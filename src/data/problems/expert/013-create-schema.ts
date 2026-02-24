@@ -1,0 +1,24 @@
+import type { Problem } from '@/types/problem';
+
+export const problem: Problem = {
+  id: 'expert-013', level: 'expert', order: 13,
+  title: { ko: 'CREATE SCHEMA: 스키마 생성 및 관리', en: 'CREATE SCHEMA: Schema Creation and Management' },
+  description: {
+    ko: `분석용 스키마를 생성하고 그 안에 테이블을 만드세요.\n\n### 요구사항\n1. 스키마를 생성하세요:\n\`\`\`sql\nCREATE SCHEMA IF NOT EXISTS analytics;\n\`\`\`\n\n2. 스키마 안에 테이블을 생성하세요:\n\`\`\`sql\nCREATE TABLE IF NOT EXISTS analytics.daily_sales (\n  id SERIAL PRIMARY KEY,\n  sale_date DATE NOT NULL,\n  category_id INTEGER NOT NULL,\n  total_orders INTEGER DEFAULT 0,\n  total_revenue DECIMAL(12,2) DEFAULT 0.00,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n\`\`\`\n\n3. 스키마와 테이블을 확인하세요:\n\`\`\`sql\nSELECT table_schema, table_name, table_type\nFROM information_schema.tables\nWHERE table_schema = 'analytics'\nORDER BY table_name;\n\`\`\`\n\n> **채점**: 3번 SELECT 쿼리의 결과로 채점됩니다.\n\n### 스키마(Schema)란?\n- 데이터베이스 내에서 **테이블, 뷰, 인덱스 등을 논리적으로 그룹화**\n- 네임스페이스 역할: 같은 이름의 테이블이 다른 스키마에 존재 가능\n- DBA의 핵심 업무: 스키마 설계와 관리`,
+    en: `Create an analytics schema and a table within it.\n\n### Requirements\n1. Create the schema:\n\`\`\`sql\nCREATE SCHEMA IF NOT EXISTS analytics;\n\`\`\`\n\n2. Create a table in the schema:\n\`\`\`sql\nCREATE TABLE IF NOT EXISTS analytics.daily_sales (\n  id SERIAL PRIMARY KEY,\n  sale_date DATE NOT NULL,\n  category_id INTEGER NOT NULL,\n  total_orders INTEGER DEFAULT 0,\n  total_revenue DECIMAL(12,2) DEFAULT 0.00,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n\`\`\`\n\n3. Verify schema and table:\n\`\`\`sql\nSELECT table_schema, table_name, table_type\nFROM information_schema.tables\nWHERE table_schema = 'analytics'\nORDER BY table_name;\n\`\`\`\n\n> **Grading**: Based on step 3's SELECT result.\n\n### What is a Schema?\n- **Logical grouping** of tables, views, indexes within a database\n- Acts as a namespace: same table name can exist in different schemas\n- Core DBA task: schema design and management`,
+  },
+  schema: 'ecommerce', category: 'DDL', difficulty: 2,
+  hints: {
+    ko: ['CREATE SCHEMA IF NOT EXISTS로 스키마를 안전하게 생성합니다.', '스키마.테이블명 형식으로 테이블을 특정 스키마에 생성합니다.', "SELECT table_schema, table_name, table_type FROM information_schema.tables WHERE table_schema = 'analytics' ORDER BY table_name;"],
+    en: ['Use CREATE SCHEMA IF NOT EXISTS for safe creation.', 'Use schema.table_name format to create tables in a specific schema.', "SELECT table_schema, table_name, table_type FROM information_schema.tables WHERE table_schema = 'analytics' ORDER BY table_name;"],
+  },
+  explanation: {
+    ko: `## CREATE SCHEMA (스키마 생성)\n\n\`\`\`sql\nCREATE SCHEMA IF NOT EXISTS analytics;\n\nCREATE TABLE IF NOT EXISTS analytics.daily_sales (\n  id SERIAL PRIMARY KEY,\n  sale_date DATE NOT NULL,\n  ...\n);\n\`\`\`\n\n### 스키마의 역할\n- **논리적 분리**: 업무 영역별 테이블 그룹화 (analytics, billing, logging 등)\n- **네임스페이스**: \`public.users\`와 \`analytics.users\`는 다른 테이블\n- **권한 관리**: 스키마 단위로 접근 제어 가능\n- **search_path**: 기본 스키마 검색 순서 설정\n\n### 주요 명령어\n\`\`\`sql\n-- 스키마 생성\nCREATE SCHEMA IF NOT EXISTS analytics;\n\n-- 검색 경로에 스키마 추가\nSET search_path TO public, analytics;\n\n-- 스키마 삭제 (빈 스키마만)\nDROP SCHEMA analytics;\n\n-- 스키마 + 내부 객체 전부 삭제\nDROP SCHEMA analytics CASCADE;\n\`\`\`\n\n### 실무 스키마 설계 예시\n| 스키마 | 용도 |\n|--------|------|\n| public | 핵심 비즈니스 테이블 |\n| analytics | 분석/리포팅 테이블 |\n| staging | ETL 중간 데이터 |\n| audit | 감사 로그 |\n| archive | 아카이빙 데이터 |`,
+    en: `## CREATE SCHEMA\n\n\`\`\`sql\nCREATE SCHEMA IF NOT EXISTS analytics;\n\nCREATE TABLE IF NOT EXISTS analytics.daily_sales (\n  id SERIAL PRIMARY KEY,\n  sale_date DATE NOT NULL,\n  ...\n);\n\`\`\`\n\n### Schema Roles\n- **Logical separation**: Group tables by domain (analytics, billing, logging)\n- **Namespace**: \`public.users\` and \`analytics.users\` are different tables\n- **Access control**: Grant permissions per schema\n- **search_path**: Default schema search order\n\n### Key Commands\n\`\`\`sql\n-- Create schema\nCREATE SCHEMA IF NOT EXISTS analytics;\n\n-- Add schema to search path\nSET search_path TO public, analytics;\n\n-- Drop empty schema\nDROP SCHEMA analytics;\n\n-- Drop schema with all objects\nDROP SCHEMA analytics CASCADE;\n\`\`\`\n\n### Production Schema Design\n| Schema | Purpose |\n|--------|---------|\n| public | Core business tables |\n| analytics | Analysis/reporting |\n| staging | ETL intermediate data |\n| audit | Audit logs |\n| archive | Archived data |`,
+  },
+  expectedQuery: {
+    postgresql: "SELECT table_schema, table_name, table_type FROM information_schema.tables WHERE table_schema = 'analytics' ORDER BY table_name;",
+    mysql: "SELECT table_schema, table_name, table_type FROM information_schema.tables WHERE table_schema = 'analytics' ORDER BY table_name;",
+  },
+  gradingMode: 'exact', relatedConcepts: ['CREATE SCHEMA', 'Namespace', 'DDL', 'Schema Design', 'DBA'],
+};

@@ -20,27 +20,27 @@ const LEVEL_PERMISSIONS: Record<Level, { blocked: RegExp[]; blockedMessage: { ko
     },
   },
   intermediate: {
-    // 중급: SELECT + DML (INSERT, UPDATE, DELETE) 허용. DDL/권한 차단.
+    // 중급: SELECT + DML + 기본 DDL (CREATE TABLE, DROP TABLE, TRUNCATE) 허용. 권한/트랜잭션 차단.
     blocked: [
-      /\bDROP\s+(TABLE|DATABASE|SCHEMA|INDEX|VIEW)\b/i,
-      /\b(ALTER|CREATE|TRUNCATE|GRANT|REVOKE)\b/i,
+      /\bDROP\s+(DATABASE|SCHEMA|INDEX|VIEW)\b/i,
+      /\b(ALTER|GRANT|REVOKE)\b/i,
+      /\bCREATE\s+(INDEX|VIEW|SCHEMA|SEQUENCE|TRIGGER|FUNCTION|PROCEDURE)\b/i,
       /\b(BEGIN|COMMIT|ROLLBACK|START\s+TRANSACTION)\b/i,
     ],
     blockedMessage: {
-      ko: '중급 레벨에서는 SELECT, INSERT, UPDATE, DELETE만 사용할 수 있습니다.',
-      en: 'Only SELECT, INSERT, UPDATE, DELETE are allowed at the Intermediate level.',
+      ko: '중급 레벨에서는 SELECT, DML, CREATE TABLE, DROP TABLE, TRUNCATE를 사용할 수 있습니다.',
+      en: 'SELECT, DML, CREATE TABLE, DROP TABLE, and TRUNCATE are allowed at the Intermediate level.',
     },
   },
   advanced: {
-    // 고급: SELECT + DML + DDL (CREATE TABLE/VIEW/INDEX, ALTER TABLE) 허용. 권한/DROP DATABASE 차단.
+    // 고급: SELECT + DML + DDL (CREATE TABLE/VIEW/INDEX, ALTER TABLE, TRUNCATE) 허용. 권한/DROP DATABASE 차단.
     blocked: [
       /\bDROP\s+DATABASE\b/i,
-      /\bTRUNCATE\b/i,
       /\b(GRANT|REVOKE)\b/i,
     ],
     blockedMessage: {
-      ko: '고급 레벨에서는 GRANT, REVOKE, TRUNCATE, DROP DATABASE를 사용할 수 없습니다.',
-      en: 'GRANT, REVOKE, TRUNCATE, and DROP DATABASE are not allowed at the Advanced level.',
+      ko: '고급 레벨에서는 GRANT, REVOKE, DROP DATABASE를 사용할 수 없습니다.',
+      en: 'GRANT, REVOKE, and DROP DATABASE are not allowed at the Advanced level.',
     },
   },
   expert: {

@@ -1,0 +1,24 @@
+import type { Problem } from '@/types/problem';
+
+export const problem: Problem = {
+  id: 'advanced-015', level: 'advanced', order: 15,
+  title: { ko: 'MATERIALIZED VIEW: 구체화된 뷰 생성', en: 'MATERIALIZED VIEW: Create Materialized View' },
+  description: {
+    ko: `카테고리별 매출 요약 **Materialized View**를 생성하세요.\n\n### 요구사항\n1. Materialized View를 생성하세요:\n\`\`\`sql\nCREATE MATERIALIZED VIEW IF NOT EXISTS mv_category_sales AS\nSELECT\n  c.id AS category_id,\n  c.name AS category_name,\n  COUNT(DISTINCT o.id) AS order_count,\n  SUM(oi.quantity) AS total_quantity,\n  SUM(oi.quantity * oi.unit_price) AS total_revenue\nFROM categories c\nJOIN products p ON c.id = p.category_id\nJOIN order_items oi ON p.id = oi.product_id\nJOIN orders o ON oi.order_id = o.id\nGROUP BY c.id, c.name;\n\`\`\`\n\n2. 생성된 뷰를 조회하세요:\n\`\`\`sql\nSELECT * FROM mv_category_sales\nORDER BY total_revenue DESC;\n\`\`\`\n\n> **채점**: 2번 SELECT 쿼리의 결과로 채점됩니다.\n\n### Materialized View란?\n- 일반 VIEW는 매번 쿼리를 실행하지만, **Materialized View는 결과를 물리적으로 저장**\n- \`REFRESH MATERIALIZED VIEW\`로 데이터를 갱신`,
+    en: `Create a category sales summary **Materialized View**.\n\n### Requirements\n1. Create the Materialized View:\n\`\`\`sql\nCREATE MATERIALIZED VIEW IF NOT EXISTS mv_category_sales AS\nSELECT\n  c.id AS category_id,\n  c.name AS category_name,\n  COUNT(DISTINCT o.id) AS order_count,\n  SUM(oi.quantity) AS total_quantity,\n  SUM(oi.quantity * oi.unit_price) AS total_revenue\nFROM categories c\nJOIN products p ON c.id = p.category_id\nJOIN order_items oi ON p.id = oi.product_id\nJOIN orders o ON oi.order_id = o.id\nGROUP BY c.id, c.name;\n\`\`\`\n\n2. Query the view:\n\`\`\`sql\nSELECT * FROM mv_category_sales\nORDER BY total_revenue DESC;\n\`\`\`\n\n> **Grading**: Based on step 2's SELECT query result.\n\n### What is a Materialized View?\n- Regular VIEWs execute queries each time, but **Materialized Views store results physically**\n- Use \`REFRESH MATERIALIZED VIEW\` to update data`,
+  },
+  schema: 'ecommerce', category: 'DDL', difficulty: 3,
+  hints: {
+    ko: ['CREATE MATERIALIZED VIEW는 쿼리 결과를 물리적으로 저장합니다.', 'IF NOT EXISTS로 중복 생성을 방지합니다.', 'SELECT * FROM mv_category_sales ORDER BY total_revenue DESC;'],
+    en: ['CREATE MATERIALIZED VIEW physically stores query results.', 'IF NOT EXISTS prevents duplicate creation.', 'SELECT * FROM mv_category_sales ORDER BY total_revenue DESC;'],
+  },
+  explanation: {
+    ko: `## MATERIALIZED VIEW (구체화된 뷰)\n\n\`\`\`sql\nCREATE MATERIALIZED VIEW IF NOT EXISTS mv_category_sales AS\nSELECT c.id AS category_id, c.name AS category_name, ...\nFROM categories c\nJOIN products p ON c.id = p.category_id\n...\nGROUP BY c.id, c.name;\n\`\`\`\n\n### VIEW vs MATERIALIZED VIEW\n| 비교 | VIEW | MATERIALIZED VIEW |\n|------|------|-------------------|\n| 데이터 저장 | 없음 (쿼리만 저장) | 물리적 저장 |\n| 조회 성능 | 매번 실행 | 미리 계산된 결과 |\n| 갱신 | 자동 (실시간) | 수동 (REFRESH) |\n| 인덱스 | 불가 | 가능 |\n| 디스크 사용 | 없음 | 있음 |\n\n### 데이터 갱신\n\`\`\`sql\n-- 전체 갱신 (테이블 잠금)\nREFRESH MATERIALIZED VIEW mv_category_sales;\n\n-- 동시 갱신 (잠금 없음, UNIQUE INDEX 필요)\nREFRESH MATERIALIZED VIEW CONCURRENTLY mv_category_sales;\n\`\`\`\n\n### 실무 활용\n- **대시보드**: 실시간 집계가 필요 없는 통계\n- **리포팅**: 일/주/월별 요약 데이터\n- **검색 최적화**: 복잡한 JOIN 결과를 미리 계산\n\n### 주의사항\n- REFRESH를 주기적으로 실행해야 최신 데이터 유지\n- CONCURRENTLY 사용 시 UNIQUE INDEX가 필수\n- MySQL은 Materialized View를 지원하지 않음 (CTAS + 수동 갱신으로 대체)`,
+    en: `## MATERIALIZED VIEW\n\n\`\`\`sql\nCREATE MATERIALIZED VIEW IF NOT EXISTS mv_category_sales AS\nSELECT c.id AS category_id, c.name AS category_name, ...\nFROM categories c\nJOIN products p ON c.id = p.category_id\n...\nGROUP BY c.id, c.name;\n\`\`\`\n\n### VIEW vs MATERIALIZED VIEW\n| Compare | VIEW | MATERIALIZED VIEW |\n|---------|------|-------------------|\n| Data storage | None (query only) | Physical storage |\n| Query speed | Executes each time | Pre-computed results |\n| Refresh | Automatic (real-time) | Manual (REFRESH) |\n| Indexes | No | Yes |\n| Disk usage | None | Yes |\n\n### Refreshing Data\n\`\`\`sql\n-- Full refresh (locks table)\nREFRESH MATERIALIZED VIEW mv_category_sales;\n\n-- Concurrent refresh (no lock, requires UNIQUE INDEX)\nREFRESH MATERIALIZED VIEW CONCURRENTLY mv_category_sales;\n\`\`\`\n\n### Real-World Uses\n- **Dashboards**: Stats that don't need real-time aggregation\n- **Reporting**: Daily/weekly/monthly summaries\n- **Search optimization**: Pre-compute complex JOINs\n\n### Notes\n- Must REFRESH periodically for up-to-date data\n- CONCURRENTLY requires a UNIQUE INDEX\n- MySQL doesn't support Materialized Views (use CTAS + manual refresh)`,
+  },
+  expectedQuery: {
+    postgresql: 'SELECT * FROM mv_category_sales ORDER BY total_revenue DESC;',
+    mysql: 'SELECT * FROM mv_category_sales ORDER BY total_revenue DESC;',
+  },
+  gradingMode: 'exact', relatedConcepts: ['MATERIALIZED VIEW', 'CREATE MATERIALIZED VIEW', 'REFRESH', 'DDL', 'Performance'],
+};
