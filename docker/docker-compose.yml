@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sql-dba-postgres
+    environment:
+      POSTGRES_DB: sql_practice
+      POSTGRES_USER: sql_student
+      POSTGRES_PASSWORD: practice123
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - pgdata:/var/lib/postgresql/data
+    command: >
+      postgres
+        -c statement_timeout=10000
+        -c max_connections=50
+        -c shared_buffers=128MB
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: sql-dba-mysql
+    environment:
+      MYSQL_DATABASE: sql_practice
+      MYSQL_USER: sql_student
+      MYSQL_PASSWORD: practice123
+      MYSQL_ROOT_PASSWORD: root123
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - mysqldata:/var/lib/mysql
+    command: >
+      --max-execution-time=10000
+      --max-connections=50
+      --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  mysqldata:
