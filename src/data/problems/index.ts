@@ -14,6 +14,8 @@ import { problem as b010 } from './beginner/010-aggregate';
 import { problem as b011 } from './beginner/011-insert-basic';
 import { problem as b012 } from './beginner/012-update-basic';
 import { problem as b013 } from './beginner/013-delete-basic';
+import { problem as b014 } from './beginner/014-insert-multiple';
+import { problem as b015 } from './beginner/015-update-multiple-columns';
 
 // Intermediate
 import { problem as i001 } from './intermediate/001-inner-join';
@@ -26,6 +28,9 @@ import { problem as i007 } from './intermediate/007-insert';
 import { problem as i008 } from './intermediate/008-update';
 import { problem as i009 } from './intermediate/009-delete';
 import { problem as i010 } from './intermediate/010-comprehensive';
+import { problem as i011 } from './intermediate/011-insert-select';
+import { problem as i012 } from './intermediate/012-update-with-join';
+import { problem as i013 } from './intermediate/013-delete-subquery';
 
 // Advanced
 import { problem as a001 } from './advanced/001-row-number';
@@ -38,6 +43,8 @@ import { problem as a007 } from './advanced/007-create-view';
 import { problem as a008 } from './advanced/008-create-table';
 import { problem as a009 } from './advanced/009-union';
 import { problem as a010 } from './advanced/010-alter-table';
+import { problem as a011 } from './advanced/011-insert-returning';
+import { problem as a012 } from './advanced/012-update-from';
 
 // Expert
 import { problem as e001 } from './expert/001-create-index';
@@ -50,16 +57,18 @@ import { problem as e007 } from './expert/007-drop-recreate';
 import { problem as e008 } from './expert/008-window-cte-combo';
 import { problem as e009 } from './expert/009-subquery-optimization';
 import { problem as e010 } from './expert/010-comprehensive-dba';
+import { problem as e011 } from './expert/011-delete-using';
+import { problem as e012 } from './expert/012-bulk-update-case';
 
 const allProblems: Problem[] = [
   // Beginner
-  b001, b002, b003, b004, b005, b006, b007, b008, b009, b010, b011, b012, b013,
+  b001, b002, b003, b004, b005, b006, b007, b008, b009, b010, b011, b012, b013, b014, b015,
   // Intermediate
-  i001, i002, i003, i004, i005, i006, i007, i008, i009, i010,
+  i001, i002, i003, i004, i005, i006, i007, i008, i009, i010, i011, i012, i013,
   // Advanced
-  a001, a002, a003, a004, a005, a006, a007, a008, a009, a010,
+  a001, a002, a003, a004, a005, a006, a007, a008, a009, a010, a011, a012,
   // Expert
-  e001, e002, e003, e004, e005, e006, e007, e008, e009, e010,
+  e001, e002, e003, e004, e005, e006, e007, e008, e009, e010, e011, e012,
 ];
 
 export function getAllProblems(): Problem[] {
