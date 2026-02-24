@@ -1,0 +1,24 @@
+import type { Problem } from '@/types/problem';
+
+export const problem: Problem = {
+  id: 'database-002', level: 'database', order: 2,
+  title: { ko: 'pg_stat_activity: 실행 중인 쿼리 모니터링', en: 'pg_stat_activity: Monitor Running Queries' },
+  description: {
+    ko: `현재 데이터베이스에서 **실행 중인 세션과 쿼리**를 조회하세요.\n\n### 요구사항\n\`\`\`sql\nSELECT\n  pid,\n  usename,\n  state,\n  query,\n  query_start,\n  NOW() - query_start AS duration\nFROM pg_stat_activity\nWHERE datname = current_database()\n  AND state IS NOT NULL\nORDER BY query_start;\n\`\`\`\n\n### pg_stat_activity란?\n- PostgreSQL의 **실시간 세션 모니터링** 시스템 뷰\n- 누가, 언제, 어떤 쿼리를 실행 중인지 확인\n- DBA의 필수 모니터링 도구\n\n### 주요 state 값\n| 상태 | 설명 |\n|------|------|\n| active | 쿼리 실행 중 |\n| idle | 대기 중 (연결 유지) |\n| idle in transaction | 트랜잭션 내 대기 |\n| disabled | 추적 비활성화 |`,
+    en: `Query the currently **running sessions and queries** in the database.\n\n### Requirements\n\`\`\`sql\nSELECT\n  pid,\n  usename,\n  state,\n  query,\n  query_start,\n  NOW() - query_start AS duration\nFROM pg_stat_activity\nWHERE datname = current_database()\n  AND state IS NOT NULL\nORDER BY query_start;\n\`\`\`\n\n### What is pg_stat_activity?\n- PostgreSQL's **real-time session monitoring** system view\n- See who is running what query and when\n- Essential DBA monitoring tool\n\n### Key state values\n| State | Description |\n|-------|-------------|\n| active | Query running |\n| idle | Waiting (connection alive) |\n| idle in transaction | Waiting inside transaction |\n| disabled | Tracking disabled |`,
+  },
+  schema: 'ecommerce', category: 'Monitoring', difficulty: 1,
+  hints: {
+    ko: ['pg_stat_activity는 현재 데이터베이스의 모든 세션 정보를 보여줍니다.', 'state 컬럼으로 쿼리의 현재 상태를 확인합니다.', "SELECT pid, usename, state, query, query_start, NOW() - query_start AS duration FROM pg_stat_activity WHERE datname = current_database() AND state IS NOT NULL ORDER BY query_start;"],
+    en: ['pg_stat_activity shows all session info for the current database.', 'The state column shows the current status of each query.', "SELECT pid, usename, state, query, query_start, NOW() - query_start AS duration FROM pg_stat_activity WHERE datname = current_database() AND state IS NOT NULL ORDER BY query_start;"],
+  },
+  explanation: {
+    ko: `## pg_stat_activity (세션 모니터링)\n\n### 기본 조회\n\`\`\`sql\nSELECT pid, usename, state, query, query_start,\n       NOW() - query_start AS duration\nFROM pg_stat_activity\nWHERE datname = current_database()\n  AND state IS NOT NULL\nORDER BY query_start;\n\`\`\`\n\n### 장시간 실행 쿼리 찾기\n\`\`\`sql\nSELECT pid, usename, state, query,\n       NOW() - query_start AS duration\nFROM pg_stat_activity\nWHERE state = 'active'\n  AND NOW() - query_start > interval '5 seconds'\nORDER BY duration DESC;\n\`\`\`\n\n### 문제 세션 강제 종료\n\`\`\`sql\n-- 정상 종료 (권장)\nSELECT pg_cancel_backend(pid);\n\n-- 강제 종료\nSELECT pg_terminate_backend(pid);\n\`\`\`\n\n### idle in transaction 감지\n\`\`\`sql\nSELECT pid, usename, state, query,\n       NOW() - state_change AS idle_time\nFROM pg_stat_activity\nWHERE state = 'idle in transaction'\n  AND NOW() - state_change > interval '10 minutes';\n\`\`\`\n\n### DBA 활용\n- 슬로우 쿼리 실시간 감지\n- 잠금 대기 세션 확인\n- idle in transaction 세션 정리 (잠금 유발)`,
+    en: `## pg_stat_activity (Session Monitoring)\n\n### Basic Query\n\`\`\`sql\nSELECT pid, usename, state, query, query_start,\n       NOW() - query_start AS duration\nFROM pg_stat_activity\nWHERE datname = current_database()\n  AND state IS NOT NULL\nORDER BY query_start;\n\`\`\`\n\n### Find Long-Running Queries\n\`\`\`sql\nSELECT pid, usename, state, query,\n       NOW() - query_start AS duration\nFROM pg_stat_activity\nWHERE state = 'active'\n  AND NOW() - query_start > interval '5 seconds'\nORDER BY duration DESC;\n\`\`\`\n\n### Kill Problem Sessions\n\`\`\`sql\n-- Graceful cancel (recommended)\nSELECT pg_cancel_backend(pid);\n\n-- Force terminate\nSELECT pg_terminate_backend(pid);\n\`\`\`\n\n### Detect idle in transaction\n\`\`\`sql\nSELECT pid, usename, state, query,\n       NOW() - state_change AS idle_time\nFROM pg_stat_activity\nWHERE state = 'idle in transaction'\n  AND NOW() - state_change > interval '10 minutes';\n\`\`\`\n\n### DBA Uses\n- Real-time slow query detection\n- Lock-waiting session identification\n- Cleanup idle in transaction sessions (cause locks)`,
+  },
+  expectedQuery: {
+    postgresql: "SELECT pid, usename, state, query, query_start, NOW() - query_start AS duration FROM pg_stat_activity WHERE datname = current_database() AND state IS NOT NULL ORDER BY query_start;",
+    mysql: "SELECT pid, usename, state, query, query_start, NOW() - query_start AS duration FROM pg_stat_activity WHERE datname = current_database() AND state IS NOT NULL ORDER BY query_start;",
+  },
+  gradingMode: 'exact', relatedConcepts: ['pg_stat_activity', 'Monitoring', 'Session', 'DBA', 'Performance'],
+};

@@ -70,6 +70,16 @@ import { problem as e014 } from './expert/014-create-sequence';
 import { problem as e015 } from './expert/015-create-trigger';
 import { problem as e016 } from './expert/016-grant-revoke';
 
+// Database
+import { problem as d001 } from './database/001-vacuum-analyze';
+import { problem as d002 } from './database/002-pg-stat-activity';
+import { problem as d003 } from './database/003-table-statistics';
+import { problem as d004 } from './database/004-database-size';
+import { problem as d005 } from './database/005-pg-locks';
+import { problem as d006 } from './database/006-pg-settings';
+import { problem as d007 } from './database/007-index-usage';
+import { problem as d008 } from './database/008-connection-info';
+
 const allProblems: Problem[] = [
   // Beginner
   b001, b002, b003, b004, b005, b006, b007, b008, b009, b010, b011, b012, b013, b014, b015,
@@ -79,6 +89,8 @@ const allProblems: Problem[] = [
   a001, a002, a003, a004, a005, a006, a007, a008, a009, a010, a011, a012, a013, a014, a015,
   // Expert
   e001, e002, e003, e004, e005, e006, e007, e008, e009, e010, e011, e012, e013, e014, e015, e016,
+  // Database
+  d001, d002, d003, d004, d005, d006, d007, d008,
 ];
 
 export function getAllProblems(): Problem[] {

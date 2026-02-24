@@ -1,0 +1,24 @@
+import type { Problem } from '@/types/problem';
+
+export const problem: Problem = {
+  id: 'database-006', level: 'database', order: 6,
+  title: { ko: 'pg_settings: 데이터베이스 설정 조회', en: 'pg_settings: Database Configuration' },
+  description: {
+    ko: `PostgreSQL의 **주요 설정값**을 조회하세요.\n\n### 요구사항\n\`\`\`sql\nSELECT\n  name,\n  setting,\n  unit,\n  short_desc\nFROM pg_settings\nWHERE name IN (\n  'max_connections',\n  'shared_buffers',\n  'work_mem',\n  'maintenance_work_mem',\n  'effective_cache_size',\n  'wal_level',\n  'max_wal_size',\n  'statement_timeout',\n  'lock_timeout',\n  'autovacuum'\n)\nORDER BY name;\n\`\`\`\n\n### 주요 설정값\n| 설정 | 설명 |\n|------|------|\n| max_connections | 최대 동시 연결 수 |\n| shared_buffers | 공유 메모리 버퍼 크기 |\n| work_mem | 쿼리당 작업 메모리 |\n| effective_cache_size | 예상 캐시 크기 (플래너용) |\n| autovacuum | 자동 VACUUM 활성화 여부 |`,
+    en: `Query **key PostgreSQL settings**.\n\n### Requirements\n\`\`\`sql\nSELECT\n  name,\n  setting,\n  unit,\n  short_desc\nFROM pg_settings\nWHERE name IN (\n  'max_connections',\n  'shared_buffers',\n  'work_mem',\n  'maintenance_work_mem',\n  'effective_cache_size',\n  'wal_level',\n  'max_wal_size',\n  'statement_timeout',\n  'lock_timeout',\n  'autovacuum'\n)\nORDER BY name;\n\`\`\`\n\n### Key Settings\n| Setting | Description |\n|---------|-------------|\n| max_connections | Max concurrent connections |\n| shared_buffers | Shared memory buffer size |\n| work_mem | Per-query working memory |\n| effective_cache_size | Expected cache size (for planner) |\n| autovacuum | Auto VACUUM enabled |`,
+  },
+  schema: 'ecommerce', category: 'Monitoring', difficulty: 1,
+  hints: {
+    ko: ['pg_settings에는 PostgreSQL의 모든 설정값이 있습니다.', 'unit 컬럼으로 설정값의 단위(kB, MB, ms, s 등)를 확인합니다.', "SELECT name, setting, unit, short_desc FROM pg_settings WHERE name IN ('max_connections', 'shared_buffers', 'work_mem', 'maintenance_work_mem', 'effective_cache_size', 'wal_level', 'max_wal_size', 'statement_timeout', 'lock_timeout', 'autovacuum') ORDER BY name;"],
+    en: ['pg_settings contains all PostgreSQL configuration values.', 'The unit column shows the unit (kB, MB, ms, s, etc.).', "SELECT name, setting, unit, short_desc FROM pg_settings WHERE name IN ('max_connections', 'shared_buffers', 'work_mem', 'maintenance_work_mem', 'effective_cache_size', 'wal_level', 'max_wal_size', 'statement_timeout', 'lock_timeout', 'autovacuum') ORDER BY name;"],
+  },
+  explanation: {
+    ko: `## pg_settings (데이터베이스 설정)\n\n### 메모리 관련 설정\n| 설정 | 권장값 | 설명 |\n|------|--------|------|\n| shared_buffers | RAM의 25% | 공유 버퍼 |\n| work_mem | 4MB~64MB | 쿼리당 작업 메모리 |\n| maintenance_work_mem | 512MB~1GB | VACUUM/CREATE INDEX용 |\n| effective_cache_size | RAM의 50~75% | 플래너 캐시 추정 |\n\n### 연결 관련 설정\n\`\`\`sql\nSELECT name, setting, unit\nFROM pg_settings\nWHERE name IN ('max_connections', 'superuser_reserved_connections');\n\`\`\`\n\n### 설정 변경 방법\n\`\`\`sql\n-- 세션 레벨 (즉시 적용)\nSET work_mem = '64MB';\n\n-- 데이터베이스 레벨 (재시작 불필요)\nALTER DATABASE mydb SET work_mem = '64MB';\n\n-- postgresql.conf 수정 후 재시작 필요\n-- shared_buffers, max_connections 등\n\`\`\`\n\n### 설정 컨텍스트 확인\n\`\`\`sql\nSELECT name, context FROM pg_settings;\n-- postmaster: 재시작 필요\n-- sighup: pg_ctl reload로 적용\n-- user: SET으로 세션 레벨 변경 가능\n\`\`\``,
+    en: `## pg_settings (Database Configuration)\n\n### Memory Settings\n| Setting | Recommended | Description |\n|---------|-------------|-------------|\n| shared_buffers | 25% of RAM | Shared buffers |\n| work_mem | 4MB~64MB | Per-query working memory |\n| maintenance_work_mem | 512MB~1GB | For VACUUM/CREATE INDEX |\n| effective_cache_size | 50~75% of RAM | Planner cache estimate |\n\n### Connection Settings\n\`\`\`sql\nSELECT name, setting, unit\nFROM pg_settings\nWHERE name IN ('max_connections', 'superuser_reserved_connections');\n\`\`\`\n\n### How to Change Settings\n\`\`\`sql\n-- Session level (immediate)\nSET work_mem = '64MB';\n\n-- Database level (no restart needed)\nALTER DATABASE mydb SET work_mem = '64MB';\n\n-- postgresql.conf changes require restart\n-- shared_buffers, max_connections, etc.\n\`\`\`\n\n### Setting Context\n\`\`\`sql\nSELECT name, context FROM pg_settings;\n-- postmaster: requires restart\n-- sighup: pg_ctl reload applies\n-- user: SET changes session level\n\`\`\``,
+  },
+  expectedQuery: {
+    postgresql: "SELECT name, setting, unit, short_desc FROM pg_settings WHERE name IN ('max_connections', 'shared_buffers', 'work_mem', 'maintenance_work_mem', 'effective_cache_size', 'wal_level', 'max_wal_size', 'statement_timeout', 'lock_timeout', 'autovacuum') ORDER BY name;",
+    mysql: "SELECT name, setting, unit, short_desc FROM pg_settings WHERE name IN ('max_connections', 'shared_buffers', 'work_mem', 'maintenance_work_mem', 'effective_cache_size', 'wal_level', 'max_wal_size', 'statement_timeout', 'lock_timeout', 'autovacuum') ORDER BY name;",
+  },
+  gradingMode: 'exact', relatedConcepts: ['pg_settings', 'Configuration', 'Tuning', 'Monitoring', 'DBA'],
+};

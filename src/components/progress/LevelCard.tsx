@@ -7,13 +7,14 @@ import { useProgressStore } from '@/stores/progress-store';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Lock, Sprout, Flame, Zap, Crown } from 'lucide-react';
+import { Lock, Sprout, Flame, Zap, Crown, Database } from 'lucide-react';
 
 const ICONS = {
   Sprout,
   Flame,
   Zap,
   Crown,
+  Database,
 };
 
 const GRADIENTS = {
@@ -21,6 +22,7 @@ const GRADIENTS = {
   blue: 'from-blue-500/20 to-blue-600/5 hover:from-blue-500/30 hover:to-blue-600/10',
   purple: 'from-purple-500/20 to-purple-600/5 hover:from-purple-500/30 hover:to-purple-600/10',
   amber: 'from-amber-500/20 to-amber-600/5 hover:from-amber-500/30 hover:to-amber-600/10',
+  cyan: 'from-cyan-500/20 to-cyan-600/5 hover:from-cyan-500/30 hover:to-cyan-600/10',
 };
 
 const ICON_COLORS = {
@@ -28,6 +30,7 @@ const ICON_COLORS = {
   blue: 'text-blue-500',
   purple: 'text-purple-500',
   amber: 'text-amber-500',
+  cyan: 'text-cyan-500',
 };
 
 const PROGRESS_COLORS = {
@@ -35,6 +38,7 @@ const PROGRESS_COLORS = {
   blue: '[&>div]:bg-blue-500',
   purple: '[&>div]:bg-purple-500',
   amber: '[&>div]:bg-amber-500',
+  cyan: '[&>div]:bg-cyan-500',
 };
 
 interface LevelCardProps {

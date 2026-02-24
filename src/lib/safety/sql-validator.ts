@@ -52,6 +52,15 @@ const LEVEL_PERMISSIONS: Record<Level, { blocked: RegExp[]; blockedMessage: { ko
       en: 'DROP DATABASE is not allowed.',
     },
   },
+  database: {
+    // Database: 모든 것 허용. DROP DATABASE만 차단. 멀티 스테이트먼트 허용.
+    blocked: [/\bDROP\s+DATABASE\b/i],
+    allowMultiStatement: true,
+    blockedMessage: {
+      ko: 'DROP DATABASE는 사용할 수 없습니다.',
+      en: 'DROP DATABASE is not allowed.',
+    },
+  },
 };
 
 export function validateSQL(sql: string, level: Level): ValidationResult {

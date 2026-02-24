@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useProgressStore } from '@/stores/progress-store';
 import { getProblemsByLevel } from '@/data/problems';
-import { LEVEL_CONFIGS, type Level } from '@/types/problem';
+import { LEVEL_CONFIGS, type Level, getSqlType, SQL_TYPE_LABELS } from '@/types/problem';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -95,6 +95,11 @@ export default function LevelPage() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
+                          <Badge
+                            className={`text-[10px] ${SQL_TYPE_LABELS[getSqlType(problem.category)].color}`}
+                          >
+                            {SQL_TYPE_LABELS[getSqlType(problem.category)][locale]}
+                          </Badge>
                           <Badge
                             variant="secondary"
                             className={`text-[10px] ${

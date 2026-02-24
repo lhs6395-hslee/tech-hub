@@ -6,7 +6,7 @@ import type { Level } from '@/types/problem';
 import type { UserProgress, ProblemAttempt, LevelProgress } from '@/types/progress';
 import { getAllProblems } from '@/data/problems';
 
-const LEVEL_ORDER: Level[] = ['beginner', 'intermediate', 'advanced', 'expert'];
+const LEVEL_ORDER: Level[] = ['beginner', 'intermediate', 'advanced', 'expert', 'database'];
 const UNLOCK_THRESHOLD = 0.8;
 
 function createInitialProgress(): UserProgress {
@@ -18,6 +18,7 @@ function createInitialProgress(): UserProgress {
       intermediate: { totalProblems: 0, completedProblems: 0, percentage: 0, unlocked: false },
       advanced: { totalProblems: 0, completedProblems: 0, percentage: 0, unlocked: false },
       expert: { totalProblems: 0, completedProblems: 0, percentage: 0, unlocked: false },
+      database: { totalProblems: 0, completedProblems: 0, percentage: 0, unlocked: true },
     },
     totalScore: 0,
     lastActiveAt: new Date().toISOString(),

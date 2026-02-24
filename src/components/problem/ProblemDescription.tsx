@@ -2,7 +2,7 @@
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { Problem } from '@/types/problem';
+import { type Problem, getSqlType, SQL_TYPE_LABELS } from '@/types/problem';
 import { useLocaleStore } from '@/stores/locale-store';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -35,6 +35,9 @@ export default function ProblemDescription({ problem }: ProblemDescriptionProps)
               {difficultyLabels[problem.difficulty][locale]}
             </Badge>
             <Badge variant="secondary">{problem.category}</Badge>
+            <Badge className={`text-[10px] ${SQL_TYPE_LABELS[getSqlType(problem.category)].color}`}>
+              {SQL_TYPE_LABELS[getSqlType(problem.category)][locale]}
+            </Badge>
           </div>
           <h2 className="text-lg font-bold">{problem.title[locale]}</h2>
         </div>
