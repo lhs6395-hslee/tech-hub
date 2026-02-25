@@ -1,0 +1,82 @@
+<mxGraphModel>
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- CLIENT LAYER -->
+    <mxCell id="client-group" value="Client Layer" style="swimlane;startSize=28;fillColor=#dbeafe;strokeColor=#3b82f6;fontStyle=1;fontSize=13;fontColor=#1e40af;rounded=1;arcSize=8;shadow=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="30" width="720" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="dashboard" value="Dashboard&#xa;React 19 + Zustand" style="rounded=1;fillColor=#eff6ff;strokeColor=#93c5fd;fontColor=#1e40af;fontSize=11;whiteSpace=wrap;shadow=0;" vertex="1" parent="client-group">
+      <mxGeometry x="15" y="38" width="155" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="workspace" value="SQL Workspace&#xa;CodeMirror 6" style="rounded=1;fillColor=#eff6ff;strokeColor=#93c5fd;fontColor=#1e40af;fontSize=11;whiteSpace=wrap;shadow=0;" vertex="1" parent="client-group">
+      <mxGeometry x="190" y="38" width="155" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="docs" value="Theory Docs&#xa;react-markdown + SVG" style="rounded=1;fillColor=#eff6ff;strokeColor=#93c5fd;fontColor=#1e40af;fontSize=11;whiteSpace=wrap;shadow=0;" vertex="1" parent="client-group">
+      <mxGeometry x="365" y="38" width="165" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="chatui" value="AI Chat&#xa;AWS Bedrock" style="rounded=1;fillColor=#eff6ff;strokeColor=#93c5fd;fontColor=#1e40af;fontSize=11;whiteSpace=wrap;shadow=0;" vertex="1" parent="client-group">
+      <mxGeometry x="550" y="38" width="155" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- API LAYER -->
+    <mxCell id="api-group" value="Next.js 16 API Layer" style="swimlane;startSize=28;fillColor=#ede9fe;strokeColor=#8b5cf6;fontStyle=1;fontSize=13;fontColor=#5b21b6;rounded=1;arcSize=8;shadow=1;" vertex="1" parent="1">
+      <mxGeometry x="120" y="185" width="560" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="api-exec" value="/api/execute-sql" style="rounded=1;fillColor=#f5f3ff;strokeColor=#c4b5fd;fontColor=#5b21b6;fontSize=11;whiteSpace=wrap;shadow=0;" vertex="1" parent="api-group">
+      <mxGeometry x="15" y="38" width="155" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="api-reset" value="/api/reset-db" style="rounded=1;fillColor=#f5f3ff;strokeColor=#c4b5fd;fontColor=#5b21b6;fontSize=11;whiteSpace=wrap;shadow=0;" vertex="1" parent="api-group">
+      <mxGeometry x="195" y="38" width="155" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="api-chat" value="/api/chat" style="rounded=1;fillColor=#f5f3ff;strokeColor=#c4b5fd;fontColor=#5b21b6;fontSize=11;whiteSpace=wrap;shadow=0;" vertex="1" parent="api-group">
+      <mxGeometry x="375" y="38" width="155" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- CORE LOGIC LAYER -->
+    <mxCell id="logic-group" value="Core Logic" style="swimlane;startSize=28;fillColor=#fef3c7;strokeColor=#f59e0b;fontStyle=1;fontSize=13;fontColor=#92400e;rounded=1;arcSize=8;shadow=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="340" width="720" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="validator" value="SQL Validator&#xa;Level-based Permissions" style="rounded=1;fillColor=#fffbeb;strokeColor=#fcd34d;fontColor=#92400e;fontSize=11;whiteSpace=wrap;shadow=0;" vertex="1" parent="logic-group">
+      <mxGeometry x="15" y="38" width="170" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="grader" value="Grading Engine&#xa;exact / unordered / contains" style="rounded=1;fillColor=#fffbeb;strokeColor=#fcd34d;fontColor=#92400e;fontSize=11;whiteSpace=wrap;shadow=0;" vertex="1" parent="logic-group">
+      <mxGeometry x="210" y="38" width="195" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="state" value="State Manager&#xa;Zustand 5 + localStorage" style="rounded=1;fillColor=#fffbeb;strokeColor=#fcd34d;fontColor=#92400e;fontSize=11;whiteSpace=wrap;shadow=0;" vertex="1" parent="logic-group">
+      <mxGeometry x="430" y="38" width="175" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- DATABASE LAYER -->
+    <mxCell id="db-group" value="Docker Compose" style="swimlane;startSize=28;fillColor=#d1fae5;strokeColor=#10b981;fontStyle=1;fontSize=13;fontColor=#065f46;rounded=1;arcSize=8;shadow=1;" vertex="1" parent="1">
+      <mxGeometry x="180" y="500" width="440" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="pg" value="PostgreSQL 16" style="shape=cylinder3;size=8;fillColor=#ecfdf5;strokeColor=#6ee7b7;fontColor=#065f46;fontSize=12;fontStyle=1;whiteSpace=wrap;shadow=0;" vertex="1" parent="db-group">
+      <mxGeometry x="40" y="30" width="150" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="mysql" value="MySQL 8.0" style="shape=cylinder3;size=8;fillColor=#ecfdf5;strokeColor=#6ee7b7;fontColor=#065f46;fontSize=12;fontStyle=1;whiteSpace=wrap;shadow=0;" vertex="1" parent="db-group">
+      <mxGeometry x="250" y="30" width="150" height="60" as="geometry"/>
+    </mxCell>
+
+    <!-- EDGES -->
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#3b82f6;strokeWidth=2;endArrow=blockThin;endFill=1;flowAnimation=1;exitX=0.5;exitY=1;entryX=0.3;entryY=0;" edge="1" source="workspace" target="api-group" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#3b82f6;strokeWidth=2;endArrow=blockThin;endFill=1;flowAnimation=1;exitX=0.5;exitY=1;entryX=0.7;entryY=0;" edge="1" source="chatui" target="api-group" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#8b5cf6;strokeWidth=2;endArrow=blockThin;endFill=1;flowAnimation=1;exitX=0.25;exitY=1;entryX=0.25;entryY=0;" edge="1" source="api-group" target="logic-group" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#8b5cf6;strokeWidth=2;endArrow=blockThin;endFill=1;flowAnimation=1;exitX=0.6;exitY=1;entryX=0.6;entryY=0;" edge="1" source="api-group" target="logic-group" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#f59e0b;strokeWidth=2;endArrow=blockThin;endFill=1;flowAnimation=1;exitX=0.25;exitY=1;entryX=0.3;entryY=0;" edge="1" source="logic-group" target="db-group" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#f59e0b;strokeWidth=2;endArrow=blockThin;endFill=1;flowAnimation=1;exitX=0.55;exitY=1;entryX=0.7;entryY=0;" edge="1" source="logic-group" target="db-group" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

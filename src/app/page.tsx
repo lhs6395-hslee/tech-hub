@@ -7,6 +7,7 @@ import LevelCard from '@/components/progress/LevelCard';
 import { Database, Terminal, BookOpen, Trophy } from 'lucide-react';
 import ArchitectureDiagram from '@/components/home/ArchitectureDiagram';
 import ExecutionFlowDiagram from '@/components/home/ExecutionFlowDiagram';
+import ERDDiagram from '@/components/home/ERDDiagram';
 
 export default function HomePage() {
   const { t } = useTranslation();
@@ -74,6 +75,11 @@ export default function HomePage() {
       {/* Execution Flow Diagram */}
       <section className="max-w-4xl mx-auto">
         <ExecutionFlowDiagram locale={locale} />
+      </section>
+
+      {/* ERD Diagram */}
+      <section className="max-w-4xl mx-auto">
+        <ERDDiagram locale={locale} />
       </section>
 
       {/* Level Cards */}

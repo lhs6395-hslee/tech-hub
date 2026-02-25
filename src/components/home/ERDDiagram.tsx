@@ -8,12 +8,12 @@ interface Props {
   locale: 'ko' | 'en';
 }
 
-export default function ArchitectureDiagram({ locale }: Props) {
+export default function ERDDiagram({ locale }: Props) {
   const [xml, setXml] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    fetch('/diagrams/architecture.drawio')
+    fetch('/diagrams/erd.drawio')
       .then((r) => r.text())
       .then(setXml)
       .catch(() => setXml(null));
@@ -29,12 +29,12 @@ export default function ArchitectureDiagram({ locale }: Props) {
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
         <div>
           <h3 className="font-bold text-lg">
-            {locale === 'ko' ? 'System Architecture' : 'System Architecture'}
+            {locale === 'ko' ? 'E-Commerce ERD' : 'E-Commerce ERD'}
           </h3>
           <p className="text-xs text-muted-foreground">
             {locale === 'ko'
-              ? '드래그로 이동, 스크롤로 확대/축소할 수 있습니다'
-              : 'Drag to pan, scroll to zoom'}
+              ? '7개 테이블 간 관계를 확인하세요 — 드래그 이동, 스크롤 확대/축소'
+              : '7 tables with relationships — drag to pan, scroll to zoom'}
           </p>
         </div>
         <button
@@ -50,7 +50,7 @@ export default function ArchitectureDiagram({ locale }: Props) {
       </div>
 
       {/* draw.io embed */}
-      <div style={{ height: expanded ? 700 : 420 }} className="transition-all duration-300">
+      <div style={{ height: expanded ? 700 : 450 }} className="transition-all duration-300">
         <DrawIoEmbed
           xml={xml}
           urlParameters={{

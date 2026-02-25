@@ -1,0 +1,182 @@
+<mxGraphModel>
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- customers table -->
+    <mxCell id="t-cust" value="customers" style="shape=table;startSize=28;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontStyle=1;strokeColor=#3b82f6;fillColor=#dbeafe;fontSize=13;fontColor=#1e40af;shadow=1;rounded=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="20" y="120" width="200" height="178" as="geometry"/>
+    </mxCell>
+    <mxCell id="c-id" value="PK  id            int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#1e3a5f;" vertex="1" parent="t-cust">
+      <mxGeometry y="28" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="c-name" value="     name        varchar" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-cust">
+      <mxGeometry y="53" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="c-email" value="UK  email        varchar" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-cust">
+      <mxGeometry y="78" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="c-city" value="     city         varchar" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-cust">
+      <mxGeometry y="103" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="c-signup" value="     signup_date date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-cust">
+      <mxGeometry y="128" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="c-prem" value="     is_premium  boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-cust">
+      <mxGeometry y="153" width="200" height="25" as="geometry"/>
+    </mxCell>
+
+    <!-- customer_profiles table -->
+    <mxCell id="t-prof" value="customer_profiles" style="shape=table;startSize=28;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontStyle=1;strokeColor=#8b5cf6;fillColor=#ede9fe;fontSize=13;fontColor=#5b21b6;shadow=1;rounded=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="310" y="20" width="200" height="128" as="geometry"/>
+    </mxCell>
+    <mxCell id="p-id" value="PK  id              int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#1e3a5f;" vertex="1" parent="t-prof">
+      <mxGeometry y="28" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="p-cid" value="FK  customer_id  int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#b91c1c;" vertex="1" parent="t-prof">
+      <mxGeometry y="53" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="p-bio" value="     bio            text" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-prof">
+      <mxGeometry y="78" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="p-avatar" value="     avatar_url  varchar" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-prof">
+      <mxGeometry y="103" width="200" height="25" as="geometry"/>
+    </mxCell>
+
+    <!-- orders table -->
+    <mxCell id="t-ord" value="orders" style="shape=table;startSize=28;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontStyle=1;strokeColor=#10b981;fillColor=#d1fae5;fontSize=13;fontColor=#065f46;shadow=1;rounded=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="310" y="180" width="200" height="153" as="geometry"/>
+    </mxCell>
+    <mxCell id="o-id" value="PK  id              int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#1e3a5f;" vertex="1" parent="t-ord">
+      <mxGeometry y="28" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="o-cid" value="FK  customer_id  int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#b91c1c;" vertex="1" parent="t-ord">
+      <mxGeometry y="53" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="o-date" value="     order_date   date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-ord">
+      <mxGeometry y="78" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="o-amt" value="     total_amount decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-ord">
+      <mxGeometry y="103" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="o-status" value="     status        varchar" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-ord">
+      <mxGeometry y="128" width="200" height="25" as="geometry"/>
+    </mxCell>
+
+    <!-- order_items table -->
+    <mxCell id="t-oi" value="order_items" style="shape=table;startSize=28;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontStyle=1;strokeColor=#f59e0b;fillColor=#fef3c7;fontSize=13;fontColor=#92400e;shadow=1;rounded=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="590" y="180" width="200" height="153" as="geometry"/>
+    </mxCell>
+    <mxCell id="oi-id" value="PK  id              int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#1e3a5f;" vertex="1" parent="t-oi">
+      <mxGeometry y="28" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="oi-oid" value="FK  order_id      int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#b91c1c;" vertex="1" parent="t-oi">
+      <mxGeometry y="53" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="oi-pid" value="FK  product_id   int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#b91c1c;" vertex="1" parent="t-oi">
+      <mxGeometry y="78" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="oi-qty" value="     quantity      int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-oi">
+      <mxGeometry y="103" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="oi-price" value="     unit_price   decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-oi">
+      <mxGeometry y="128" width="200" height="25" as="geometry"/>
+    </mxCell>
+
+    <!-- products table -->
+    <mxCell id="t-prod" value="products" style="shape=table;startSize=28;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontStyle=1;strokeColor=#f43f5e;fillColor=#ffe4e6;fontSize=13;fontColor=#9f1239;shadow=1;rounded=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="590" y="380" width="200" height="178" as="geometry"/>
+    </mxCell>
+    <mxCell id="pr-id" value="PK  id              int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#1e3a5f;" vertex="1" parent="t-prod">
+      <mxGeometry y="28" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="pr-name" value="     name          varchar" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-prod">
+      <mxGeometry y="53" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="pr-price" value="     price          decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-prod">
+      <mxGeometry y="78" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="pr-stock" value="     stock          int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-prod">
+      <mxGeometry y="103" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="pr-cat" value="FK  category_id  int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#b91c1c;" vertex="1" parent="t-prod">
+      <mxGeometry y="128" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="pr-created" value="     created_at   timestamp" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-prod">
+      <mxGeometry y="153" width="200" height="25" as="geometry"/>
+    </mxCell>
+
+    <!-- categories table -->
+    <mxCell id="t-cat" value="categories" style="shape=table;startSize=28;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontStyle=1;strokeColor=#14b8a6;fillColor=#ccfbf1;fontSize=13;fontColor=#134e4a;shadow=1;rounded=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="310" y="430" width="200" height="103" as="geometry"/>
+    </mxCell>
+    <mxCell id="cat-id" value="PK  id              int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#1e3a5f;" vertex="1" parent="t-cat">
+      <mxGeometry y="28" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="cat-name" value="     name          varchar" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-cat">
+      <mxGeometry y="53" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="cat-pid" value="FK  parent_id    int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#b91c1c;" vertex="1" parent="t-cat">
+      <mxGeometry y="78" width="200" height="25" as="geometry"/>
+    </mxCell>
+
+    <!-- reviews table -->
+    <mxCell id="t-rev" value="reviews" style="shape=table;startSize=28;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontStyle=1;strokeColor=#6366f1;fillColor=#e0e7ff;fontSize=13;fontColor=#3730a3;shadow=1;rounded=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="20" y="380" width="200" height="153" as="geometry"/>
+    </mxCell>
+    <mxCell id="r-id" value="PK  id              int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#1e3a5f;" vertex="1" parent="t-rev">
+      <mxGeometry y="28" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="r-cid" value="FK  customer_id  int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#b91c1c;" vertex="1" parent="t-rev">
+      <mxGeometry y="53" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="r-pid" value="FK  product_id   int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#b91c1c;" vertex="1" parent="t-rev">
+      <mxGeometry y="78" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="r-rating" value="     rating         int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-rev">
+      <mxGeometry y="103" width="200" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="r-comment" value="     comment     text" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;fontSize=11;fontFamily=Courier New;fontColor=#374151;" vertex="1" parent="t-rev">
+      <mxGeometry y="128" width="200" height="25" as="geometry"/>
+    </mxCell>
+
+    <!-- RELATIONSHIP EDGES -->
+    <!-- customers 1:1 customer_profiles -->
+    <mxCell id="rel1" value="1:1" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#8b5cf6;strokeWidth=2;endArrow=diamond;endFill=1;startArrow=diamond;startFill=0;fontSize=10;fontColor=#8b5cf6;fontStyle=1;flowAnimation=1;" edge="1" source="t-cust" target="t-prof" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- customers 1:N orders -->
+    <mxCell id="rel2" value="1:N" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#10b981;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;fontSize=10;fontColor=#10b981;fontStyle=1;flowAnimation=1;" edge="1" source="t-cust" target="t-ord" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- customers 1:N reviews -->
+    <mxCell id="rel3" value="1:N" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#6366f1;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;fontSize=10;fontColor=#6366f1;fontStyle=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="t-cust" target="t-rev" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- orders 1:N order_items -->
+    <mxCell id="rel4" value="1:N" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#f59e0b;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;fontSize=10;fontColor=#f59e0b;fontStyle=1;flowAnimation=1;" edge="1" source="t-ord" target="t-oi" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- products 1:N order_items (N:M junction) -->
+    <mxCell id="rel5" value="N:M" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#f43f5e;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERmany;startFill=0;fontSize=10;fontColor=#f43f5e;fontStyle=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" source="t-prod" target="t-oi" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- categories 1:N products -->
+    <mxCell id="rel6" value="1:N" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#14b8a6;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;fontSize=10;fontColor=#14b8a6;fontStyle=1;flowAnimation=1;" edge="1" source="t-cat" target="t-prod" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- categories self-ref -->
+    <mxCell id="rel7" value="self" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#14b8a6;strokeWidth=1.5;dashed=1;endArrow=ERmany;endFill=0;fontSize=9;fontColor=#14b8a6;flowAnimation=1;exitX=0;exitY=0.7;entryX=0;entryY=0.3;" edge="1" source="t-cat" target="t-cat" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="280" y="510"/>
+          <mxPoint x="280" y="460"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <!-- products 1:N reviews -->
+    <mxCell id="rel8" value="1:N" style="edgeStyle=orthogonalEdgeStyle;curved=1;strokeColor=#6366f1;strokeWidth=2;endArrow=ERmany;endFill=0;startArrow=ERone;startFill=0;fontSize=10;fontColor=#6366f1;fontStyle=1;exitX=0;exitY=0.85;entryX=1;entryY=0.5;" edge="1" source="t-prod" target="t-rev" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
