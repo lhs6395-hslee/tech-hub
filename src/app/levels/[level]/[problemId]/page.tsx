@@ -142,12 +142,15 @@ export default function ProblemWorkspacePage() {
       // Step 3: Grade
       const result = gradeResult(userResult, expectedData.result, problem.gradingMode);
       setGradingResult(result);
+      setActiveTab('result');
 
       if (result.correct) {
-        completeProblem(problem.id, sqlValue, Math.max(0, hintIndex + 1));
+        try {
+          completeProblem(problem.id, sqlValue, Math.max(0, hintIndex + 1));
+        } catch {
+          // Progress save failed, but grading result is still valid
+        }
       }
-
-      setActiveTab('result');
     } catch {
       setQueryError(
         locale === 'ko'
@@ -308,7 +311,7 @@ export default function ProblemWorkspacePage() {
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="result" className="flex-1 overflow-auto mt-0 p-3">
-                <ResultTable result={queryResult} error={queryError} />
+                <ResultTable result={queryResult} error={gradingResultState ? null : queryError} />
               </TabsContent>
               <TabsContent value="explanation" className="flex-1 overflow-auto mt-0">
                 <Explanation problem={problem} />
