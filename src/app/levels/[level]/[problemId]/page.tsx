@@ -122,7 +122,11 @@ export default function ProblemWorkspacePage() {
     setGradingResult(null);
 
     try {
-      // Step 1: Execute user's query
+      // Step 1: Reset DB to clean state before grading
+      // (user may have already run DML that modified the data)
+      await resetDatabase();
+
+      // Step 2: Execute user's query against clean DB
       const userRes = await fetch('/api/execute-sql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -144,7 +148,9 @@ export default function ProblemWorkspacePage() {
       setQueryResult(userResult);
       recordAttempt(problem.id);
 
-      // Step 2: Execute the expected query
+      // Step 3: Reset DB again, then execute expected query against clean DB
+      await resetDatabase();
+
       const expectedRes = await fetch('/api/execute-sql', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -161,7 +167,7 @@ export default function ProblemWorkspacePage() {
         return;
       }
 
-      // Step 3: Grade
+      // Step 4: Grade
       const result = gradeResult(userResult, expectedData.result, problem.gradingMode);
       setGradingResult(result);
       setActiveTab('result');
@@ -174,7 +180,7 @@ export default function ProblemWorkspacePage() {
         }
       }
 
-      // Step 4: Reset DB after grading to restore clean state
+      // Step 5: Reset DB after grading to restore clean state
       await resetDatabase();
     } catch {
       setQueryError(
