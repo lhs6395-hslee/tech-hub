@@ -24,11 +24,11 @@ import {
   ArrowLeft,
   Sparkles,
   GraduationCap,
-  FileText,
   Copy,
   Check,
 } from 'lucide-react';
 import Link from 'next/link';
+import { sectionDiagrams } from '@/components/docs/DocDiagrams';
 
 const LEVEL_GRADIENTS: Record<string, string> = {
   beginner: 'from-emerald-500/20 via-emerald-500/5 to-transparent',
@@ -338,12 +338,33 @@ export default function DocsPage() {
                 </div>
               </div>
 
+              {/* Diagram (if available for this section) */}
+              {sectionDiagrams[selectedSection] && (() => {
+                const Diagram = sectionDiagrams[selectedSection];
+                return (
+                  <div className="max-w-3xl mx-auto px-6 pt-6">
+                    <Diagram locale={locale} />
+                  </div>
+                );
+              })()}
+
               {/* Markdown Content */}
-              <div className="max-w-3xl mx-auto px-6 py-8">
-                <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-h2:text-lg prose-h2:font-bold prose-h2:border-b prose-h2:pb-2 prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-base prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-p:leading-relaxed prose-li:leading-relaxed">
+              <div className="max-w-3xl mx-auto px-6 py-10">
+                <div className="prose dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-p:leading-7 prose-li:leading-7 prose-ul:my-4 prose-ol:my-4">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
+                      h2: ({ children }) => (
+                        <h2 className="flex items-center gap-3 text-xl font-bold mt-14 mb-6 pb-3 border-b border-border/60">
+                          <span className="w-1.5 h-7 rounded-full bg-primary shrink-0" />
+                          <span>{children}</span>
+                        </h2>
+                      ),
+                      h3: ({ children }) => (
+                        <h3 className="text-base font-semibold mt-10 mb-5 py-2.5 pl-4 border-l-[3px] border-primary/40 bg-muted/30 rounded-r-lg">
+                          {children}
+                        </h3>
+                      ),
                       code: ({ children, className, ...props }) => {
                         const isInline = !className;
                         if (isInline) {
@@ -370,15 +391,29 @@ export default function DocsPage() {
                             ? String((children as React.ReactElement<{ children?: React.ReactNode }>).props.children ?? '')
                             : '';
                         return (
-                          <div className="group relative my-4">
-                            <div className="absolute top-0 left-0 right-0 h-8 bg-muted/80 rounded-t-lg border-b border-border/50 flex items-center px-3 gap-1.5">
-                              <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
-                              <div className="w-2.5 h-2.5 rounded-full bg-amber-400/60" />
-                              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/60" />
-                              <span className="ml-2 text-[10px] text-muted-foreground font-mono">SQL</span>
-                            </div>
+                          <div className="group relative my-6">
+                            {(() => {
+                              const lang =
+                                typeof children === 'object' &&
+                                children !== null &&
+                                'props' in children
+                                  ? String(
+                                      (children as React.ReactElement<{ className?: string }>).props.className ?? ''
+                                    )
+                                      .replace('language-', '')
+                                      .toUpperCase()
+                                  : '';
+                              return (
+                                <div className="absolute top-0 left-0 right-0 h-8 bg-zinc-800 dark:bg-zinc-800/80 rounded-t-lg border-b border-zinc-700/50 flex items-center px-3 gap-1.5">
+                                  <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
+                                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400/60" />
+                                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/60" />
+                                  <span className="ml-2 text-[10px] text-zinc-400 font-mono">{lang || 'CODE'}</span>
+                                </div>
+                              );
+                            })()}
                             <pre
-                              className="rounded-lg bg-zinc-950 dark:bg-zinc-900/80 pt-10 pb-4 px-4 text-[12px] overflow-x-auto text-zinc-100 border border-border/30"
+                              className="rounded-lg bg-zinc-950 dark:bg-zinc-900/80 pt-10 pb-4 px-4 text-[12px] overflow-x-auto text-zinc-100 border border-zinc-700/40 [&_code]:!text-zinc-100 [&_code]:!bg-transparent [&_code]:!p-0 [&_code]:!rounded-none [&_code]:!border-0 [&_code]:!shadow-none [&_code]:!font-normal"
                               {...props}
                             >
                               {children}
@@ -388,7 +423,7 @@ export default function DocsPage() {
                         );
                       },
                       table: ({ children, ...props }) => (
-                        <div className="my-4 overflow-x-auto rounded-lg border border-border">
+                        <div className="my-6 overflow-x-auto rounded-lg border border-border">
                           <table className="text-xs w-full" {...props}>
                             {children}
                           </table>
@@ -408,7 +443,7 @@ export default function DocsPage() {
                         </td>
                       ),
                       blockquote: ({ children }) => (
-                        <div className="my-4 flex gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+                        <div className="my-6 flex gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
                           <Sparkles className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                           <div className="text-xs text-amber-800 dark:text-amber-200 [&>p]:m-0">
                             {children}
