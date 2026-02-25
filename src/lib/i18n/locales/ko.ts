@@ -13,6 +13,7 @@ export const ko = {
   nav: {
     home: '홈',
     levels: '레벨',
+    docs: '이론학습',
     progress: '진행도',
     settings: '설정',
   },

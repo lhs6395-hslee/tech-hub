@@ -15,6 +15,7 @@ export const en: TranslationKeys = {
   nav: {
     home: 'Home',
     levels: 'Levels',
+    docs: 'Theory',
     progress: 'Progress',
     settings: 'Settings',
   },
