@@ -3421,16 +3421,27 @@ LEFT JOIN orders o ON c.id = o.customer_id;
 
 ### JOIN 비교
 
-\`\`\`
-테이블 A        테이블 B
-┌───────┐      ┌───────┐
-│ 1, 2  │      │ 2, 3  │
-└───────┘      └───────┘
+예시 데이터로 각 JOIN 유형을 이해해봅시다:
+- **테이블 A**: 값 `{1, 2}`
+- **테이블 B**: 값 `{2, 3}`
 
-INNER JOIN:     2       (교집합)
-LEFT JOIN:      1, 2    (A 전체 + 교집합)
-RIGHT JOIN:     2, 3    (교집합 + B 전체)
-FULL OUTER:     1, 2, 3 (합집합)
+| JOIN 유형 | 결과 | 설명 | 집합 개념 |
+|-----------|------|------|----------|
+| **INNER JOIN** | `2` | 양쪽 모두에 존재하는 값만 | 교집합 (A ∩ B) |
+| **LEFT JOIN** | `1, 2` | A의 모든 값 + B와 일치하는 값 | A 전체 |
+| **RIGHT JOIN** | `2, 3` | B의 모든 값 + A와 일치하는 값 | B 전체 |
+| **FULL OUTER JOIN** | `1, 2, 3` | 양쪽 테이블의 모든 값 | 합집합 (A ∪ B) |
+
+**💡 실전 예시:**
+\`\`\`sql
+-- 테이블 A (customers): id가 1, 2인 고객
+-- 테이블 B (orders): customer_id가 2, 3인 주문
+
+-- INNER JOIN: 주문이 있는 고객만 (id=2)
+SELECT * FROM customers c INNER JOIN orders o ON c.id = o.customer_id;
+
+-- LEFT JOIN: 모든 고객 + 주문 정보 (id=1은 주문 NULL, id=2는 주문 있음)
+SELECT * FROM customers c LEFT JOIN orders o ON c.id = o.customer_id;
 \`\`\`
 
 ### 여러 테이블 JOIN
@@ -3493,16 +3504,27 @@ All rows from both tables (NULL where no match).
 
 ### JOIN Comparison
 
-\`\`\`
-Table A         Table B
-┌───────┐      ┌───────┐
-│ 1, 2  │      │ 2, 3  │
-└───────┘      └───────┘
+Let's understand each JOIN type with example data:
+- **Table A**: values `{1, 2}`
+- **Table B**: values `{2, 3}`
 
-INNER JOIN:     2       (intersection)
-LEFT JOIN:      1, 2    (all A + intersection)
-RIGHT JOIN:     2, 3    (intersection + all B)
-FULL OUTER:     1, 2, 3 (union)
+| JOIN Type | Result | Description | Set Concept |
+|-----------|--------|-------------|-------------|
+| **INNER JOIN** | `2` | Only values present in both | Intersection (A ∩ B) |
+| **LEFT JOIN** | `1, 2` | All values from A + matching from B | All of A |
+| **RIGHT JOIN** | `2, 3` | All values from B + matching from A | All of B |
+| **FULL OUTER JOIN** | `1, 2, 3` | All values from both tables | Union (A ∪ B) |
+
+**💡 Practical Example:**
+\`\`\`sql
+-- Table A (customers): id 1, 2
+-- Table B (orders): customer_id 2, 3
+
+-- INNER JOIN: Only customers with orders (id=2)
+SELECT * FROM customers c INNER JOIN orders o ON c.id = o.customer_id;
+
+-- LEFT JOIN: All customers + order info (id=1 has NULL orders, id=2 has orders)
+SELECT * FROM customers c LEFT JOIN orders o ON c.id = o.customer_id;
 \`\`\`
 
 ### Multiple Table JOINs
