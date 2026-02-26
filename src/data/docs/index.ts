@@ -842,7 +842,87 @@ customers ──1:1── customer_profiles
 | 자동 증가 PK | \`SERIAL\` / \`GENERATED ALWAYS AS IDENTITY\` | \`AUTO_INCREMENT\` |
 | FK 지원 | 모든 테이블 | **InnoDB**에서만 |
 | Deferred FK | \`DEFERRABLE INITIALLY DEFERRED\` 지원 | 미지원 |
-| CASCADE | \`ON DELETE CASCADE / SET NULL / RESTRICT\` | 동일 |`,
+| CASCADE | \`ON DELETE CASCADE / SET NULL / RESTRICT\` | 동일 |
+
+---
+
+## ER 모델 심화
+
+### 약한 엔터티 (Weak Entity)
+
+자체적인 기본키가 없어 **소유 엔터티(Owner Entity)**의 키에 의존하는 엔터티입니다.
+
+\`\`\`
+[rooms] ← 약한 엔터티
+  room_number (부분키)
+  building_id → [buildings] (소유 엔터티)
+
+기본키: (building_id, room_number) ← 복합키
+\`\`\`
+
+\`\`\`sql
+CREATE TABLE buildings (
+  id    SERIAL PRIMARY KEY,
+  name  VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE rooms (
+  building_id  INTEGER NOT NULL REFERENCES buildings(id) ON DELETE CASCADE,
+  room_number  VARCHAR(10) NOT NULL,
+  capacity     INTEGER,
+  PRIMARY KEY (building_id, room_number)  -- 복합키 = 소유자PK + 부분키
+);
+\`\`\`
+
+**약한 엔터티 조건:**
+- 소유 엔터티가 삭제되면 약한 엔터티도 삭제 (CASCADE)
+- 소유 관계는 항상 **1:N** (소유자 1 : 약한 엔터티 N)
+- ERD에서 이중 사각형(▭)으로 표기
+
+### 속성의 종류
+
+| 종류 | 설명 | ERD 처리 |
+|------|------|---------|
+| **단순 속성** | 더 이상 분해 불가 (이름, 가격) | 컬럼으로 직접 매핑 |
+| **복합 속성** | 분해 가능 (주소 → 시, 구, 동) | 개별 컬럼으로 분해 또는 별도 테이블 |
+| **다치 속성** | 여러 값 (전화번호 여러 개) | 별도 테이블로 분리 (1NF) |
+| **유도 속성** | 다른 속성에서 계산 (나이 ← 생년월일) | 저장 안 함 또는 파생 컬럼 |
+| **키 속성** | 엔터티를 고유 식별 | PRIMARY KEY |
+
+### E/R → 릴레이션 변환 규칙
+
+| ER 요소 | 릴레이션 변환 |
+|---------|-------------|
+| **강한 엔터티** | 테이블 1개, 속성 → 컬럼, 키 → PK |
+| **약한 엔터티** | 테이블 1개, PK = 소유자PK + 부분키 |
+| **1:1 관계** | FK(UNIQUE)를 한쪽에 추가 또는 테이블 병합 |
+| **1:N 관계** | N쪽에 FK 추가 |
+| **N:M 관계** | 중간 테이블 생성 (양쪽 FK가 복합 PK) |
+| **다치 속성** | 별도 테이블 (원래 엔터티 FK + 속성값) |
+| **관계의 속성** | 관계 테이블에 컬럼으로 추가 |
+
+\`\`\`sql
+-- N:M 관계 변환: students ↔ courses
+-- 관계 속성: grade (성적)
+CREATE TABLE enrollments (
+  student_id  INTEGER REFERENCES students(id),
+  course_id   INTEGER REFERENCES courses(id),
+  grade       CHAR(2),            -- 관계의 속성
+  semester    VARCHAR(10),
+  PRIMARY KEY (student_id, course_id, semester)
+);
+\`\`\`
+
+### ER 설계 원칙 (Design Principles)
+
+| 원칙 | 설명 |
+|------|------|
+| **충실성 (Faithfulness)** | 현실 세계를 정확히 반영 |
+| **중복 회피 (Avoid Redundancy)** | 같은 정보를 두 곳에 저장하지 않음 |
+| **단순성 (Simplicity)** | 불필요한 엔터티/관계를 만들지 않음 |
+| **올바른 관계 선택** | 엔터티 vs 속성, 관계 vs 엔터티를 신중히 결정 |
+
+> **속성 vs 엔터티 판단:** 해당 데이터가 자체 속성을 가지거나 다른 엔터티와 관계가 있으면 → 엔터티. 단순 값이면 → 속성.`,
           en: `## ERD (Entity-Relationship Diagram)
 
 An **ERD** is a visual blueprint showing the **tables (Entities)** and **relationships** in a database.
@@ -981,7 +1061,87 @@ customers ──1:1── customer_profiles
 | Auto-increment PK | \`SERIAL\` / \`GENERATED ALWAYS AS IDENTITY\` | \`AUTO_INCREMENT\` |
 | FK support | All tables | **InnoDB only** |
 | Deferred FK | \`DEFERRABLE INITIALLY DEFERRED\` | Not supported |
-| CASCADE | \`ON DELETE CASCADE / SET NULL / RESTRICT\` | Same |`,
+| CASCADE | \`ON DELETE CASCADE / SET NULL / RESTRICT\` | Same |
+
+---
+
+## ER Model Deep Dive
+
+### Weak Entity
+
+An entity that **lacks its own primary key** and depends on an **owner entity**.
+
+\`\`\`
+[rooms] ← Weak Entity
+  room_number (partial key)
+  building_id → [buildings] (Owner Entity)
+
+Primary Key: (building_id, room_number) ← composite key
+\`\`\`
+
+\`\`\`sql
+CREATE TABLE buildings (
+  id    SERIAL PRIMARY KEY,
+  name  VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE rooms (
+  building_id  INTEGER NOT NULL REFERENCES buildings(id) ON DELETE CASCADE,
+  room_number  VARCHAR(10) NOT NULL,
+  capacity     INTEGER,
+  PRIMARY KEY (building_id, room_number)  -- Composite = owner PK + partial key
+);
+\`\`\`
+
+**Weak entity requirements:**
+- If owner is deleted, weak entities are also deleted (CASCADE)
+- Identifying relationship is always **1:N** (owner 1 : weak N)
+- Shown as double rectangle (▭) in ERD notation
+
+### Types of Attributes
+
+| Type | Description | ERD Handling |
+|------|-------------|-------------|
+| **Simple** | Cannot decompose (name, price) | Map directly to column |
+| **Composite** | Decomposable (address → city, district) | Split into columns or separate table |
+| **Multi-valued** | Multiple values (multiple phone numbers) | Separate table (1NF) |
+| **Derived** | Computed from other attrs (age ← birthdate) | Don't store, or use derived column |
+| **Key** | Uniquely identifies entity | PRIMARY KEY |
+
+### E/R → Relation Conversion Rules
+
+| ER Element | Relation Conversion |
+|-----------|-------------------|
+| **Strong Entity** | 1 table, attributes → columns, key → PK |
+| **Weak Entity** | 1 table, PK = owner PK + partial key |
+| **1:1 Relationship** | Add FK(UNIQUE) to one side, or merge tables |
+| **1:N Relationship** | Add FK to the N-side |
+| **N:M Relationship** | Create junction table (both FKs as composite PK) |
+| **Multi-valued Attribute** | Separate table (entity FK + attribute value) |
+| **Relationship Attribute** | Add column to relationship table |
+
+\`\`\`sql
+-- N:M relationship: students ↔ courses
+-- Relationship attribute: grade
+CREATE TABLE enrollments (
+  student_id  INTEGER REFERENCES students(id),
+  course_id   INTEGER REFERENCES courses(id),
+  grade       CHAR(2),            -- Relationship attribute
+  semester    VARCHAR(10),
+  PRIMARY KEY (student_id, course_id, semester)
+);
+\`\`\`
+
+### ER Design Principles
+
+| Principle | Description |
+|-----------|-------------|
+| **Faithfulness** | Accurately reflect the real world |
+| **Avoid Redundancy** | Don't store the same info in two places |
+| **Simplicity** | Don't create unnecessary entities/relationships |
+| **Right Relationships** | Carefully decide: entity vs attribute, relationship vs entity |
+
+> **Attribute vs Entity decision:** If the data has its own attributes or relates to other entities → make it an Entity. If it's a simple value → Attribute.`,
         },
       },
       {
@@ -2404,6 +2564,143 @@ Core transformation rules used by the optimizer:
         },
       },
       {
+        id: 'relational-calculus',
+        title: { ko: '관계 해석 (Relational Calculus)', en: 'Relational Calculus' },
+        level: 'intermediate',
+        content: {
+          ko: `## 관계 해석 (Relational Calculus)
+
+관계 대수가 **"어떻게" 데이터를 가져오는가** (절차적)를 기술한다면, 관계 해석은 **"무엇을" 원하는가** (선언적)를 기술합니다. SQL은 관계 해석에 더 가깝습니다.
+
+### 튜플 관계 해석 (Tuple Relational Calculus, TRC)
+
+변수가 **튜플(행)**을 나타냅니다.
+
+\`\`\`
+형식: { t | P(t) }
+의미: 조건 P를 만족하는 모든 튜플 t의 집합
+
+예시: 가격 10만 이상 상품
+{ t | t ∈ Products ∧ t.price > 100000 }
+→ SQL: SELECT * FROM products WHERE price > 100000;
+\`\`\`
+
+**존재 한정자 (∃):**
+\`\`\`
+주문이 있는 고객:
+{ c | c ∈ Customers ∧ ∃o(o ∈ Orders ∧ o.customer_id = c.id) }
+→ SQL: SELECT * FROM customers c
+       WHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);
+\`\`\`
+
+**전체 한정자 (∀):**
+\`\`\`
+모든 상품을 주문한 고객:
+{ c | c ∈ Customers ∧ ∀p(p ∈ Products →
+      ∃oi(oi ∈ OrderItems ∧ oi.product_id = p.id ∧
+          ∃o(o ∈ Orders ∧ o.id = oi.order_id ∧ o.customer_id = c.id))) }
+→ SQL: 관계 나눗셈(Division)으로 구현 (NOT EXISTS + NOT EXISTS)
+\`\`\`
+
+### 도메인 관계 해석 (Domain Relational Calculus, DRC)
+
+변수가 **도메인 값(속성값)**을 나타냅니다.
+
+\`\`\`
+형식: { <x1, x2, ...> | P(x1, x2, ...) }
+
+예시: 가격 10만 이상 상품의 이름과 가격
+{ <n, p> | ∃id,cid,s(Products(id, n, cid, p, s) ∧ p > 100000) }
+→ SQL: SELECT name, price FROM products WHERE price > 100000;
+\`\`\`
+
+### 관계 대수 vs 관계 해석 vs SQL
+
+| 특성 | 관계 대수 | 관계 해석 | SQL |
+|------|----------|----------|-----|
+| **패러다임** | 절차적 (How) | 선언적 (What) | 선언적 (What) |
+| **기반** | 집합 연산 | 수학 논리 (1차 술어 논리) | 관계 해석 기반 |
+| **변수** | 릴레이션 | 튜플 또는 도메인 값 | 테이블/컬럼 |
+| **표현력** | 동일 | 동일 (안전한 표현식 한정) | 동일 + 확장 (집계 등) |
+
+> **Codd의 정리:** 관계 대수와 (안전한) 관계 해석의 표현력은 동등합니다. SQL은 이 둘에 집계 함수, 정렬 등을 추가한 것입니다.
+
+### 안전한 표현식 (Safe Expression)
+
+관계 해석에서는 무한 결과를 반환하는 표현식이 가능합니다:
+\`\`\`
+{ t | ¬(t ∈ Products) }  → Products에 없는 모든 튜플 = 무한!
+\`\`\`
+
+**안전한 표현식:** 결과가 항상 유한하고 도메인 내 값만 포함하는 표현식. 실제 DBMS (SQL)는 안전한 표현식만 허용합니다.`,
+          en: `## Relational Calculus
+
+While relational algebra describes **"how" to get data** (procedural), relational calculus describes **"what" you want** (declarative). SQL is closer to relational calculus.
+
+### Tuple Relational Calculus (TRC)
+
+Variables represent **tuples (rows)**.
+
+\`\`\`
+Form: { t | P(t) }
+Meaning: Set of all tuples t satisfying condition P
+
+Example: Products priced over 100K
+{ t | t ∈ Products ∧ t.price > 100000 }
+→ SQL: SELECT * FROM products WHERE price > 100000;
+\`\`\`
+
+**Existential quantifier (∃):**
+\`\`\`
+Customers who have orders:
+{ c | c ∈ Customers ∧ ∃o(o ∈ Orders ∧ o.customer_id = c.id) }
+→ SQL: SELECT * FROM customers c
+       WHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);
+\`\`\`
+
+**Universal quantifier (∀):**
+\`\`\`
+Customers who ordered every product:
+{ c | c ∈ Customers ∧ ∀p(p ∈ Products →
+      ∃oi(oi ∈ OrderItems ∧ oi.product_id = p.id ∧
+          ∃o(o ∈ Orders ∧ o.id = oi.order_id ∧ o.customer_id = c.id))) }
+→ SQL: Implemented via relational division (NOT EXISTS + NOT EXISTS)
+\`\`\`
+
+### Domain Relational Calculus (DRC)
+
+Variables represent **domain values (attribute values)**.
+
+\`\`\`
+Form: { <x1, x2, ...> | P(x1, x2, ...) }
+
+Example: Name and price of products over 100K
+{ <n, p> | ∃id,cid,s(Products(id, n, cid, p, s) ∧ p > 100000) }
+→ SQL: SELECT name, price FROM products WHERE price > 100000;
+\`\`\`
+
+### Relational Algebra vs Calculus vs SQL
+
+| Feature | Relational Algebra | Relational Calculus | SQL |
+|---------|-------------------|-------------------|-----|
+| **Paradigm** | Procedural (How) | Declarative (What) | Declarative (What) |
+| **Based on** | Set operations | Math logic (first-order predicate logic) | Based on calculus |
+| **Variables** | Relations | Tuples or domain values | Tables/columns |
+| **Expressive power** | Equal | Equal (safe expressions only) | Equal + extensions (aggregates, etc.) |
+
+> **Codd's Theorem:** Relational algebra and (safe) relational calculus have equivalent expressive power. SQL adds aggregate functions, sorting, etc. on top of both.
+
+### Safe Expressions
+
+Relational calculus can express queries that return infinite results:
+\`\`\`
+{ t | ¬(t ∈ Products) }  → All tuples NOT in Products = infinite!
+\`\`\`
+
+**Safe expression:** An expression whose result is always finite and contains only values from the domain. Real DBMS (SQL) only allow safe expressions.`,
+        },
+      },
+      {
         id: 'normalization-theory',
         title: { ko: '정규화 이론 심화', en: 'Normalization Theory Deep Dive' },
         level: 'intermediate',
@@ -2503,7 +2800,64 @@ R1 ∩ R2 → R1 또는 R1 ∩ R2 → R2 이면 무손실 분해
 
 분해된 테이블들에서 원래 FD를 모두 **로컬하게 검증**할 수 있어야 합니다.
 
-> **실무 지침:** BCNF와 종속성 보존을 동시에 달성할 수 없는 경우가 있습니다. 이때는 3NF로 타협하는 것이 일반적입니다.`,
+> **실무 지침:** BCNF와 종속성 보존을 동시에 달성할 수 없는 경우가 있습니다. 이때는 3NF로 타협하는 것이 일반적입니다.
+
+### 다치 종속 (Multi-valued Dependency, MVD)
+
+하나의 속성이 다른 속성의 **값 집합을 독립적으로 결정**하는 관계입니다.
+
+\`\`\`
+교수(이름, 과목, 취미)
+
+김교수 | DB     | 등산
+김교수 | DB     | 독서
+김교수 | 네트워크 | 등산
+김교수 | 네트워크 | 독서  ← 과목과 취미의 모든 조합이 존재해야 함
+
+이름 →→ 과목   (이름이 과목 집합을 결정)
+이름 →→ 취미   (이름이 취미 집합을 결정)
+과목과 취미는 서로 독립 → 불필요한 중복!
+\`\`\`
+
+### 4NF (제4정규형)
+
+- BCNF + **비자명 다치 종속의 결정자가 슈퍼키**
+
+\`\`\`
+위반: 교수(이름, 과목, 취미) — 이름 →→ 과목, 이름 →→ 취미
+해결: 교수_과목(이름, 과목) + 교수_취미(이름, 취미) 로 분해
+\`\`\`
+
+\`\`\`sql
+-- 4NF 위반 상태
+CREATE TABLE professor_bad (
+  name    VARCHAR(50),
+  course  VARCHAR(50),
+  hobby   VARCHAR(50)
+);
+-- 김교수 × 2과목 × 2취미 = 4행 (중복!)
+
+-- 4NF 분해
+CREATE TABLE professor_courses (
+  name    VARCHAR(50),
+  course  VARCHAR(50),
+  PRIMARY KEY (name, course)
+);
+CREATE TABLE professor_hobbies (
+  name    VARCHAR(50),
+  hobby   VARCHAR(50),
+  PRIMARY KEY (name, hobby)
+);
+-- 김교수: 2행 + 2행 = 4행 → 중복 없음!
+\`\`\`
+
+### 정규형 관계도
+
+\`\`\`
+1NF ⊃ 2NF ⊃ 3NF ⊃ BCNF ⊃ 4NF ⊃ 5NF
+ ↑                                     ↑
+모든 릴레이션               실무에서는 거의 여기까지
+\`\`\``,
           en: `## Functional Dependencies (FD)
 
 The core theory behind normalization. If attribute set X **functionally determines** Y, we write X → Y.
@@ -2599,7 +2953,64 @@ R1 ∩ R2 → R1  OR  R1 ∩ R2 → R2  guarantees lossless decomposition
 
 All original FDs should be verifiable **locally** within the decomposed tables.
 
-> **Practical guideline:** It's sometimes impossible to achieve both BCNF and dependency preservation. In such cases, settling for 3NF is the common practice.`,
+> **Practical guideline:** It's sometimes impossible to achieve both BCNF and dependency preservation. In such cases, settling for 3NF is the common practice.
+
+### Multi-valued Dependency (MVD)
+
+An attribute **independently determines a set of values** for another attribute.
+
+\`\`\`
+Professor(Name, Course, Hobby)
+
+Prof Kim | DB      | Hiking
+Prof Kim | DB      | Reading
+Prof Kim | Networks| Hiking
+Prof Kim | Networks| Reading  ← All combinations of courses × hobbies must exist
+
+Name →→ Course   (Name determines the set of courses)
+Name →→ Hobby    (Name determines the set of hobbies)
+Courses and hobbies are independent → unnecessary redundancy!
+\`\`\`
+
+### 4NF (Fourth Normal Form)
+
+- BCNF + **every non-trivial MVD's determinant is a superkey**
+
+\`\`\`
+Violation: Professor(Name, Course, Hobby) — Name →→ Course, Name →→ Hobby
+Solution: Professor_Courses(Name, Course) + Professor_Hobbies(Name, Hobby)
+\`\`\`
+
+\`\`\`sql
+-- 4NF violation
+CREATE TABLE professor_bad (
+  name    VARCHAR(50),
+  course  VARCHAR(50),
+  hobby   VARCHAR(50)
+);
+-- Prof Kim × 2 courses × 2 hobbies = 4 rows (redundant!)
+
+-- 4NF decomposition
+CREATE TABLE professor_courses (
+  name    VARCHAR(50),
+  course  VARCHAR(50),
+  PRIMARY KEY (name, course)
+);
+CREATE TABLE professor_hobbies (
+  name    VARCHAR(50),
+  hobby   VARCHAR(50),
+  PRIMARY KEY (name, hobby)
+);
+-- Prof Kim: 2 rows + 2 rows = 4 rows total → no redundancy!
+\`\`\`
+
+### Normal Form Hierarchy
+
+\`\`\`
+1NF ⊃ 2NF ⊃ 3NF ⊃ BCNF ⊃ 4NF ⊃ 5NF
+ ↑                                     ↑
+All relations              Practical limit in practice
+\`\`\``,
         },
       },
       {
@@ -4155,6 +4566,61 @@ CREATE FULLTEXT INDEX idx_product_name ON products(name);
 SELECT * FROM products WHERE MATCH(name) AGAINST('wireless');
 \`\`\`
 
+### 해시 인덱스 (Hash Index)
+
+해시 함수를 사용하여 키를 버킷에 매핑하는 인덱스입니다.
+
+\`\`\`sql
+-- PostgreSQL: 해시 인덱스 생성
+CREATE INDEX idx_customers_email_hash ON customers USING HASH(email);
+\`\`\`
+
+**구조:**
+\`\`\`
+해시 함수: h(key) → 버킷 번호
+버킷 0: [key1→ctid, key5→ctid, ...]
+버킷 1: [key2→ctid, key8→ctid, ...]
+버킷 2: [key3→ctid, ...]
+...
+\`\`\`
+
+| 특성 | B-tree | Hash |
+|------|--------|------|
+| 등호 (=) | ✓ O(log N) | ✓ **O(1)** |
+| 범위 (<, >, BETWEEN) | ✓ | ✗ 불가능 |
+| 정렬 (ORDER BY) | ✓ | ✗ 불가능 |
+| WAL 지원 | ✓ | ✓ (PG 10+) |
+| 크기 | 더 큼 | 더 작음 |
+
+> **실무:** PostgreSQL에서는 B-tree가 거의 모든 경우에 충분합니다. 해시 인덱스는 매우 큰 테이블의 정확 일치 검색에서만 미세한 이점이 있습니다.
+
+### 비트맵 인덱스 (Bitmap Index)
+
+각 값에 대해 **비트 배열**을 생성하는 인덱스입니다. 선택도가 낮은 컬럼(성별, 상태 등)에 효과적입니다.
+
+\`\`\`
+products.status 컬럼: 'active', 'inactive', 'discontinued'
+
+active:       [1, 0, 1, 1, 0, 0, 1, 1, ...]
+inactive:     [0, 1, 0, 0, 1, 0, 0, 0, ...]
+discontinued: [0, 0, 0, 0, 0, 1, 0, 0, ...]
+
+WHERE status = 'active' AND category_id = 3
+→ bitmap_status_active AND bitmap_category_3 → 비트 AND 연산으로 빠른 필터링
+\`\`\`
+
+- **Oracle**: 명시적 CREATE BITMAP INDEX 지원
+- **PostgreSQL**: 명시적 비트맵 인덱스는 없지만, 쿼리 실행 시 **Bitmap Index Scan**으로 여러 인덱스를 비트맵 AND/OR 결합
+- **MySQL**: 비트맵 인덱스 미지원
+
+\`\`\`sql
+-- PostgreSQL: 비트맵 스캔 확인 (EXPLAIN에서 볼 수 있음)
+EXPLAIN ANALYZE
+SELECT * FROM products WHERE category_id = 3 AND price > 50000;
+-- → Bitmap Index Scan on idx_products_category
+-- → Bitmap Heap Scan on products
+\`\`\`
+
 ### 인덱스 주의사항
 
 - INSERT/UPDATE/DELETE 성능이 약간 저하됨
@@ -4297,6 +4763,61 @@ INCLUDE (order_date, total_amount);
 -- FULLTEXT index (full-text search)
 CREATE FULLTEXT INDEX idx_product_name ON products(name);
 SELECT * FROM products WHERE MATCH(name) AGAINST('wireless');
+\`\`\`
+
+### Hash Index
+
+An index that maps keys to buckets using a hash function.
+
+\`\`\`sql
+-- PostgreSQL: create hash index
+CREATE INDEX idx_customers_email_hash ON customers USING HASH(email);
+\`\`\`
+
+**Structure:**
+\`\`\`
+Hash function: h(key) → bucket number
+Bucket 0: [key1→ctid, key5→ctid, ...]
+Bucket 1: [key2→ctid, key8→ctid, ...]
+Bucket 2: [key3→ctid, ...]
+...
+\`\`\`
+
+| Feature | B-tree | Hash |
+|---------|--------|------|
+| Equality (=) | ✓ O(log N) | ✓ **O(1)** |
+| Range (<, >, BETWEEN) | ✓ | ✗ Not possible |
+| Sorting (ORDER BY) | ✓ | ✗ Not possible |
+| WAL support | ✓ | ✓ (PG 10+) |
+| Size | Larger | Smaller |
+
+> **In practice:** B-tree is sufficient for almost all cases in PostgreSQL. Hash indexes offer marginal benefit only for exact-match lookups on very large tables.
+
+### Bitmap Index
+
+An index that creates a **bit array** for each distinct value. Effective for low-selectivity columns (gender, status, etc.).
+
+\`\`\`
+products.status column: 'active', 'inactive', 'discontinued'
+
+active:       [1, 0, 1, 1, 0, 0, 1, 1, ...]
+inactive:     [0, 1, 0, 0, 1, 0, 0, 0, ...]
+discontinued: [0, 0, 0, 0, 0, 1, 0, 0, ...]
+
+WHERE status = 'active' AND category_id = 3
+→ bitmap_status_active AND bitmap_category_3 → fast filtering via bitwise AND
+\`\`\`
+
+- **Oracle**: Explicit CREATE BITMAP INDEX
+- **PostgreSQL**: No explicit bitmap index, but uses **Bitmap Index Scan** at query time to combine multiple indexes via bitmap AND/OR
+- **MySQL**: No bitmap index support
+
+\`\`\`sql
+-- PostgreSQL: see bitmap scan in action
+EXPLAIN ANALYZE
+SELECT * FROM products WHERE category_id = 3 AND price > 50000;
+-- → Bitmap Index Scan on idx_products_category
+-- → Bitmap Heap Scan on products
 \`\`\`
 
 ### Index Considerations
@@ -7355,6 +7876,283 @@ SELECT 'products', COUNT(*) FROM products;
 -- Checksum comparison (PostgreSQL)
 SELECT md5(string_agg(t::text, ''))
 FROM (SELECT * FROM customers ORDER BY id) t;
+\`\`\``,
+        },
+      },
+      {
+        id: 'disk-page-structure',
+        title: { ko: '디스크와 페이지 구조', en: 'Disk & Page Structure' },
+        level: 'database',
+        content: {
+          ko: `## 메모리 계층 구조
+
+데이터베이스 성능의 핵심은 **디스크 I/O를 최소화**하는 것입니다.
+
+\`\`\`
+[CPU 레지스터]     ← 가장 빠름, 가장 작음
+     ↓
+[CPU 캐시 (L1/L2/L3)]
+     ↓
+[메인 메모리 (RAM)]  ← 버퍼 풀이 여기에 위치
+     ↓
+[SSD / HDD]        ← 데이터 파일이 여기에 저장
+     ↓
+[네트워크 스토리지]   ← 가장 느림, 가장 큼
+\`\`\`
+
+| 계층 | 접근 시간 | 용량 |
+|------|----------|------|
+| L1 캐시 | ~1ns | 64KB |
+| 메인 메모리 | ~100ns | 16-512GB |
+| SSD | ~100μs (100,000ns) | 1-16TB |
+| HDD | ~10ms (10,000,000ns) | 1-20TB |
+
+> RAM vs SSD는 **약 1,000배** 속도 차이. 이것이 인덱스와 버퍼 풀이 중요한 이유입니다.
+
+## 페이지 (Page / Block)
+
+DBMS가 디스크와 메모리 사이에서 **데이터를 주고받는 최소 단위**입니다.
+
+\`\`\`
+페이지 크기:
+  PostgreSQL: 8KB (기본, 컴파일 시 변경 가능)
+  MySQL/InnoDB: 16KB (기본, innodb_page_size로 변경)
+\`\`\`
+
+### 슬롯 페이지 (Slotted Page) 구조
+
+대부분의 RDBMS가 사용하는 페이지 내부 구조입니다.
+
+\`\`\`
+┌─────────────────────────────────────┐
+│ Page Header                          │ ← 페이지 메타데이터 (LSN, checksum 등)
+├─────────────────────────────────────┤
+│ Line Pointer Array (슬롯 디렉토리)    │ ← 각 행의 오프셋과 길이
+│ [Slot1: offset=7800, len=120]       │
+│ [Slot2: offset=7680, len=95]        │
+│ [Slot3: offset=7580, len=100]       │
+├─────────────────────────────────────┤
+│                                      │
+│         빈 공간 (Free Space)          │ ← 새 행 삽입에 사용
+│                                      │
+├─────────────────────────────────────┤
+│ [Row 3 데이터] (offset 7580)        │ ← 아래에서 위로 채워짐
+│ [Row 2 데이터] (offset 7680)        │
+│ [Row 1 데이터] (offset 7800)        │
+└─────────────────────────────────────┘
+\`\`\`
+
+**핵심 포인트:**
+- 슬롯 포인터는 위→아래로, 실제 데이터는 아래→위로 채워짐
+- 행을 삭제하면 슬롯을 "사용 안 함"으로 표시 (PostgreSQL: dead tuple)
+- 행 이동 시 슬롯 포인터만 갱신 → 인덱스의 CTID가 유효 유지
+
+### PostgreSQL 페이지 구조
+
+\`\`\`sql
+-- 페이지 크기 확인
+SHOW block_size;  -- 8192 (8KB)
+
+-- 페이지 헤더 정보 (pageinspect 확장)
+CREATE EXTENSION IF NOT EXISTS pageinspect;
+SELECT * FROM page_header(get_raw_page('products', 0));
+-- lsn, checksum, flags, lower, upper, special, pagesize, version
+
+-- 행 포인터 (line pointer) 확인
+SELECT * FROM heap_page_item_attrs(get_raw_page('products', 0), 'products');
+\`\`\`
+
+## 레코드 (Tuple / Row) 형식
+
+### 고정 길이 vs 가변 길이
+
+| 타입 | 예시 | 저장 |
+|------|------|------|
+| **고정 길이** | INTEGER(4B), CHAR(10)(10B), BOOLEAN(1B) | 항상 동일한 크기 |
+| **가변 길이** | VARCHAR(n), TEXT, JSONB | 헤더에 길이 정보 포함 |
+
+### PostgreSQL 튜플 구조 (HeapTupleHeader)
+
+\`\`\`
+┌──────────────────────────────────┐
+│ HeapTupleHeader (23 bytes)        │
+│ - t_xmin: 삽입한 트랜잭션 ID      │
+│ - t_xmax: 삭제한 트랜잭션 ID      │
+│ - t_ctid: (페이지번호, 슬롯번호)   │
+│ - t_infomask: 행 상태 플래그      │
+│ - t_hoff: 사용자 데이터 시작 위치  │
+├──────────────────────────────────┤
+│ NULL 비트맵 (선택적)               │ ← 어떤 컬럼이 NULL인지
+├──────────────────────────────────┤
+│ 사용자 데이터 (실제 컬럼 값)       │
+│ [col1_value][col2_value][...]     │
+└──────────────────────────────────┘
+\`\`\`
+
+## 파일 구조 (File Organization)
+
+### 힙 파일 (Heap File)
+
+가장 기본적인 저장 방식입니다. 행이 **삽입 순서대로** 페이지에 저장됩니다.
+
+\`\`\`
+힙 파일: [Page0][Page1][Page2]...[PageN]
+
+장점: 삽입이 빠름 (끝에 추가)
+단점: 검색 시 전체 스캔 필요 (인덱스 없으면)
+\`\`\`
+
+### 기타 파일 구조
+
+| 구조 | 원리 | 용도 |
+|------|------|------|
+| **힙 파일** | 순서 없이 저장 | 범용 (RDBMS 기본) |
+| **정렬 파일** | 특정 키로 정렬 저장 | 범위 검색 최적화 |
+| **해시 파일** | 해시 함수로 버킷에 분배 | 정확 일치 검색 |
+| **클러스터 인덱스** | 인덱스 순서 = 데이터 물리 순서 | InnoDB의 PK |
+
+\`\`\`sql
+-- PostgreSQL: 테이블의 물리적 크기와 페이지 수
+SELECT pg_relation_size('products') AS bytes,
+       pg_relation_size('products') / 8192 AS pages;
+
+-- InnoDB: 클러스터 인덱스 (PK = 물리적 정렬 키)
+-- MySQL에서는 PK가 곧 데이터 정렬 순서를 결정
+\`\`\``,
+          en: `## Memory Hierarchy
+
+The key to database performance is **minimizing disk I/O**.
+
+\`\`\`
+[CPU Registers]        ← Fastest, smallest
+     ↓
+[CPU Cache (L1/L2/L3)]
+     ↓
+[Main Memory (RAM)]    ← Buffer pool lives here
+     ↓
+[SSD / HDD]           ← Data files stored here
+     ↓
+[Network Storage]      ← Slowest, largest
+\`\`\`
+
+| Level | Access Time | Capacity |
+|-------|------------|----------|
+| L1 Cache | ~1ns | 64KB |
+| Main Memory | ~100ns | 16-512GB |
+| SSD | ~100μs (100,000ns) | 1-16TB |
+| HDD | ~10ms (10,000,000ns) | 1-20TB |
+
+> RAM vs SSD is a **~1,000x** speed difference. This is why indexes and buffer pools matter.
+
+## Page / Block
+
+The **minimum unit of data transfer** between disk and memory in a DBMS.
+
+\`\`\`
+Page sizes:
+  PostgreSQL: 8KB (default, configurable at compile time)
+  MySQL/InnoDB: 16KB (default, innodb_page_size)
+\`\`\`
+
+### Slotted Page Structure
+
+The internal page format used by most RDBMS.
+
+\`\`\`
+┌─────────────────────────────────────┐
+│ Page Header                          │ ← Page metadata (LSN, checksum, etc.)
+├─────────────────────────────────────┤
+│ Line Pointer Array (Slot Directory)  │ ← Offset and length of each row
+│ [Slot1: offset=7800, len=120]       │
+│ [Slot2: offset=7680, len=95]        │
+│ [Slot3: offset=7580, len=100]       │
+├─────────────────────────────────────┤
+│                                      │
+│         Free Space                    │ ← Used for new row inserts
+│                                      │
+├─────────────────────────────────────┤
+│ [Row 3 data] (offset 7580)          │ ← Fills bottom-up
+│ [Row 2 data] (offset 7680)          │
+│ [Row 1 data] (offset 7800)          │
+└─────────────────────────────────────┘
+\`\`\`
+
+**Key points:**
+- Slot pointers grow top→down, actual data fills bottom→up
+- Deleting a row marks the slot as "unused" (PostgreSQL: dead tuple)
+- When a row moves, only the slot pointer updates → index CTIDs remain valid
+
+### PostgreSQL Page Structure
+
+\`\`\`sql
+-- Check page size
+SHOW block_size;  -- 8192 (8KB)
+
+-- Page header info (pageinspect extension)
+CREATE EXTENSION IF NOT EXISTS pageinspect;
+SELECT * FROM page_header(get_raw_page('products', 0));
+-- lsn, checksum, flags, lower, upper, special, pagesize, version
+
+-- Line pointers
+SELECT * FROM heap_page_item_attrs(get_raw_page('products', 0), 'products');
+\`\`\`
+
+## Record (Tuple / Row) Format
+
+### Fixed-Length vs Variable-Length
+
+| Type | Examples | Storage |
+|------|---------|---------|
+| **Fixed-length** | INTEGER(4B), CHAR(10)(10B), BOOLEAN(1B) | Always same size |
+| **Variable-length** | VARCHAR(n), TEXT, JSONB | Length info in header |
+
+### PostgreSQL Tuple Structure (HeapTupleHeader)
+
+\`\`\`
+┌──────────────────────────────────┐
+│ HeapTupleHeader (23 bytes)        │
+│ - t_xmin: Transaction that inserted│
+│ - t_xmax: Transaction that deleted │
+│ - t_ctid: (page_number, slot_num) │
+│ - t_infomask: Row status flags     │
+│ - t_hoff: Offset to user data     │
+├──────────────────────────────────┤
+│ NULL Bitmap (optional)             │ ← Which columns are NULL
+├──────────────────────────────────┤
+│ User Data (actual column values)   │
+│ [col1_value][col2_value][...]     │
+└──────────────────────────────────┘
+\`\`\`
+
+## File Organization
+
+### Heap File
+
+The most basic storage method. Rows are stored in pages in **insertion order**.
+
+\`\`\`
+Heap File: [Page0][Page1][Page2]...[PageN]
+
+Pros: Fast inserts (append to end)
+Cons: Full scan needed for search (without index)
+\`\`\`
+
+### Other File Organizations
+
+| Structure | Principle | Use Case |
+|-----------|-----------|----------|
+| **Heap file** | Unordered storage | General purpose (RDBMS default) |
+| **Sorted file** | Stored sorted by key | Range query optimization |
+| **Hash file** | Hash function distributes to buckets | Exact match lookups |
+| **Clustered index** | Index order = physical data order | InnoDB's primary key |
+
+\`\`\`sql
+-- PostgreSQL: table physical size and page count
+SELECT pg_relation_size('products') AS bytes,
+       pg_relation_size('products') / 8192 AS pages;
+
+-- InnoDB: clustered index (PK = physical sort order)
+-- In MySQL, the PK determines the physical row ordering
 \`\`\``,
         },
       },
