@@ -35,6 +35,9 @@ export default function Header() {
           <Link href="/simulator" className="text-muted-foreground hover:text-foreground transition-colors">
             {t('nav.simulator')}
           </Link>
+          <Link href="/quiz" className="text-muted-foreground hover:text-foreground transition-colors">
+            {t('nav.quiz')}
+          </Link>
         </nav>
 
         <div className="flex items-center gap-2 ml-auto">

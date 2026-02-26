@@ -15,6 +15,7 @@ export const ko = {
     levels: '레벨',
     docs: '이론학습',
     simulator: '시뮬레이터',
+    quiz: '퀴즈',
     progress: '진행도',
     settings: '설정',
   },

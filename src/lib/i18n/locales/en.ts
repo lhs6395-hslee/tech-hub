@@ -17,6 +17,7 @@ export const en: TranslationKeys = {
     levels: 'Levels',
     docs: 'Theory',
     simulator: 'Simulator',
+    quiz: 'Quiz',
     progress: 'Progress',
     settings: 'Settings',
   },
