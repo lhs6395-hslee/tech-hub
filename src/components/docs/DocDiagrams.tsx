@@ -291,11 +291,67 @@ function JoinVenn({ type, id }: { type: JoinType; id: string }) {
 }
 
 export function JoinTypesDiagram({ locale }: DiagramProps) {
-  const types: { type: JoinType; name: string; desc: { ko: string; en: string } }[] = [
-    { type: 'inner', name: 'INNER JOIN', desc: { ko: '양쪽 모두 일치하는 행만 반환', en: 'Only matching rows from both tables' } },
-    { type: 'left', name: 'LEFT JOIN', desc: { ko: '왼쪽(A) 전체 + 오른쪽 일치', en: 'All from A + matching from B' } },
-    { type: 'right', name: 'RIGHT JOIN', desc: { ko: '왼쪽 일치 + 오른쪽(B) 전체', en: 'Matching from A + all from B' } },
-    { type: 'full', name: 'FULL OUTER JOIN', desc: { ko: '양쪽 모두의 전체 행 (합집합)', en: 'All rows from both (union)' } },
+  const [activeType, setActiveType] = useState<JoinType | null>(null);
+
+  const types: {
+    type: JoinType;
+    name: string;
+    desc: { ko: string; en: string };
+    example: { ko: string; en: string };
+    result: { ko: string; en: string };
+  }[] = [
+    {
+      type: 'inner',
+      name: 'INNER JOIN',
+      desc: { ko: '양쪽 모두 일치하는 행만 반환', en: 'Only matching rows from both tables' },
+      example: {
+        ko: 'SELECT * FROM customers c INNER JOIN orders o ON c.id = o.customer_id;',
+        en: 'SELECT * FROM customers c INNER JOIN orders o ON c.id = o.customer_id;'
+      },
+      result: {
+        ko: '주문이 있는 고객만 반환 (고객 ID가 양쪽 테이블에 모두 존재)',
+        en: 'Returns only customers who have orders (customer ID exists in both tables)'
+      }
+    },
+    {
+      type: 'left',
+      name: 'LEFT JOIN',
+      desc: { ko: '왼쪽(A) 전체 + 오른쪽 일치', en: 'All from A + matching from B' },
+      example: {
+        ko: 'SELECT * FROM customers c LEFT JOIN orders o ON c.id = o.customer_id;',
+        en: 'SELECT * FROM customers c LEFT JOIN orders o ON c.id = o.customer_id;'
+      },
+      result: {
+        ko: '모든 고객 반환 (주문이 없으면 orders 컬럼은 NULL)',
+        en: 'Returns all customers (orders columns are NULL if no orders)'
+      }
+    },
+    {
+      type: 'right',
+      name: 'RIGHT JOIN',
+      desc: { ko: '왼쪽 일치 + 오른쪽(B) 전체', en: 'Matching from A + all from B' },
+      example: {
+        ko: 'SELECT * FROM customers c RIGHT JOIN orders o ON c.id = o.customer_id;',
+        en: 'SELECT * FROM customers c RIGHT JOIN orders o ON c.id = o.customer_id;'
+      },
+      result: {
+        ko: '모든 주문 반환 (고객 정보가 없으면 customers 컬럼은 NULL)',
+        en: 'Returns all orders (customers columns are NULL if no customer info)'
+      }
+    },
+    {
+      type: 'full',
+      name: 'FULL OUTER JOIN',
+      desc: { ko: '양쪽 모두의 전체 행 (합집합)', en: 'All rows from both (union)' },
+      example: {
+        ko: 'SELECT * FROM customers c FULL OUTER JOIN orders o ON c.id = o.customer_id;',
+        en: 'SELECT * FROM customers c FULL OUTER JOIN orders o ON c.id = o.customer_id;'
+      },
+      result: {
+        ko: '모든 고객과 모든 주문 반환 (일치하지 않으면 NULL)',
+        en: 'Returns all customers and all orders (NULL where no match)'
+      }
+    },
   ];
 
   return (
@@ -309,24 +365,47 @@ export function JoinTypesDiagram({ locale }: DiagramProps) {
             {locale === 'ko' ? 'JOIN 타입 비교' : 'JOIN Types Comparison'}
           </h3>
           <p className="text-[10px] text-muted-foreground">
-            {locale === 'ko' ? '색칠된 영역이 결과에 포함되는 행입니다' : 'Colored regions represent rows included in the result'}
+            {locale === 'ko' ? '각 JOIN 타입을 클릭하여 SQL 예시 확인' : 'Click each JOIN type to see SQL examples'}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         {types.map((t) => (
-          <div key={t.type} className="text-center p-4 rounded-xl bg-background border shadow-sm">
+          <button
+            key={t.type}
+            onClick={() => setActiveType(activeType === t.type ? null : t.type)}
+            className={`text-center p-4 rounded-xl bg-background border shadow-sm transition-all hover:shadow-md ${
+              activeType === t.type ? 'ring-2 ring-primary shadow-lg' : ''
+            }`}
+          >
             <JoinVenn type={t.type} id={t.type} />
             <p className="text-xs font-bold font-mono mt-2 text-foreground">{t.name}</p>
             <p className="text-[11px] text-muted-foreground mt-1 leading-snug">{t.desc[locale]}</p>
-          </div>
+          </button>
         ))}
       </div>
 
+      {activeType && (
+        <div className="mt-4 p-4 rounded-lg border-2 border-primary/30 bg-primary/5">
+          <p className="text-[10px] font-bold mb-2 text-primary">
+            {locale === 'ko' ? 'SQL 예시' : 'SQL Example'}:
+          </p>
+          <code className="block text-[11px] font-mono bg-background/60 p-2 rounded mb-3 overflow-x-auto">
+            {types.find(t => t.type === activeType)?.example[locale]}
+          </code>
+          <p className="text-[10px] font-bold mb-1">
+            {locale === 'ko' ? '결과' : 'Result'}:
+          </p>
+          <p className="text-xs leading-relaxed">
+            {types.find(t => t.type === activeType)?.result[locale]}
+          </p>
+        </div>
+      )}
+
       <div className="mt-5 p-3.5 rounded-lg bg-amber-500/5 border border-amber-500/20">
         <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
-          <span className="font-bold">TIP:</span>{' '}
+          <span className="font-bold">💡 TIP:</span>{' '}
           {locale === 'ko'
             ? 'LEFT JOIN이 가장 자주 사용됩니다. 일치하지 않는 행은 NULL이 되므로, WHERE o.id IS NULL 패턴으로 "데이터가 없는 항목"을 찾을 수 있습니다.'
             : 'LEFT JOIN is the most commonly used. Non-matching rows return NULL, so you can use the WHERE o.id IS NULL pattern to find "missing data".'}
@@ -341,15 +420,97 @@ export function JoinTypesDiagram({ locale }: DiagramProps) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export function SqlExecutionOrder({ locale }: DiagramProps) {
+  const [activeStep, setActiveStep] = useState<number | null>(null);
+
   const steps = [
-    { clause: 'FROM / JOIN', desc: { ko: '테이블 선택 & 결합', en: 'Select & join tables' }, color: 'bg-blue-500', written: 4 },
-    { clause: 'WHERE', desc: { ko: '조건에 맞는 행 필터링', en: 'Filter rows by condition' }, color: 'bg-red-500', written: 5 },
-    { clause: 'GROUP BY', desc: { ko: '행을 그룹으로 묶기', en: 'Group rows together' }, color: 'bg-amber-500', written: 6 },
-    { clause: 'HAVING', desc: { ko: '그룹 필터링', en: 'Filter groups' }, color: 'bg-orange-500', written: 7 },
-    { clause: 'SELECT', desc: { ko: '열 선택 & 계산', en: 'Select columns & compute' }, color: 'bg-emerald-500', written: 1 },
-    { clause: 'DISTINCT', desc: { ko: '중복 행 제거', en: 'Remove duplicate rows' }, color: 'bg-teal-500', written: 2 },
-    { clause: 'ORDER BY', desc: { ko: '결과 정렬', en: 'Sort results' }, color: 'bg-violet-500', written: 8 },
-    { clause: 'LIMIT / OFFSET', desc: { ko: '반환 행 수 제한', en: 'Limit number of rows' }, color: 'bg-pink-500', written: 9 },
+    {
+      clause: 'FROM / JOIN',
+      desc: { ko: '테이블 선택 & 결합', en: 'Select & join tables' },
+      detail: {
+        ko: '실행할 데이터 소스를 결정합니다. 여러 테이블을 JOIN하는 경우 여기서 결합이 발생합니다.',
+        en: 'Determines the data source to execute. If joining multiple tables, the join happens here.'
+      },
+      example: { ko: 'FROM customers c JOIN orders o ON c.id = o.customer_id', en: 'FROM customers c JOIN orders o ON c.id = o.customer_id' },
+      color: 'bg-blue-500',
+      written: 4
+    },
+    {
+      clause: 'WHERE',
+      desc: { ko: '조건에 맞는 행 필터링', en: 'Filter rows by condition' },
+      detail: {
+        ko: 'FROM에서 가져온 행 중 조건을 만족하는 행만 남깁니다. 집계 함수는 사용 불가합니다.',
+        en: 'Keeps only rows that satisfy the condition from FROM. Cannot use aggregate functions.'
+      },
+      example: { ko: 'WHERE c.city = \'Seoul\' AND o.total_amount > 1000', en: 'WHERE c.city = \'Seoul\' AND o.total_amount > 1000' },
+      color: 'bg-red-500',
+      written: 5
+    },
+    {
+      clause: 'GROUP BY',
+      desc: { ko: '행을 그룹으로 묶기', en: 'Group rows together' },
+      detail: {
+        ko: '지정된 컬럼 값이 같은 행들을 하나의 그룹으로 묶습니다. 집계 함수와 함께 사용됩니다.',
+        en: 'Groups rows with the same column values together. Used with aggregate functions.'
+      },
+      example: { ko: 'GROUP BY c.city', en: 'GROUP BY c.city' },
+      color: 'bg-amber-500',
+      written: 6
+    },
+    {
+      clause: 'HAVING',
+      desc: { ko: '그룹 필터링', en: 'Filter groups' },
+      detail: {
+        ko: 'GROUP BY로 생성된 그룹을 필터링합니다. 집계 함수를 조건으로 사용할 수 있습니다.',
+        en: 'Filters groups created by GROUP BY. Can use aggregate functions in conditions.'
+      },
+      example: { ko: 'HAVING COUNT(*) > 5', en: 'HAVING COUNT(*) > 5' },
+      color: 'bg-orange-500',
+      written: 7
+    },
+    {
+      clause: 'SELECT',
+      desc: { ko: '열 선택 & 계산', en: 'Select columns & compute' },
+      detail: {
+        ko: '최종 결과에 포함할 컬럼을 선택하고, 계산식이나 집계 함수를 실행합니다.',
+        en: 'Selects columns to include in the final result and executes calculations or aggregate functions.'
+      },
+      example: { ko: 'SELECT c.city, COUNT(*) as order_count, SUM(o.total_amount) as total', en: 'SELECT c.city, COUNT(*) as order_count, SUM(o.total_amount) as total' },
+      color: 'bg-emerald-500',
+      written: 1
+    },
+    {
+      clause: 'DISTINCT',
+      desc: { ko: '중복 행 제거', en: 'Remove duplicate rows' },
+      detail: {
+        ko: 'SELECT 결과에서 완전히 동일한 행을 제거하고 고유한 행만 남깁니다.',
+        en: 'Removes completely identical rows from SELECT results, keeping only unique rows.'
+      },
+      example: { ko: 'SELECT DISTINCT city FROM customers', en: 'SELECT DISTINCT city FROM customers' },
+      color: 'bg-teal-500',
+      written: 2
+    },
+    {
+      clause: 'ORDER BY',
+      desc: { ko: '결과 정렬', en: 'Sort results' },
+      detail: {
+        ko: '최종 결과를 지정된 컬럼 기준으로 정렬합니다. SELECT의 별칭을 사용할 수 있습니다.',
+        en: 'Sorts the final result by specified columns. Can use aliases from SELECT.'
+      },
+      example: { ko: 'ORDER BY total DESC, order_count ASC', en: 'ORDER BY total DESC, order_count ASC' },
+      color: 'bg-violet-500',
+      written: 8
+    },
+    {
+      clause: 'LIMIT / OFFSET',
+      desc: { ko: '반환 행 수 제한', en: 'Limit number of rows' },
+      detail: {
+        ko: '반환할 행의 개수를 제한하고, OFFSET으로 시작 위치를 지정할 수 있습니다.',
+        en: 'Limits the number of rows to return and can specify start position with OFFSET.'
+      },
+      example: { ko: 'LIMIT 10 OFFSET 20', en: 'LIMIT 10 OFFSET 20' },
+      color: 'bg-pink-500',
+      written: 9
+    },
   ];
 
   return (
@@ -363,7 +524,7 @@ export function SqlExecutionOrder({ locale }: DiagramProps) {
             {locale === 'ko' ? 'SQL 실행 순서' : 'SQL Execution Order'}
           </h3>
           <p className="text-[10px] text-muted-foreground">
-            {locale === 'ko' ? '작성 순서와 실행 순서는 다릅니다!' : 'Written order and execution order are different!'}
+            {locale === 'ko' ? '각 단계를 클릭하여 상세 정보 확인' : 'Click each step for details'}
           </p>
         </div>
       </div>
@@ -372,20 +533,25 @@ export function SqlExecutionOrder({ locale }: DiagramProps) {
         {/* Execution Order */}
         <div className="flex-1">
           <p className="text-[10px] font-bold text-muted-foreground mb-3 uppercase tracking-wider">
-            {locale === 'ko' ? '실행 순서' : 'Execution Order'}
+            {locale === 'ko' ? '⚡ 실행 순서 (실제 처리 순서)' : '⚡ Execution Order (Actual Processing)'}
           </p>
           <div className="flex flex-col items-start gap-0">
             {steps.map((step, i) => (
               <Fragment key={step.clause}>
-                <div className="flex items-center gap-3 w-full">
+                <button
+                  onClick={() => setActiveStep(activeStep === i ? null : i)}
+                  className={`flex items-center gap-3 w-full transition-all hover:bg-background/50 rounded-lg p-1 ${
+                    activeStep === i ? 'bg-background/80 ring-2 ring-primary' : ''
+                  }`}
+                >
                   <span className={`${step.color} w-7 h-7 rounded-full text-white flex items-center justify-center text-[11px] font-bold shrink-0 shadow-sm`}>
                     {i + 1}
                   </span>
-                  <div className="flex items-baseline gap-2 min-w-0">
+                  <div className="flex items-baseline gap-2 min-w-0 text-left">
                     <code className="font-mono font-bold text-[13px] shrink-0">{step.clause}</code>
                     <span className="text-xs text-muted-foreground truncate">{step.desc[locale]}</span>
                   </div>
-                </div>
+                </button>
                 {i < steps.length - 1 && (
                   <div className="w-px h-3 bg-border ml-[13px]" />
                 )}
@@ -394,10 +560,10 @@ export function SqlExecutionOrder({ locale }: DiagramProps) {
           </div>
         </div>
 
-        {/* Written vs Execution comparison */}
+        {/* Written Order comparison */}
         <div className="w-48 shrink-0 hidden md:block">
           <p className="text-[10px] font-bold text-muted-foreground mb-3 uppercase tracking-wider">
-            {locale === 'ko' ? '작성 순서' : 'Written Order'}
+            {locale === 'ko' ? '✍️ 작성 순서' : '✍️ Written Order'}
           </p>
           <div className="space-y-1 text-xs font-mono">
             <div className="px-2 py-1 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold">1. SELECT</div>
@@ -413,9 +579,20 @@ export function SqlExecutionOrder({ locale }: DiagramProps) {
         </div>
       </div>
 
+      {activeStep !== null && (
+        <div className="mt-4 p-4 rounded-lg border-2 border-primary/30 bg-primary/5">
+          <p className="text-[10px] font-bold mb-2 text-primary">{steps[activeStep].clause}</p>
+          <p className="text-xs mb-3 leading-relaxed">{steps[activeStep].detail[locale]}</p>
+          <p className="text-[10px] font-bold mb-1">{locale === 'ko' ? '예시' : 'Example'}:</p>
+          <code className="block text-[11px] font-mono bg-background/60 p-2 rounded overflow-x-auto">
+            {steps[activeStep].example[locale]}
+          </code>
+        </div>
+      )}
+
       <div className="mt-5 p-3.5 rounded-lg bg-amber-500/5 border border-amber-500/20">
         <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
-          <span className="font-bold">TIP:</span>{' '}
+          <span className="font-bold">💡 TIP:</span>{' '}
           {locale === 'ko'
             ? 'SELECT는 5번째로 실행됩니다! 따라서 WHERE 절에서 SELECT의 별칭(AS)을 사용할 수 없습니다. 별칭을 사용하려면 ORDER BY에서 사용하세요.'
             : 'SELECT runs 5th! So you cannot use SELECT aliases (AS) in the WHERE clause. Use aliases in ORDER BY instead.'}
