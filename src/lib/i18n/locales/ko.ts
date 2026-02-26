@@ -14,6 +14,7 @@ export const ko = {
     home: '홈',
     levels: '레벨',
     docs: '이론학습',
+    simulator: '시뮬레이터',
     progress: '진행도',
     settings: '설정',
   },
