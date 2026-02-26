@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useLocaleStore } from '@/stores/locale-store';
 import { docChapters, type DocChapter, type DocSection } from '@/data/docs';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -377,10 +379,30 @@ export default function DocsPage() {
                             </code>
                           );
                         }
+                        // Extract language from className (format: language-xxx)
+                        const match = /language-(\w+)/.exec(className || '');
+                        const language = match ? match[1] : '';
+                        const code = String(children).replace(/\n$/, '');
+
                         return (
-                          <code className={`${className} text-[12px]`} {...props}>
-                            {children}
-                          </code>
+                          <SyntaxHighlighter
+                            style={vscDarkPlus}
+                            language={language || 'text'}
+                            PreTag="div"
+                            customStyle={{
+                              margin: 0,
+                              borderRadius: '0 0 0.5rem 0.5rem',
+                              fontSize: '12px',
+                              background: '#09090b',
+                            }}
+                            codeTagProps={{
+                              style: {
+                                fontFamily: '"JetBrains Mono", "Fira Code", "Cascadia Code", monospace',
+                              }
+                            }}
+                          >
+                            {code}
+                          </SyntaxHighlighter>
                         );
                       },
                       pre: ({ children, ...props }) => {

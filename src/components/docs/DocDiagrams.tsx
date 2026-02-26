@@ -2200,42 +2200,64 @@ export function ReplicationHADiagram({ locale }: DiagramProps) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export function InnoDBDiagram({ locale }: DiagramProps) {
-  const [activeLayer, setActiveLayer] = useState<number | null>(null);
+  const [activeComponent, setActiveComponent] = useState<string | null>(null);
 
-  const layers = [
-    {
+  const components = {
+    bufferPool: {
       name: { ko: 'Buffer Pool', en: 'Buffer Pool' },
       icon: '🧠',
-      color: { bg: 'bg-orange-500/10', border: 'border-orange-500/30', header: 'bg-orange-500' },
-      items: ['Data Pages', 'Index Pages', 'Change Buffer', 'Adaptive Hash Index'],
-      size: { ko: 'RAM의 70~80%', en: '70-80% of RAM' },
-      desc: { ko: 'InnoDB의 핵심 캐시. 디스크 I/O를 최소화하여 성능을 좌우합니다. LRU 알고리즘으로 관리하며, 히트율 99% 이상이 목표입니다.', en: 'InnoDB core cache. Minimizes disk I/O and determines performance. Managed by LRU, target 99%+ hit rate.' },
+      size: { ko: 'RAM 70-80%', en: 'RAM 70-80%' },
+      desc: {
+        ko: 'InnoDB의 핵심 캐시. 디스크 I/O를 최소화하여 성능을 좌우합니다. LRU 알고리즘으로 관리하며, 히트율 99% 이상이 목표입니다.',
+        en: 'Core cache that minimizes disk I/O. Managed by LRU algorithm, target 99%+ hit rate.',
+      },
+      subItems: ['Data Pages', 'Index Pages', 'Change Buffer', 'Adaptive Hash'],
     },
-    {
-      name: { ko: 'Redo & Undo Log', en: 'Redo & Undo Log' },
+    logBuffer: {
+      name: { ko: 'Log Buffer', en: 'Log Buffer' },
+      icon: '📝',
+      size: { ko: '16MB', en: '16MB' },
+      desc: {
+        ko: 'Redo Log를 디스크에 쓰기 전 메모리에서 버퍼링. 트랜잭션 커밋 시 디스크로 플러시됩니다.',
+        en: 'Buffers redo log entries before writing to disk. Flushed on transaction commit.',
+      },
+    },
+    redoLog: {
+      name: { ko: 'Redo Log', en: 'Redo Log' },
       icon: '📋',
-      color: { bg: 'bg-amber-500/10', border: 'border-amber-500/30', header: 'bg-amber-500' },
-      items: ['Redo Log (WAL)', 'Undo Log (MVCC)', 'Log Buffer'],
-      size: { ko: 'Redo: 수 GB / Undo: 자동 관리', en: 'Redo: several GB / Undo: auto-managed' },
-      desc: { ko: 'Redo Log: 커밋된 트랜잭션의 장애 복구. Undo Log: 롤백 + MVCC 읽기 일관성을 제공합니다.', en: 'Redo Log: crash recovery for committed txns. Undo Log: rollback + MVCC read consistency.' },
+      size: { ko: '수 GB', en: 'Several GB' },
+      desc: {
+        ko: 'WAL(Write-Ahead Logging) 방식으로 커밋된 트랜잭션을 보장. 장애 발생 시 복구에 사용됩니다.',
+        en: 'WAL for crash recovery. Ensures durability of committed transactions.',
+      },
     },
-    {
-      name: { ko: '클러스터드 인덱스', en: 'Clustered Index' },
-      icon: '🌳',
-      color: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', header: 'bg-emerald-500' },
-      items: ['PK = Physical Order', 'Secondary → PK Lookup', 'Leaf = Data Row'],
-      size: { ko: '테이블당 1개 (PK)', en: '1 per table (PK)' },
-      desc: { ko: 'InnoDB는 PK 기준으로 데이터를 물리적으로 정렬합니다. 보조 인덱스는 PK 값을 저장하므로, 보조 인덱스 조회 시 PK 재조회가 필요합니다.', en: 'InnoDB physically sorts data by PK. Secondary indexes store PK values, requiring a PK lookup on secondary index queries.' },
+    undoLog: {
+      name: { ko: 'Undo Log', en: 'Undo Log' },
+      icon: '↩️',
+      size: { ko: 'Auto', en: 'Auto' },
+      desc: {
+        ko: '트랜잭션 롤백과 MVCC 읽기 일관성을 제공. 이전 버전의 데이터를 보관합니다.',
+        en: 'Provides rollback and MVCC read consistency. Stores previous versions of data.',
+      },
     },
-    {
-      name: { ko: '잠금 (Locking)', en: 'Locking' },
-      icon: '🔒',
-      color: { bg: 'bg-rose-500/10', border: 'border-rose-500/30', header: 'bg-rose-500' },
-      items: ['Record Lock', 'Gap Lock', 'Next-Key Lock', 'Intention Lock'],
-      size: { ko: '격리 수준에 따라 동작', en: 'Varies by isolation level' },
-      desc: { ko: 'Record Lock: 레코드 잠금. Gap Lock: 간격 잠금(Phantom 방지). Next-Key Lock: 둘의 결합(REPEATABLE READ 기본).', en: 'Record Lock: row lock. Gap Lock: gap between records (prevents phantoms). Next-Key: combined (default in REPEATABLE READ).' },
+    dataFiles: {
+      name: { ko: 'Data Files (.ibd)', en: 'Data Files (.ibd)' },
+      icon: '💾',
+      size: { ko: 'Variable', en: 'Variable' },
+      desc: {
+        ko: 'PK 기준 클러스터드 인덱스로 저장. 각 테이블은 별도의 .ibd 파일로 관리됩니다.',
+        en: 'Stored as clustered index by PK. Each table has its own .ibd file.',
+      },
     },
-  ];
+    threads: {
+      name: { ko: 'Background Threads', en: 'Background Threads' },
+      icon: '⚙️',
+      desc: {
+        ko: 'Master Thread(메인), IO Threads(읽기/쓰기), Purge Thread(삭제), Page Cleaner(플러시)가 백그라운드에서 실행됩니다.',
+        en: 'Master (main), IO (read/write), Purge (cleanup), Page Cleaner (flush) run in background.',
+      },
+    },
+  };
 
   return (
     <div className="not-prose my-8 p-6 rounded-xl border-2 border-dashed border-border bg-muted/10">
@@ -2244,54 +2266,166 @@ export function InnoDBDiagram({ locale }: DiagramProps) {
           IDB
         </span>
         <div>
-          <h3 className="text-sm font-bold">InnoDB {locale === 'ko' ? '내부 구조' : 'Internal Architecture'}</h3>
+          <h3 className="text-sm font-bold">InnoDB {locale === 'ko' ? '아키텍처' : 'Architecture'}</h3>
           <p className="text-[10px] text-muted-foreground">
-            {locale === 'ko' ? '각 레이어를 클릭하여 상세 정보 확인' : 'Click each layer for details'}
+            {locale === 'ko' ? '컴포넌트를 클릭하여 상세 정보 확인' : 'Click components for details'}
           </p>
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        {layers.map((layer, i) => (
-          <button
-            key={i}
-            onClick={() => setActiveLayer(activeLayer === i ? null : i)}
-            className={`w-full rounded-lg border text-left transition-all ${layer.color.border} ${layer.color.bg} ${
-              activeLayer === i ? 'ring-2 ring-primary shadow-md' : 'hover:shadow-sm'
-            }`}
-          >
-            <div className="flex items-center gap-3 p-3">
-              <span className="text-lg">{layer.icon}</span>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-bold text-foreground">{layer.name[locale]}</p>
-                  <span className="text-[8px] text-muted-foreground font-mono">{layer.size[locale]}</span>
-                </div>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {layer.items.map((item) => (
-                    <span key={item} className="text-[8px] font-mono bg-background/60 px-1.5 py-0.5 rounded">
-                      {item}
-                    </span>
-                  ))}
-                </div>
+      {/* Architecture Diagram */}
+      <div className="relative space-y-4">
+        {/* Client Layer */}
+        <div className="flex justify-center">
+          <div className="px-4 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-center">
+            <p className="text-[10px] font-bold text-blue-700 dark:text-blue-300">
+              {locale === 'ko' ? '📱 클라이언트 / 애플리케이션' : '📱 Client / Application'}
+            </p>
+          </div>
+        </div>
+
+        {/* Arrow down */}
+        <div className="flex justify-center">
+          <div className="text-2xl text-muted-foreground">↓</div>
+        </div>
+
+        {/* Memory Layer */}
+        <div className="border-2 border-orange-500/30 rounded-xl p-4 bg-orange-500/5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-bold text-orange-700 dark:text-orange-300">
+              💭 {locale === 'ko' ? 'IN-MEMORY' : 'IN-MEMORY'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {/* Buffer Pool - takes 2 columns */}
+            <button
+              onClick={() => setActiveComponent(activeComponent === 'bufferPool' ? null : 'bufferPool')}
+              className={`col-span-2 p-3 rounded-lg border-2 border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 transition-all text-left ${
+                activeComponent === 'bufferPool' ? 'ring-2 ring-orange-500' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-lg">{components.bufferPool.icon}</span>
+                <span className="text-[8px] font-mono text-muted-foreground">{components.bufferPool.size[locale]}</span>
               </div>
-            </div>
-          </button>
-        ))}
+              <p className="text-[11px] font-bold mb-1">{components.bufferPool.name[locale]}</p>
+              <div className="flex flex-wrap gap-1">
+                {components.bufferPool.subItems.map((item) => (
+                  <span key={item} className="text-[7px] font-mono bg-background/60 px-1.5 py-0.5 rounded">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </button>
+
+            {/* Log Buffer */}
+            <button
+              onClick={() => setActiveComponent(activeComponent === 'logBuffer' ? null : 'logBuffer')}
+              className={`p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all text-left ${
+                activeComponent === 'logBuffer' ? 'ring-2 ring-amber-500' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-lg">{components.logBuffer.icon}</span>
+                <span className="text-[8px] font-mono text-muted-foreground">{components.logBuffer.size[locale]}</span>
+              </div>
+              <p className="text-[10px] font-bold">{components.logBuffer.name[locale]}</p>
+            </button>
+
+            {/* Empty space for visual balance */}
+            <div className="p-3 rounded-lg border border-dashed border-muted-foreground/20"></div>
+          </div>
+        </div>
+
+        {/* Arrow down with label */}
+        <div className="flex flex-col items-center">
+          <div className="text-2xl text-muted-foreground">↓</div>
+          <span className="text-[8px] text-muted-foreground font-mono">
+            {locale === 'ko' ? 'Flush / Checkpoint' : 'Flush / Checkpoint'}
+          </span>
+        </div>
+
+        {/* Disk Layer */}
+        <div className="border-2 border-emerald-500/30 rounded-xl p-4 bg-emerald-500/5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+              💿 {locale === 'ko' ? 'ON-DISK (영구 저장소)' : 'ON-DISK (Persistent Storage)'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            {/* Data Files */}
+            <button
+              onClick={() => setActiveComponent(activeComponent === 'dataFiles' ? null : 'dataFiles')}
+              className={`p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all text-left ${
+                activeComponent === 'dataFiles' ? 'ring-2 ring-emerald-500' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-lg">{components.dataFiles.icon}</span>
+              </div>
+              <p className="text-[10px] font-bold">{components.dataFiles.name[locale]}</p>
+            </button>
+
+            {/* Redo Log */}
+            <button
+              onClick={() => setActiveComponent(activeComponent === 'redoLog' ? null : 'redoLog')}
+              className={`p-3 rounded-lg border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all text-left ${
+                activeComponent === 'redoLog' ? 'ring-2 ring-blue-500' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-lg">{components.redoLog.icon}</span>
+                <span className="text-[8px] font-mono text-muted-foreground">{components.redoLog.size[locale]}</span>
+              </div>
+              <p className="text-[10px] font-bold">{components.redoLog.name[locale]}</p>
+            </button>
+
+            {/* Undo Log */}
+            <button
+              onClick={() => setActiveComponent(activeComponent === 'undoLog' ? null : 'undoLog')}
+              className={`p-3 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all text-left ${
+                activeComponent === 'undoLog' ? 'ring-2 ring-purple-500' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-lg">{components.undoLog.icon}</span>
+                <span className="text-[8px] font-mono text-muted-foreground">{components.undoLog.size[locale]}</span>
+              </div>
+              <p className="text-[10px] font-bold">{components.undoLog.name[locale]}</p>
+            </button>
+          </div>
+        </div>
+
+        {/* Background Threads */}
+        <button
+          onClick={() => setActiveComponent(activeComponent === 'threads' ? null : 'threads')}
+          className={`w-full p-3 rounded-lg border border-slate-500/30 bg-slate-500/10 hover:bg-slate-500/20 transition-all text-left ${
+            activeComponent === 'threads' ? 'ring-2 ring-slate-500' : ''
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{components.threads.icon}</span>
+            <p className="text-[10px] font-bold">{components.threads.name[locale]}</p>
+          </div>
+        </button>
       </div>
 
-      {activeLayer !== null && (
-        <div className={`mt-3 rounded-lg border ${layers[activeLayer].color.border} ${layers[activeLayer].color.bg} p-4 transition-all`}>
-          <p className="text-xs leading-relaxed">{layers[activeLayer].desc[locale]}</p>
+      {/* Detail Panel */}
+      {activeComponent && (
+        <div className="mt-4 p-4 rounded-lg border-2 border-primary/30 bg-primary/5">
+          <p className="text-xs leading-relaxed">{components[activeComponent as keyof typeof components].desc[locale]}</p>
         </div>
       )}
 
+      {/* Tips */}
       <div className="mt-5 p-3.5 rounded-lg bg-amber-500/5 border border-amber-500/20">
         <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
-          <span className="font-bold">TIP:</span>{' '}
+          <span className="font-bold">💡 TIP:</span>{' '}
           {locale === 'ko'
             ? 'Buffer Pool 히트율이 99% 미만이면 innodb_buffer_pool_size를 증가시키세요. SHOW STATUS LIKE \'Innodb_buffer_pool%\';로 확인합니다.'
-            : 'If buffer pool hit rate is below 99%, increase innodb_buffer_pool_size. Check with SHOW STATUS LIKE \'Innodb_buffer_pool%\';'}
+            : 'If buffer pool hit rate < 99%, increase innodb_buffer_pool_size. Check with SHOW STATUS LIKE \'Innodb_buffer_pool%\';'}
         </p>
       </div>
     </div>
@@ -2303,38 +2437,92 @@ export function InnoDBDiagram({ locale }: DiagramProps) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export function PostgreSQLDiagram({ locale }: DiagramProps) {
-  const [activeFeature, setActiveFeature] = useState<number | null>(null);
+  const [activeComponent, setActiveComponent] = useState<string | null>(null);
 
-  const features = [
-    {
-      name: 'MVCC',
-      icon: '🔄',
-      color: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', header: 'bg-blue-500' },
-      items: ['xmin / xmax', 'Tuple Versioning', 'Snapshot Isolation'],
-      desc: { ko: '행의 여러 버전을 유지하여 읽기와 쓰기가 차단하지 않습니다. 각 행의 xmin(생성 TX), xmax(삭제 TX)으로 가시성을 판단합니다.', en: 'Maintains multiple row versions so reads and writes don\'t block. Visibility determined by xmin (creating TX) and xmax (deleting TX) of each row.' },
+  const components = {
+    postmaster: {
+      name: { ko: 'Postmaster', en: 'Postmaster' },
+      icon: '👑',
+      desc: {
+        ko: 'PostgreSQL의 메인 데몬 프로세스. 클라이언트 연결을 수신하고 각 연결마다 새로운 Backend 프로세스를 생성합니다.',
+        en: 'Main daemon process. Listens for client connections and spawns a new backend process for each connection.',
+      },
     },
-    {
-      name: 'VACUUM',
+    backends: {
+      name: { ko: 'Backend Processes', en: 'Backend Processes' },
+      icon: '👥',
+      desc: {
+        ko: '각 클라이언트 연결마다 별도의 프로세스가 생성됩니다 (Multi-Process). 각 Backend는 독립적인 메모리 공간을 가집니다.',
+        en: 'Each client connection gets its own process (Multi-Process). Each backend has independent memory space.',
+      },
+    },
+    sharedBuffers: {
+      name: { ko: 'Shared Buffers', en: 'Shared Buffers' },
+      icon: '🧠',
+      size: { ko: 'RAM 25%', en: 'RAM 25%' },
+      desc: {
+        ko: '테이블과 인덱스 페이지를 캐시하는 공유 메모리. 모든 Backend 프로세스가 공유합니다.',
+        en: 'Shared memory cache for table and index pages. Shared by all backend processes.',
+      },
+    },
+    walBuffers: {
+      name: { ko: 'WAL Buffers', en: 'WAL Buffers' },
+      icon: '📝',
+      size: { ko: '16MB', en: '16MB' },
+      desc: {
+        ko: 'Write-Ahead Log 버퍼. 트랜잭션 로그를 디스크에 쓰기 전 메모리에서 버퍼링합니다.',
+        en: 'Write-Ahead Log buffer. Buffers transaction logs before writing to disk.',
+      },
+    },
+    bgWriter: {
+      name: { ko: 'Background Writer', en: 'Background Writer' },
+      icon: '✍️',
+      desc: {
+        ko: 'Dirty 페이지를 주기적으로 디스크에 기록. Checkpoint 시 부하를 분산시킵니다.',
+        en: 'Periodically writes dirty pages to disk. Distributes I/O load from checkpoints.',
+      },
+    },
+    walWriter: {
+      name: { ko: 'WAL Writer', en: 'WAL Writer' },
+      icon: '📋',
+      desc: {
+        ko: 'WAL 버퍼를 디스크에 기록. 트랜잭션 커밋 시 즉시 플러시됩니다.',
+        en: 'Writes WAL buffers to disk. Flushes immediately on transaction commit.',
+      },
+    },
+    checkpointer: {
+      name: { ko: 'Checkpointer', en: 'Checkpointer' },
+      icon: '⏱️',
+      desc: {
+        ko: '주기적으로 체크포인트를 수행. Shared Buffers의 Dirty 페이지를 디스크에 동기화합니다.',
+        en: 'Performs periodic checkpoints. Syncs dirty pages in shared buffers to disk.',
+      },
+    },
+    autovacuum: {
+      name: { ko: 'Autovacuum', en: 'Autovacuum' },
       icon: '🧹',
-      color: { bg: 'bg-amber-500/10', border: 'border-amber-500/30', header: 'bg-amber-500' },
-      items: ['Dead Tuple Cleanup', 'Autovacuum', 'VACUUM FULL', 'Freeze'],
-      desc: { ko: 'MVCC로 쌓이는 Dead Tuple을 정리합니다. Autovacuum이 자동 실행되며, 테이블별 튜닝이 가능합니다. VACUUM FULL은 테이블을 재작성합니다.', en: 'Cleans up dead tuples from MVCC. Autovacuum runs automatically with per-table tuning. VACUUM FULL rewrites the table.' },
+      desc: {
+        ko: 'MVCC로 생성된 Dead Tuple을 자동으로 정리. 통계 정보도 업데이트합니다.',
+        en: 'Automatically cleans up dead tuples from MVCC. Also updates statistics.',
+      },
     },
-    {
-      name: { ko: '인덱스 유형', en: 'Index Types' },
-      icon: '📇',
-      color: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', header: 'bg-emerald-500' },
-      items: ['B-tree', 'Hash', 'GIN', 'GiST', 'BRIN', 'SP-GiST'],
-      desc: { ko: '6가지 인덱스 유형을 제공합니다. B-tree(기본), GIN(JSONB/배열), GiST(지리/범위), BRIN(시계열). 부분 인덱스, 표현식 인덱스, 커버링 인덱스도 지원합니다.', en: '6 index types. B-tree (default), GIN (JSONB/arrays), GiST (geometry/range), BRIN (time-series). Supports partial, expression, and covering indexes.' },
+    dataFiles: {
+      name: { ko: 'Data Files', en: 'Data Files' },
+      icon: '💾',
+      desc: {
+        ko: '테이블과 인덱스 데이터. Heap 구조로 저장되며 MVCC를 위한 xmin/xmax를 포함합니다.',
+        en: 'Table and index data. Stored as heap with xmin/xmax for MVCC.',
+      },
     },
-    {
-      name: { ko: '고유 기능', en: 'Unique Features' },
-      icon: '⚡',
-      color: { bg: 'bg-violet-500/10', border: 'border-violet-500/30', header: 'bg-violet-500' },
-      items: ['LISTEN/NOTIFY', 'Advisory Lock', 'RETURNING', 'INHERITS', 'DOMAIN'],
-      desc: { ko: 'LISTEN/NOTIFY로 실시간 이벤트 처리, Advisory Lock으로 앱 레벨 잠금, RETURNING으로 DML 결과 즉시 반환, 테이블 상속과 도메인 타입을 지원합니다.', en: 'LISTEN/NOTIFY for real-time events, advisory locks for app-level locking, RETURNING for DML results, table inheritance and domain types.' },
+    walFiles: {
+      name: { ko: 'WAL Files', en: 'WAL Files' },
+      icon: '📁',
+      desc: {
+        ko: 'Write-Ahead Logging 파일. 트랜잭션 복구와 복제에 사용됩니다.',
+        en: 'Write-Ahead Logging files. Used for crash recovery and replication.',
+      },
     },
-  ];
+  };
 
   return (
     <div className="not-prose my-8 p-6 rounded-xl border-2 border-dashed border-border bg-muted/10">
@@ -2343,51 +2531,241 @@ export function PostgreSQLDiagram({ locale }: DiagramProps) {
           PG
         </span>
         <div>
-          <h3 className="text-sm font-bold">PostgreSQL {locale === 'ko' ? '핵심 내부 구조' : 'Core Internals'}</h3>
+          <h3 className="text-sm font-bold">PostgreSQL {locale === 'ko' ? '프로세스 아키텍처' : 'Process Architecture'}</h3>
           <p className="text-[10px] text-muted-foreground">
-            {locale === 'ko' ? '각 기능을 클릭하여 상세 정보 확인' : 'Click each feature for details'}
+            {locale === 'ko' ? '컴포넌트를 클릭하여 상세 정보 확인' : 'Click components for details'}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        {features.map((f, i) => (
-          <button
-            key={i}
-            onClick={() => setActiveFeature(activeFeature === i ? null : i)}
-            className={`rounded-lg border text-left transition-all ${f.color.border} ${f.color.bg} ${
-              activeFeature === i ? 'ring-2 ring-primary shadow-md' : 'hover:shadow-sm'
-            }`}
-          >
-            <div className={`${f.color.header} px-2 py-1.5 rounded-t-[7px] flex items-center gap-1.5`}>
-              <span className="text-sm">{f.icon}</span>
-              <span className="text-white text-[10px] font-bold">{typeof f.name === 'string' ? f.name : f.name[locale]}</span>
-            </div>
-            <div className="p-2">
-              <div className="flex flex-wrap gap-1">
-                {f.items.map((item) => (
-                  <span key={item} className="text-[8px] font-mono bg-background/60 px-1.5 py-0.5 rounded">
-                    {item}
-                  </span>
-                ))}
+      {/* Architecture Diagram */}
+      <div className="relative space-y-4">
+        {/* Client Layer */}
+        <div className="flex justify-center">
+          <div className="px-4 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-center">
+            <p className="text-[10px] font-bold text-blue-700 dark:text-blue-300">
+              {locale === 'ko' ? '📱 클라이언트 연결' : '📱 Client Connections'}
+            </p>
+          </div>
+        </div>
+
+        {/* Arrow down */}
+        <div className="flex justify-center">
+          <div className="text-2xl text-muted-foreground">↓</div>
+        </div>
+
+        {/* Postmaster */}
+        <button
+          onClick={() => setActiveComponent(activeComponent === 'postmaster' ? null : 'postmaster')}
+          className={`w-full p-3 rounded-lg border-2 border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 transition-all text-left ${
+            activeComponent === 'postmaster' ? 'ring-2 ring-violet-500' : ''
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{components.postmaster.icon}</span>
+            <p className="text-[11px] font-bold">{components.postmaster.name[locale]}</p>
+          </div>
+        </button>
+
+        {/* Arrow down */}
+        <div className="flex justify-center">
+          <div className="text-2xl text-muted-foreground">↓</div>
+        </div>
+
+        {/* Backend Processes */}
+        <button
+          onClick={() => setActiveComponent(activeComponent === 'backends' ? null : 'backends')}
+          className={`w-full p-3 rounded-lg border-2 border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all text-left ${
+            activeComponent === 'backends' ? 'ring-2 ring-blue-500' : ''
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{components.backends.icon}</span>
+            <p className="text-[11px] font-bold">{components.backends.name[locale]}</p>
+            <span className="ml-auto text-[8px] text-muted-foreground font-mono">
+              {locale === 'ko' ? '연결당 1개 프로세스' : '1 process per connection'}
+            </span>
+          </div>
+        </button>
+
+        {/* Arrow down */}
+        <div className="flex justify-center">
+          <div className="text-2xl text-muted-foreground">↕</div>
+        </div>
+
+        {/* Shared Memory */}
+        <div className="border-2 border-orange-500/30 rounded-xl p-4 bg-orange-500/5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-bold text-orange-700 dark:text-orange-300">
+              💭 {locale === 'ko' ? 'SHARED MEMORY' : 'SHARED MEMORY'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {/* Shared Buffers */}
+            <button
+              onClick={() => setActiveComponent(activeComponent === 'sharedBuffers' ? null : 'sharedBuffers')}
+              className={`col-span-2 p-3 rounded-lg border-2 border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 transition-all text-left ${
+                activeComponent === 'sharedBuffers' ? 'ring-2 ring-orange-500' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-lg">{components.sharedBuffers.icon}</span>
+                <span className="text-[8px] font-mono text-muted-foreground">{components.sharedBuffers.size[locale]}</span>
               </div>
-            </div>
-          </button>
-        ))}
+              <p className="text-[11px] font-bold">{components.sharedBuffers.name[locale]}</p>
+            </button>
+
+            {/* WAL Buffers */}
+            <button
+              onClick={() => setActiveComponent(activeComponent === 'walBuffers' ? null : 'walBuffers')}
+              className={`p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-all text-left ${
+                activeComponent === 'walBuffers' ? 'ring-2 ring-amber-500' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-lg">{components.walBuffers.icon}</span>
+                <span className="text-[8px] font-mono text-muted-foreground">{components.walBuffers.size[locale]}</span>
+              </div>
+              <p className="text-[10px] font-bold">{components.walBuffers.name[locale]}</p>
+            </button>
+
+            {/* Empty space for visual balance */}
+            <div className="p-3 rounded-lg border border-dashed border-muted-foreground/20"></div>
+          </div>
+        </div>
+
+        {/* Arrow down */}
+        <div className="flex flex-col items-center">
+          <div className="text-2xl text-muted-foreground">↓</div>
+          <span className="text-[8px] text-muted-foreground font-mono">
+            {locale === 'ko' ? 'Background Processes' : 'Background Processes'}
+          </span>
+        </div>
+
+        {/* Background Workers */}
+        <div className="border-2 border-slate-500/30 rounded-xl p-4 bg-slate-500/5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              ⚙️ {locale === 'ko' ? 'BACKGROUND WORKERS' : 'BACKGROUND WORKERS'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {/* Background Writer */}
+            <button
+              onClick={() => setActiveComponent(activeComponent === 'bgWriter' ? null : 'bgWriter')}
+              className={`p-2.5 rounded-lg border border-slate-500/30 bg-slate-500/10 hover:bg-slate-500/20 transition-all text-left ${
+                activeComponent === 'bgWriter' ? 'ring-2 ring-slate-500' : ''
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">{components.bgWriter.icon}</span>
+                <p className="text-[9px] font-bold">{components.bgWriter.name[locale]}</p>
+              </div>
+            </button>
+
+            {/* WAL Writer */}
+            <button
+              onClick={() => setActiveComponent(activeComponent === 'walWriter' ? null : 'walWriter')}
+              className={`p-2.5 rounded-lg border border-slate-500/30 bg-slate-500/10 hover:bg-slate-500/20 transition-all text-left ${
+                activeComponent === 'walWriter' ? 'ring-2 ring-slate-500' : ''
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">{components.walWriter.icon}</span>
+                <p className="text-[9px] font-bold">{components.walWriter.name[locale]}</p>
+              </div>
+            </button>
+
+            {/* Checkpointer */}
+            <button
+              onClick={() => setActiveComponent(activeComponent === 'checkpointer' ? null : 'checkpointer')}
+              className={`p-2.5 rounded-lg border border-slate-500/30 bg-slate-500/10 hover:bg-slate-500/20 transition-all text-left ${
+                activeComponent === 'checkpointer' ? 'ring-2 ring-slate-500' : ''
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">{components.checkpointer.icon}</span>
+                <p className="text-[9px] font-bold">{components.checkpointer.name[locale]}</p>
+              </div>
+            </button>
+
+            {/* Autovacuum */}
+            <button
+              onClick={() => setActiveComponent(activeComponent === 'autovacuum' ? null : 'autovacuum')}
+              className={`p-2.5 rounded-lg border border-slate-500/30 bg-slate-500/10 hover:bg-slate-500/20 transition-all text-left ${
+                activeComponent === 'autovacuum' ? 'ring-2 ring-slate-500' : ''
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">{components.autovacuum.icon}</span>
+                <p className="text-[9px] font-bold">{components.autovacuum.name[locale]}</p>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Arrow down */}
+        <div className="flex flex-col items-center">
+          <div className="text-2xl text-muted-foreground">↓</div>
+          <span className="text-[8px] text-muted-foreground font-mono">
+            {locale === 'ko' ? 'Write to Disk' : 'Write to Disk'}
+          </span>
+        </div>
+
+        {/* Disk Storage */}
+        <div className="border-2 border-emerald-500/30 rounded-xl p-4 bg-emerald-500/5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+              💿 {locale === 'ko' ? 'DISK STORAGE' : 'DISK STORAGE'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {/* Data Files */}
+            <button
+              onClick={() => setActiveComponent(activeComponent === 'dataFiles' ? null : 'dataFiles')}
+              className={`p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all text-left ${
+                activeComponent === 'dataFiles' ? 'ring-2 ring-emerald-500' : ''
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{components.dataFiles.icon}</span>
+                <p className="text-[10px] font-bold">{components.dataFiles.name[locale]}</p>
+              </div>
+            </button>
+
+            {/* WAL Files */}
+            <button
+              onClick={() => setActiveComponent(activeComponent === 'walFiles' ? null : 'walFiles')}
+              className={`p-3 rounded-lg border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all text-left ${
+                activeComponent === 'walFiles' ? 'ring-2 ring-blue-500' : ''
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{components.walFiles.icon}</span>
+                <p className="text-[10px] font-bold">{components.walFiles.name[locale]}</p>
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
 
-      {activeFeature !== null && (
-        <div className={`mt-3 rounded-lg border ${features[activeFeature].color.border} ${features[activeFeature].color.bg} p-4 transition-all`}>
-          <p className="text-xs leading-relaxed">{features[activeFeature].desc[locale]}</p>
+      {/* Detail Panel */}
+      {activeComponent && (
+        <div className="mt-4 p-4 rounded-lg border-2 border-primary/30 bg-primary/5">
+          <p className="text-xs leading-relaxed">{components[activeComponent as keyof typeof components].desc[locale]}</p>
         </div>
       )}
 
+      {/* Tips */}
       <div className="mt-5 p-3.5 rounded-lg bg-amber-500/5 border border-amber-500/20">
         <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
-          <span className="font-bold">TIP:</span>{' '}
+          <span className="font-bold">💡 TIP:</span>{' '}
           {locale === 'ko'
-            ? 'EXPLAIN (ANALYZE, BUFFERS)로 실행 계획을 분석하세요. Seq Scan이 나오면 적절한 인덱스 추가를 검토합니다.'
-            : 'Use EXPLAIN (ANALYZE, BUFFERS) to analyze query plans. If Seq Scan appears, consider adding appropriate indexes.'}
+            ? 'shared_buffers는 RAM의 25%로 설정하고, effective_cache_size는 전체 RAM의 50-75%로 설정하세요. EXPLAIN (ANALYZE, BUFFERS)로 버퍼 사용량을 모니터링합니다.'
+            : 'Set shared_buffers to 25% of RAM and effective_cache_size to 50-75% of total RAM. Monitor buffer usage with EXPLAIN (ANALYZE, BUFFERS).'}
         </p>
       </div>
     </div>
