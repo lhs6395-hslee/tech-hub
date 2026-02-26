@@ -7888,26 +7888,45 @@ FROM (SELECT * FROM customers ORDER BY id) t;
 
 데이터베이스 성능의 핵심은 **디스크 I/O를 최소화**하는 것입니다.
 
-\`\`\`
-[CPU 레지스터]     ← 가장 빠름, 가장 작음
-     ↓
-[CPU 캐시 (L1/L2/L3)]
-     ↓
-[메인 메모리 (RAM)]  ← 버퍼 풀이 여기에 위치
-     ↓
-[SSD / HDD]        ← 데이터 파일이 여기에 저장
-     ↓
-[네트워크 스토리지]   ← 가장 느림, 가장 큼
-\`\`\`
+### 스토리지 계층 (속도 순서)
 
-| 계층 | 접근 시간 | 용량 |
-|------|----------|------|
-| L1 캐시 | ~1ns | 64KB |
-| 메인 메모리 | ~100ns | 16-512GB |
-| SSD | ~100μs (100,000ns) | 1-16TB |
-| HDD | ~10ms (10,000,000ns) | 1-20TB |
+컴퓨터 시스템은 다음과 같은 계층 구조로 데이터를 저장합니다:
 
-> RAM vs SSD는 **약 1,000배** 속도 차이. 이것이 인덱스와 버퍼 풀이 중요한 이유입니다.
+1. **CPU 레지스터**
+   - 가장 빠르지만 가장 작음
+   - CPU 내부에서 직접 사용
+
+2. **CPU 캐시 (L1/L2/L3)**
+   - L1: ~1ns, 64KB
+   - CPU와 메모리 사이의 고속 버퍼
+
+3. **메인 메모리 (RAM)** 🎯
+   - ~100ns, 16-512GB
+   - **버퍼 풀이 여기에 위치** (DB 성능의 핵심!)
+
+4. **SSD (Solid State Drive)**
+   - ~100μs (100,000ns), 1-16TB
+   - 데이터 파일의 영구 저장소
+   - **RAM보다 1,000배 느림**
+
+5. **HDD (Hard Disk Drive)**
+   - ~10ms (10,000,000ns), 1-20TB
+   - 기계적 동작으로 인해 SSD보다 느림
+
+6. **네트워크 스토리지 (NAS/SAN)**
+   - 가장 느리지만 가장 큰 용량
+   - 네트워크 지연 추가
+
+### 성능 비교
+
+| 계층 | 접근 시간 | 용량 | 상대 속도 |
+|------|----------|------|----------|
+| L1 캐시 | ~1ns | 64KB | 1× |
+| 메인 메모리 (RAM) | ~100ns | 16-512GB | 100× |
+| SSD | ~100μs | 1-16TB | 100,000× |
+| HDD | ~10ms | 1-20TB | 10,000,000× |
+
+> **핵심**: RAM과 SSD는 약 **1,000배** 속도 차이가 있습니다. 이것이 **인덱스**, **버퍼 풀**, **쿼리 최적화**가 중요한 이유입니다. 디스크 접근을 1번만 줄여도 엄청난 성능 향상을 얻을 수 있습니다.
 
 ## 페이지 (Page / Block)
 
@@ -7996,12 +8015,14 @@ PostgreSQL의 각 행(튜플)은 다음과 같은 구조로 저장됩니다:
 
 가장 기본적인 저장 방식입니다. 행이 **삽입 순서대로** 페이지에 저장됩니다.
 
-\`\`\`
-힙 파일: [Page0][Page1][Page2]...[PageN]
+**구조**: 페이지들이 순차적으로 연결됨
+- 형태: \`[Page 0] → [Page 1] → [Page 2] → ... → [Page N]\`
+- 각 페이지는 여러 행(레코드)을 포함
 
-장점: 삽입이 빠름 (끝에 추가)
-단점: 검색 시 전체 스캔 필요 (인덱스 없으면)
-\`\`\`
+**특징:**
+- ✅ **장점**: 삽입이 매우 빠름 (빈 공간이 있는 페이지에 추가하거나 새 페이지 할당)
+- ❌ **단점**: 특정 행을 찾으려면 전체 스캔 필요 (인덱스 없으면)
+- 대부분의 RDBMS가 기본으로 사용하는 방식 (PostgreSQL, MySQL 등)
 
 ### 기타 파일 구조
 
@@ -8024,26 +8045,45 @@ SELECT pg_relation_size('products') AS bytes,
 
 The key to database performance is **minimizing disk I/O**.
 
-\`\`\`
-[CPU Registers]        ← Fastest, smallest
-     ↓
-[CPU Cache (L1/L2/L3)]
-     ↓
-[Main Memory (RAM)]    ← Buffer pool lives here
-     ↓
-[SSD / HDD]           ← Data files stored here
-     ↓
-[Network Storage]      ← Slowest, largest
-\`\`\`
+### Storage Hierarchy (By Speed)
 
-| Level | Access Time | Capacity |
-|-------|------------|----------|
-| L1 Cache | ~1ns | 64KB |
-| Main Memory | ~100ns | 16-512GB |
-| SSD | ~100μs (100,000ns) | 1-16TB |
-| HDD | ~10ms (10,000,000ns) | 1-20TB |
+Computer systems store data in the following hierarchical structure:
 
-> RAM vs SSD is a **~1,000x** speed difference. This is why indexes and buffer pools matter.
+1. **CPU Registers**
+   - Fastest but smallest
+   - Used directly within the CPU
+
+2. **CPU Cache (L1/L2/L3)**
+   - L1: ~1ns, 64KB
+   - High-speed buffer between CPU and memory
+
+3. **Main Memory (RAM)** 🎯
+   - ~100ns, 16-512GB
+   - **Buffer pool resides here** (Critical for DB performance!)
+
+4. **SSD (Solid State Drive)**
+   - ~100μs (100,000ns), 1-16TB
+   - Persistent storage for data files
+   - **1,000× slower than RAM**
+
+5. **HDD (Hard Disk Drive)**
+   - ~10ms (10,000,000ns), 1-20TB
+   - Slower than SSD due to mechanical operation
+
+6. **Network Storage (NAS/SAN)**
+   - Slowest but largest capacity
+   - Additional network latency
+
+### Performance Comparison
+
+| Level | Access Time | Capacity | Relative Speed |
+|-------|------------|----------|----------------|
+| L1 Cache | ~1ns | 64KB | 1× |
+| Main Memory (RAM) | ~100ns | 16-512GB | 100× |
+| SSD | ~100μs | 1-16TB | 100,000× |
+| HDD | ~10ms | 1-20TB | 10,000,000× |
+
+> **Key Point**: RAM and SSD have about a **1,000× speed difference**. This is why **indexes**, **buffer pools**, and **query optimization** are critical. Reducing just one disk access can result in massive performance gains.
 
 ## Page / Block
 
@@ -8131,12 +8171,14 @@ SELECT * FROM heap_page_item_attrs(get_raw_page('products', 0), 'products');
 
 The most basic storage method. Rows are stored in pages in **insertion order**.
 
-\`\`\`
-Heap File: [Page0][Page1][Page2]...[PageN]
+**Structure**: Pages are linked sequentially
+- Format: \`[Page 0] → [Page 1] → [Page 2] → ... → [Page N]\`
+- Each page contains multiple rows (records)
 
-Pros: Fast inserts (append to end)
-Cons: Full scan needed for search (without index)
-\`\`\`
+**Characteristics:**
+- ✅ **Pros**: Very fast inserts (append to page with free space or allocate new page)
+- ❌ **Cons**: Finding a specific row requires full scan (without indexes)
+- Used as the default method by most RDBMS (PostgreSQL, MySQL, etc.)
 
 ### Other File Organizations
 
