@@ -819,17 +819,42 @@ LEFT JOIN categories p ON c.parent_id = p.id;
 
 ## E-Commerce ERD (본 플랫폼)
 
-\`\`\`
-customers ──1:1── customer_profiles
-    │ 1:N              │ 1:N
-    ▼                  ▼
-  orders            reviews ◄──1:N── products
-    │ 1:N                              │ N:1
-    ▼                                  ▼
- order_items ────N:M──── products   categories
-                                    ▲ self-ref
-                                    └───┘
-\`\`\`
+### 엔티티 관계 다이어그램
+
+**핵심 엔티티:**
+- **customers** (고객)
+- **customer_profiles** (고객 프로필)
+- **orders** (주문)
+- **order_items** (주문 상품)
+- **products** (상품)
+- **reviews** (리뷰)
+- **categories** (카테고리)
+
+**관계 흐름:**
+
+1. **customers → customer_profiles** (1:1)
+   - 한 고객당 하나의 프로필
+
+2. **customers → orders** (1:N)
+   - 한 고객이 여러 주문 생성
+
+3. **customers → reviews** (1:N)
+   - 한 고객이 여러 리뷰 작성
+
+4. **orders → order_items** (1:N)
+   - 한 주문에 여러 상품 포함
+
+5. **products ↔ order_items** (N:M)
+   - 상품과 주문의 다대다 관계 (order_items가 중간 테이블)
+
+6. **products → reviews** (1:N)
+   - 한 상품에 여러 리뷰
+
+7. **categories → products** (1:N)
+   - 한 카테고리에 여러 상품
+
+8. **categories → categories** (Self-Referencing)
+   - 카테고리 계층 구조 (부모-자식)
 
 ### 관계 요약
 
@@ -1038,17 +1063,42 @@ LEFT JOIN categories p ON c.parent_id = p.id;
 
 ## E-Commerce ERD (This Platform)
 
-\`\`\`
-customers ──1:1── customer_profiles
-    │ 1:N              │ 1:N
-    ▼                  ▼
-  orders            reviews ◄──1:N── products
-    │ 1:N                              │ N:1
-    ▼                                  ▼
- order_items ────N:M──── products   categories
-                                    ▲ self-ref
-                                    └───┘
-\`\`\`
+### Entity Relationship Diagram
+
+**Core Entities:**
+- **customers** (Customers)
+- **customer_profiles** (Customer Profiles)
+- **orders** (Orders)
+- **order_items** (Order Items)
+- **products** (Products)
+- **reviews** (Reviews)
+- **categories** (Categories)
+
+**Relationship Flow:**
+
+1. **customers → customer_profiles** (1:1)
+   - One customer has one profile
+
+2. **customers → orders** (1:N)
+   - One customer creates many orders
+
+3. **customers → reviews** (1:N)
+   - One customer writes many reviews
+
+4. **orders → order_items** (1:N)
+   - One order contains many items
+
+5. **products ↔ order_items** (N:M)
+   - Many-to-many between products and orders (order_items is junction table)
+
+6. **products → reviews** (1:N)
+   - One product has many reviews
+
+7. **categories → products** (1:N)
+   - One category contains many products
+
+8. **categories → categories** (Self-Referencing)
+   - Category hierarchy (parent-child)
 
 ### Relationship Summary
 
@@ -3422,15 +3472,15 @@ LEFT JOIN orders o ON c.id = o.customer_id;
 ### JOIN 비교
 
 예시 데이터로 각 JOIN 유형을 이해해봅시다:
-- **테이블 A**: 값 `{1, 2}`
-- **테이블 B**: 값 `{2, 3}`
+- **테이블 A**: 값 (1, 2)
+- **테이블 B**: 값 (2, 3)
 
 | JOIN 유형 | 결과 | 설명 | 집합 개념 |
 |-----------|------|------|----------|
-| **INNER JOIN** | `2` | 양쪽 모두에 존재하는 값만 | 교집합 (A ∩ B) |
-| **LEFT JOIN** | `1, 2` | A의 모든 값 + B와 일치하는 값 | A 전체 |
-| **RIGHT JOIN** | `2, 3` | B의 모든 값 + A와 일치하는 값 | B 전체 |
-| **FULL OUTER JOIN** | `1, 2, 3` | 양쪽 테이블의 모든 값 | 합집합 (A ∪ B) |
+| **INNER JOIN** | \`2\` | 양쪽 모두에 존재하는 값만 | 교집합 (A ∩ B) |
+| **LEFT JOIN** | \`1, 2\` | A의 모든 값 + B와 일치하는 값 | A 전체 |
+| **RIGHT JOIN** | \`2, 3\` | B의 모든 값 + A와 일치하는 값 | B 전체 |
+| **FULL OUTER JOIN** | \`1, 2, 3\` | 양쪽 테이블의 모든 값 | 합집합 (A ∪ B) |
 
 **💡 실전 예시:**
 \`\`\`sql
@@ -3505,15 +3555,15 @@ All rows from both tables (NULL where no match).
 ### JOIN Comparison
 
 Let's understand each JOIN type with example data:
-- **Table A**: values `{1, 2}`
-- **Table B**: values `{2, 3}`
+- **Table A**: values (1, 2)
+- **Table B**: values (2, 3)
 
 | JOIN Type | Result | Description | Set Concept |
 |-----------|--------|-------------|-------------|
-| **INNER JOIN** | `2` | Only values present in both | Intersection (A ∩ B) |
-| **LEFT JOIN** | `1, 2` | All values from A + matching from B | All of A |
-| **RIGHT JOIN** | `2, 3` | All values from B + matching from A | All of B |
-| **FULL OUTER JOIN** | `1, 2, 3` | All values from both tables | Union (A ∪ B) |
+| **INNER JOIN** | \`2\` | Only values present in both | Intersection (A ∩ B) |
+| **LEFT JOIN** | \`1, 2\` | All values from A + matching from B | All of A |
+| **RIGHT JOIN** | \`2, 3\` | All values from B + matching from A | All of B |
+| **FULL OUTER JOIN** | \`1, 2, 3\` | All values from both tables | Union (A ∪ B) |
 
 **💡 Practical Example:**
 \`\`\`sql
@@ -7890,15 +7940,37 @@ CREATE INDEX idx_mart_country ON mart_monthly_sales(country);
 
 ### DW 아키텍처
 
-\`\`\`
-원천 시스템        ETL/ELT        DW           마트        사용자
-┌─────────┐    ┌─────────┐   ┌──────┐    ┌──────┐    ┌──────┐
-│ 운영 DB  │───→│ Extract │──→│      │───→│ 매출  │───→│ BI   │
-│ ERP     │───→│ Transform│──→│  DW  │───→│ 마케팅│───→│ 분석  │
-│ CRM     │───→│ Load    │──→│      │───→│ 재무  │───→│ 리포트│
-│ 외부 API │───→│         │──→│      │    └──────┘    └──────┘
-└─────────┘    └─────────┘   └──────┘
-\`\`\`
+**데이터 웨어하우스 파이프라인 플로우:**
+
+#### 1단계: 원천 시스템 (Source Systems)
+다양한 데이터 소스:
+- **운영 DB (OLTP)** - 실시간 트랜잭션 데이터
+- **ERP 시스템** - 전사적 자원 관리
+- **CRM 시스템** - 고객 관계 관리
+- **외부 API** - 외부 데이터 연동
+
+#### 2단계: ETL/ELT 프로세스
+데이터 통합 및 변환:
+- **Extract (추출)** - 원천 시스템에서 데이터 수집
+- **Transform (변환)** - 데이터 정제, 통합, 표준화
+- **Load (적재)** - 변환된 데이터를 DW에 저장
+
+#### 3단계: 데이터 웨어하우스 (DW)
+- 통합된 중앙 저장소
+- 과거 데이터 보관
+- 표준화된 데이터 구조
+
+#### 4단계: 데이터 마트 (Data Marts)
+부서별/주제별 데이터 분할:
+- **매출 마트** - 판매 분석용
+- **마케팅 마트** - 캠페인 분석용
+- **재무 마트** - 재무 보고용
+
+#### 5단계: 사용자 계층 (Users)
+최종 사용자 도구:
+- **BI 도구** - 대시보드 및 시각화
+- **분석 도구** - 데이터 분석 및 마이닝
+- **리포트** - 정기 보고서 생성
 
 ### ETL vs ELT
 
@@ -7991,15 +8063,38 @@ A data warehouse is a central repository that integrates data from multiple sour
 
 ### DW Architecture
 
-\`\`\`
-Sources            ETL/ELT        DW           Marts       Users
-┌─────────┐    ┌─────────┐   ┌──────┐    ┌──────┐    ┌──────┐
-│ OLTP DB  │───→│ Extract │──→│      │───→│ Sales │───→│ BI   │
-│ ERP     │───→│Transform│──→│  DW  │───→│Market │───→│Report│
-│ CRM     │───→│ Load    │──→│      │───→│Finance│───→│Dashbd│
-│ APIs    │───→│         │──→│      │    └──────┘    └──────┘
-└─────────┘    └─────────┘   └──────┘
-\`\`\`
+**Data Warehouse Pipeline Flow:**
+
+#### Stage 1: Source Systems
+Various data sources:
+- **OLTP Database** - Real-time transactional data
+- **ERP System** - Enterprise resource planning
+- **CRM System** - Customer relationship management
+- **External APIs** - Third-party data integration
+
+#### Stage 2: ETL/ELT Process
+Data integration and transformation:
+- **Extract** - Collect data from source systems
+- **Transform** - Cleanse, integrate, and standardize data
+- **Load** - Store transformed data into DW
+
+#### Stage 3: Data Warehouse (DW)
+- Centralized integrated repository
+- Historical data storage
+- Standardized data structure
+
+#### Stage 4: Data Marts
+Department/subject-specific data subsets:
+- **Sales Mart** - Sales analysis
+- **Marketing Mart** - Campaign analysis
+- **Finance Mart** - Financial reporting
+
+#### Stage 5: User Layer
+End-user tools:
+- **BI Tools** - Dashboards and visualizations
+- **Analytics** - Data analysis and mining
+- **Reports** - Regular report generation
+- **Dashboards** - Real-time monitoring
 
 ### ETL vs ELT
 
