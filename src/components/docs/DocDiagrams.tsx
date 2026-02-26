@@ -2773,6 +2773,381 @@ export function PostgreSQLDiagram({ locale }: DiagramProps) {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Transaction Isolation Levels
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export function TransactionIsolationDiagram({ locale }: DiagramProps) {
+  const [activeLevel, setActiveLevel] = useState<number | null>(null);
+
+  const levels = [
+    {
+      name: { ko: 'READ UNCOMMITTED', en: 'READ UNCOMMITTED' },
+      level: 0,
+      icon: '🔓',
+      color: { bg: 'bg-red-500/10', border: 'border-red-500/30', ring: 'ring-red-500' },
+      problems: { ko: ['Dirty Read ✓', 'Non-repeatable Read ✓', 'Phantom Read ✓'], en: ['Dirty Read ✓', 'Non-repeatable Read ✓', 'Phantom Read ✓'] },
+      desc: {
+        ko: '가장 낮은 격리 수준. 커밋되지 않은 데이터도 읽을 수 있어 모든 문제가 발생할 수 있습니다. 실무에서는 거의 사용하지 않습니다.',
+        en: 'Lowest isolation level. Can read uncommitted data, allowing all concurrency problems. Rarely used in practice.',
+      },
+    },
+    {
+      name: { ko: 'READ COMMITTED', en: 'READ COMMITTED' },
+      level: 1,
+      icon: '🔐',
+      color: { bg: 'bg-orange-500/10', border: 'border-orange-500/30', ring: 'ring-orange-500' },
+      problems: { ko: ['Dirty Read ✗', 'Non-repeatable Read ✓', 'Phantom Read ✓'], en: ['Dirty Read ✗', 'Non-repeatable Read ✓', 'Phantom Read ✓'] },
+      desc: {
+        ko: '커밋된 데이터만 읽습니다. Dirty Read는 방지하지만, 같은 쿼리를 반복해도 다른 결과가 나올 수 있습니다. PostgreSQL, Oracle의 기본값입니다.',
+        en: 'Reads only committed data. Prevents Dirty Read but allows Non-repeatable Read. Default in PostgreSQL and Oracle.',
+      },
+    },
+    {
+      name: { ko: 'REPEATABLE READ', en: 'REPEATABLE READ' },
+      level: 2,
+      icon: '🔒',
+      color: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', ring: 'ring-blue-500' },
+      problems: { ko: ['Dirty Read ✗', 'Non-repeatable Read ✗', 'Phantom Read △'], en: ['Dirty Read ✗', 'Non-repeatable Read ✗', 'Phantom Read △'] },
+      desc: {
+        ko: '트랜잭션 내에서 같은 쿼리는 항상 같은 결과를 반환합니다. MySQL InnoDB의 기본값이며, Next-Key Lock으로 Phantom Read도 대부분 방지합니다.',
+        en: 'Same query returns same results within transaction. Default in MySQL InnoDB. Mostly prevents Phantom Read with Next-Key Locks.',
+      },
+    },
+    {
+      name: { ko: 'SERIALIZABLE', en: 'SERIALIZABLE' },
+      level: 3,
+      icon: '🔐',
+      color: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', ring: 'ring-emerald-500' },
+      problems: { ko: ['Dirty Read ✗', 'Non-repeatable Read ✗', 'Phantom Read ✗'], en: ['Dirty Read ✗', 'Non-repeatable Read ✗', 'Phantom Read ✗'] },
+      desc: {
+        ko: '가장 높은 격리 수준. 트랜잭션이 순차적으로 실행되는 것처럼 동작하여 모든 문제를 방지합니다. 성능이 가장 낮아 특수한 경우에만 사용합니다.',
+        en: 'Highest isolation level. Transactions execute as if serialized, preventing all problems. Lowest performance, used only in special cases.',
+      },
+    },
+  ];
+
+  return (
+    <div className="not-prose my-8 p-6 rounded-xl border-2 border-dashed border-border bg-muted/10">
+      <div className="flex items-center gap-2 mb-5">
+        <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white text-[9px] font-bold">
+          ISO
+        </span>
+        <div>
+          <h3 className="text-sm font-bold">{locale === 'ko' ? '트랜잭션 격리 수준' : 'Transaction Isolation Levels'}</h3>
+          <p className="text-[10px] text-muted-foreground">
+            {locale === 'ko' ? '각 레벨을 클릭하여 상세 정보 확인' : 'Click each level for details'}
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {levels.map((level, i) => (
+          <button
+            key={i}
+            onClick={() => setActiveLevel(activeLevel === i ? null : i)}
+            className={`w-full rounded-lg border text-left transition-all ${level.color.border} ${level.color.bg} ${
+              activeLevel === i ? `ring-2 ${level.color.ring} shadow-md` : 'hover:shadow-sm'
+            }`}
+          >
+            <div className="flex items-center gap-3 p-3">
+              <span className="text-xl">{level.icon}</span>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[11px] font-bold text-foreground">{level.name[locale]}</p>
+                  <span className="text-[8px] text-muted-foreground font-mono">Level {level.level}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {level.problems[locale].map((problem, idx) => (
+                    <span
+                      key={idx}
+                      className={`text-[7px] font-mono px-1.5 py-0.5 rounded ${
+                        problem.includes('✓')
+                          ? 'bg-red-500/20 text-red-700 dark:text-red-300'
+                          : problem.includes('△')
+                            ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300'
+                            : 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+                      }`}
+                    >
+                      {problem}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {activeLevel !== null && (
+        <div className={`mt-3 rounded-lg border ${levels[activeLevel].color.border} ${levels[activeLevel].color.bg} p-4 transition-all`}>
+          <p className="text-xs leading-relaxed">{levels[activeLevel].desc[locale]}</p>
+        </div>
+      )}
+
+      <div className="mt-5 p-3.5 rounded-lg bg-amber-500/5 border border-amber-500/20">
+        <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
+          <span className="font-bold">💡 TIP:</span>{' '}
+          {locale === 'ko'
+            ? '대부분의 애플리케이션은 READ COMMITTED 또는 REPEATABLE READ로 충분합니다. 성능과 일관성 사이의 균형을 고려하여 선택하세요.'
+            : 'Most applications work well with READ COMMITTED or REPEATABLE READ. Choose based on the balance between performance and consistency.'}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Normalization Steps
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export function NormalizationDiagram({ locale }: DiagramProps) {
+  const [activeStep, setActiveStep] = useState<number | null>(null);
+
+  const steps = [
+    {
+      name: { ko: '비정규형 (Unnormalized)', en: 'Unnormalized Form' },
+      icon: '❌',
+      color: { bg: 'bg-red-500/10', border: 'border-red-500/30', ring: 'ring-red-500' },
+      problem: { ko: '반복 그룹, 중복 데이터', en: 'Repeating groups, duplicate data' },
+      example: {
+        ko: '주문(주문ID, 고객명, 상품1, 수량1, 상품2, 수량2, ...)',
+        en: 'Order(OrderID, Customer, Product1, Qty1, Product2, Qty2, ...)',
+      },
+    },
+    {
+      name: { ko: '제1정규형 (1NF)', en: '1st Normal Form (1NF)' },
+      icon: '1️⃣',
+      color: { bg: 'bg-orange-500/10', border: 'border-orange-500/30', ring: 'ring-orange-500' },
+      rule: { ko: '원자값만 허용', en: 'Atomic values only' },
+      example: {
+        ko: '주문(주문ID, 고객명, 상품명, 수량) - 각 행이 하나의 상품',
+        en: 'Order(OrderID, Customer, Product, Qty) - one product per row',
+      },
+    },
+    {
+      name: { ko: '제2정규형 (2NF)', en: '2nd Normal Form (2NF)' },
+      icon: '2️⃣',
+      color: { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', ring: 'ring-yellow-500' },
+      rule: { ko: '부분 함수 종속 제거', en: 'Eliminate partial dependencies' },
+      example: {
+        ko: '주문(주문ID, 고객ID) + 주문상세(주문ID, 상품ID, 수량) + 고객(고객ID, 고객명)',
+        en: 'Order(OrderID, CustomerID) + OrderItem(OrderID, ProductID, Qty) + Customer(CustomerID, Name)',
+      },
+    },
+    {
+      name: { ko: '제3정규형 (3NF)', en: '3rd Normal Form (3NF)' },
+      icon: '3️⃣',
+      color: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', ring: 'ring-emerald-500' },
+      rule: { ko: '이행 함수 종속 제거', en: 'Eliminate transitive dependencies' },
+      example: {
+        ko: '직원(직원ID, 부서ID) + 부서(부서ID, 부서명, 위치) - 부서명과 위치는 부서ID로만 결정',
+        en: 'Employee(EmpID, DeptID) + Department(DeptID, Name, Location) - Name/Location determined by DeptID only',
+      },
+    },
+    {
+      name: { ko: 'BCNF', en: 'BCNF' },
+      icon: '🔐',
+      color: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', ring: 'ring-blue-500' },
+      rule: { ko: '모든 결정자가 후보키', en: 'All determinants are candidate keys' },
+      example: {
+        ko: '강의(교수ID, 과목코드, 시간) → 교수(교수ID, ...) + 과목(과목코드, ...)',
+        en: 'Class(ProfID, CourseCode, Time) → Professor(ProfID, ...) + Course(CourseCode, ...)',
+      },
+    },
+  ];
+
+  return (
+    <div className="not-prose my-8 p-6 rounded-xl border-2 border-dashed border-border bg-muted/10">
+      <div className="flex items-center gap-2 mb-5">
+        <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-blue-600 text-white text-[9px] font-bold">
+          NF
+        </span>
+        <div>
+          <h3 className="text-sm font-bold">{locale === 'ko' ? '정규화 단계' : 'Normalization Steps'}</h3>
+          <p className="text-[10px] text-muted-foreground">
+            {locale === 'ko' ? '각 단계를 클릭하여 상세 정보 확인' : 'Click each step for details'}
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {steps.map((step, i) => (
+          <button
+            key={i}
+            onClick={() => setActiveStep(activeStep === i ? null : i)}
+            className={`w-full rounded-lg border text-left transition-all ${step.color.border} ${step.color.bg} ${
+              activeStep === i ? `ring-2 ${step.color.ring} shadow-md` : 'hover:shadow-sm'
+            }`}
+          >
+            <div className="flex items-center gap-3 p-3">
+              <span className="text-xl">{step.icon}</span>
+              <div className="flex-1">
+                <p className="text-[11px] font-bold text-foreground mb-1">{step.name[locale]}</p>
+                {step.rule && (
+                  <p className="text-[9px] text-muted-foreground font-mono">
+                    {locale === 'ko' ? '규칙' : 'Rule'}: {step.rule[locale]}
+                  </p>
+                )}
+                {step.problem && (
+                  <p className="text-[9px] text-red-600 dark:text-red-400 font-mono">
+                    {locale === 'ko' ? '문제' : 'Problem'}: {step.problem[locale]}
+                  </p>
+                )}
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {activeStep !== null && (
+        <div className={`mt-3 rounded-lg border ${steps[activeStep].color.border} ${steps[activeStep].color.bg} p-4 transition-all`}>
+          <p className="text-[10px] font-bold mb-2">{locale === 'ko' ? '예시' : 'Example'}:</p>
+          <p className="text-xs font-mono leading-relaxed">{steps[activeStep].example[locale]}</p>
+        </div>
+      )}
+
+      <div className="mt-5 p-3.5 rounded-lg bg-amber-500/5 border border-amber-500/20">
+        <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
+          <span className="font-bold">💡 TIP:</span>{' '}
+          {locale === 'ko'
+            ? '실무에서는 대부분 3NF까지만 정규화합니다. 과도한 정규화는 JOIN이 많아져 성능 저하를 일으킬 수 있습니다.'
+            : 'In practice, most databases are normalized up to 3NF. Over-normalization can lead to performance issues due to excessive JOINs.'}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// B-tree Index Structure
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export function IndexStructureDiagram({ locale }: DiagramProps) {
+  const [activeNode, setActiveNode] = useState<string | null>(null);
+
+  const nodes = {
+    root: {
+      name: { ko: '루트 노드', en: 'Root Node' },
+      value: '50',
+      desc: { ko: '트리의 최상위 노드. 모든 검색은 루트에서 시작됩니다.', en: 'Top node of the tree. All searches start from the root.' },
+    },
+    left: {
+      name: { ko: '내부 노드 (왼쪽)', en: 'Internal Node (Left)' },
+      value: '20, 30',
+      desc: { ko: '중간 레벨 노드. 하위 노드들의 범위를 나타냅니다.', en: 'Mid-level node. Represents ranges of child nodes.' },
+    },
+    right: {
+      name: { ko: '내부 노드 (오른쪽)', en: 'Internal Node (Right)' },
+      value: '70, 80',
+      desc: { ko: '중간 레벨 노드. 데이터를 찾기 위한 경로를 제공합니다.', en: 'Mid-level node. Provides path to find data.' },
+    },
+    leaf: {
+      name: { ko: '리프 노드', en: 'Leaf Nodes' },
+      value: '10, 15 | 25, 27 | 60, 65 | 75, 77 | 85, 90',
+      desc: { ko: '실제 데이터가 저장된 노드. 정렬된 순서로 연결되어 범위 검색에 효율적입니다.', en: 'Nodes containing actual data. Linked in sorted order for efficient range queries.' },
+    },
+  };
+
+  return (
+    <div className="not-prose my-8 p-6 rounded-xl border-2 border-dashed border-border bg-muted/10">
+      <div className="flex items-center gap-2 mb-5">
+        <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 text-white text-[9px] font-bold">
+          B+
+        </span>
+        <div>
+          <h3 className="text-sm font-bold">{locale === 'ko' ? 'B-tree 인덱스 구조' : 'B-tree Index Structure'}</h3>
+          <p className="text-[10px] text-muted-foreground">
+            {locale === 'ko' ? '각 노드를 클릭하여 상세 정보 확인' : 'Click each node for details'}
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {/* Root Node */}
+        <div className="flex justify-center">
+          <button
+            onClick={() => setActiveNode(activeNode === 'root' ? null : 'root')}
+            className={`px-4 py-2 rounded-lg border-2 border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 transition-all ${
+              activeNode === 'root' ? 'ring-2 ring-purple-500 shadow-md' : ''
+            }`}
+          >
+            <p className="text-[10px] font-mono font-bold">{nodes.root.value}</p>
+          </button>
+        </div>
+
+        {/* Arrows */}
+        <div className="flex justify-center gap-8 text-muted-foreground">
+          <span className="text-xs">↙</span>
+          <span className="text-xs">↘</span>
+        </div>
+
+        {/* Internal Nodes */}
+        <div className="flex justify-center gap-8">
+          <button
+            onClick={() => setActiveNode(activeNode === 'left' ? null : 'left')}
+            className={`px-3 py-2 rounded-lg border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all ${
+              activeNode === 'left' ? 'ring-2 ring-blue-500 shadow-md' : ''
+            }`}
+          >
+            <p className="text-[9px] font-mono font-bold">{nodes.left.value}</p>
+          </button>
+          <button
+            onClick={() => setActiveNode(activeNode === 'right' ? null : 'right')}
+            className={`px-3 py-2 rounded-lg border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 transition-all ${
+              activeNode === 'right' ? 'ring-2 ring-blue-500 shadow-md' : ''
+            }`}
+          >
+            <p className="text-[9px] font-mono font-bold">{nodes.right.value}</p>
+          </button>
+        </div>
+
+        {/* Arrows */}
+        <div className="flex justify-center gap-4 text-muted-foreground text-xs">
+          <span>↓</span>
+          <span>↓</span>
+          <span className="ml-8">↓</span>
+          <span>↓</span>
+          <span>↓</span>
+        </div>
+
+        {/* Leaf Nodes */}
+        <button
+          onClick={() => setActiveNode(activeNode === 'leaf' ? null : 'leaf')}
+          className={`w-full px-3 py-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all ${
+            activeNode === 'leaf' ? 'ring-2 ring-emerald-500 shadow-md' : ''
+          }`}
+        >
+          <div className="flex justify-center gap-2 text-[8px] font-mono font-bold">
+            <span className="px-2 py-1 bg-background/60 rounded">10, 15</span>
+            <span className="px-2 py-1 bg-background/60 rounded">25, 27</span>
+            <span className="px-2 py-1 bg-background/60 rounded">60, 65</span>
+            <span className="px-2 py-1 bg-background/60 rounded">75, 77</span>
+            <span className="px-2 py-1 bg-background/60 rounded">85, 90</span>
+          </div>
+          <p className="text-[8px] text-center mt-1 text-muted-foreground">← {locale === 'ko' ? '연결됨' : 'Linked'} →</p>
+        </button>
+      </div>
+
+      {activeNode && (
+        <div className="mt-4 p-4 rounded-lg border-2 border-primary/30 bg-primary/5">
+          <p className="text-[10px] font-bold mb-1">{nodes[activeNode as keyof typeof nodes].name[locale]}</p>
+          <p className="text-xs leading-relaxed">{nodes[activeNode as keyof typeof nodes].desc[locale]}</p>
+        </div>
+      )}
+
+      <div className="mt-5 p-3.5 rounded-lg bg-amber-500/5 border border-amber-500/20">
+        <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
+          <span className="font-bold">💡 TIP:</span>{' '}
+          {locale === 'ko'
+            ? 'B-tree는 균형 트리로, 모든 리프 노드의 깊이가 같습니다. 이로 인해 검색 시간이 O(log n)으로 일정하게 유지됩니다.'
+            : 'B-tree is a balanced tree where all leaf nodes have the same depth, ensuring consistent O(log n) search time.'}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Section → Diagram Mapping
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -2794,4 +3169,7 @@ export const sectionDiagrams: Record<string, React.ComponentType<DiagramProps>> 
   'replication-ha': ReplicationHADiagram,
   'innodb-deep-dive': InnoDBDiagram,
   'postgresql-internals': PostgreSQLDiagram,
+  'transactions-constraints': TransactionIsolationDiagram,
+  'normalization-theory': NormalizationDiagram,
+  'indexes-performance': IndexStructureDiagram,
 };
