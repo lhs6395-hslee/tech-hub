@@ -2001,7 +2001,7 @@ SELECT * FROM reviews WHERE rating = 1;
 | **3NF** | 이행적 종속 제거 | A→B→C에서 A→C 종속 분리 |
 | **BCNF** | 모든 결정자가 후보키 | 더 엄격한 3NF |
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- 비정규화 (1NF 위반)
 CREATE TABLE orders_bad (
   id INT PRIMARY KEY,
@@ -2018,11 +2018,11 @@ CREATE TABLE order_items (
   product_id INT REFERENCES products(id),
   quantity INT
 );
-\\\`\\\`\\\`
+\`\`\`
 
 ### 3. 물리적 모델링
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- PostgreSQL 물리적 모델
 CREATE TABLE orders (
   id SERIAL PRIMARY KEY,
@@ -2033,7 +2033,7 @@ CREATE TABLE orders (
 );
 CREATE INDEX idx_orders_customer ON orders(customer_id);
 CREATE INDEX idx_orders_date ON orders(order_date);
-\\\`\\\`\\\`
+\`\`\`
 
 ### 반정규화 (Denormalization)
 
@@ -2082,7 +2082,7 @@ Derive **Entities**, **Attributes**, and **Relationships** from requirements.
 | **3NF** | Remove transitive dependencies | If A→B→C, separate A→C |
 | **BCNF** | Every determinant is a candidate key | Stricter 3NF |
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- Denormalized (violates 1NF)
 CREATE TABLE orders_bad (
   id INT PRIMARY KEY,
@@ -2099,11 +2099,11 @@ CREATE TABLE order_items (
   product_id INT REFERENCES products(id),
   quantity INT
 );
-\\\`\\\`\\\`
+\`\`\`
 
 ### 3. Physical Modeling
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- PostgreSQL physical model
 CREATE TABLE orders (
   id SERIAL PRIMARY KEY,
@@ -2114,7 +2114,7 @@ CREATE TABLE orders (
 );
 CREATE INDEX idx_orders_customer ON orders(customer_id);
 CREATE INDEX idx_orders_date ON orders(order_date);
-\\\`\\\`\\\`
+\`\`\`
 
 ### Denormalization
 
@@ -5313,7 +5313,7 @@ SELECT current_database(), current_user, version(),
 
 마트에서 가장 많이 사용하는 모델링 패턴입니다.
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- 팩트 테이블 (Fact Table) — 측정값
 CREATE TABLE fact_sales (
   sale_id SERIAL PRIMARY KEY,
@@ -5339,13 +5339,13 @@ CREATE TABLE dim_product (
   category VARCHAR(50),
   brand VARCHAR(100)
 );
-\\\`\\\`\\\`
+\`\`\`
 
 ### 스노우플레이크 스키마 (Snowflake Schema)
 
 디멘션 테이블을 추가로 **정규화**한 형태입니다.
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- 스타: dim_product에 category 직접 포함
 -- 스노우플레이크: category를 별도 테이블로 분리
 CREATE TABLE dim_category (
@@ -5358,11 +5358,11 @@ CREATE TABLE dim_product (
   product_name VARCHAR(200),
   category_key INT REFERENCES dim_category(category_key)
 );
-\\\`\\\`\\\`
+\`\`\`
 
 ### 마트 구축 예시 — 월별 매출 마트
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- 운영 DB에서 마트 테이블로 집계
 CREATE TABLE mart_monthly_sales AS
 SELECT
@@ -5383,14 +5383,14 @@ GROUP BY 1, 2, 3;
 -- 인덱스 추가
 CREATE INDEX idx_mart_month ON mart_monthly_sales(sale_month);
 CREATE INDEX idx_mart_country ON mart_monthly_sales(country);
-\\\`\\\`\\\`
+\`\`\`
 
 ### PostgreSQL vs MySQL
 
 | 항목 | PostgreSQL | MySQL |
 |------|-----------|-------|
-| Materialized View | \\\`CREATE MATERIALIZED VIEW\\\` 지원 | 미지원 (테이블로 대체) |
-| REFRESH | \\\`REFRESH MATERIALIZED VIEW CONCURRENTLY\\\` | 수동 TRUNCATE + INSERT |
+| Materialized View | \`CREATE MATERIALIZED VIEW\` 지원 | 미지원 (테이블로 대체) |
+| REFRESH | \`REFRESH MATERIALIZED VIEW CONCURRENTLY\` | 수동 TRUNCATE + INSERT |
 | 파티셔닝 | 선언적 파티셔닝 | RANGE/LIST/HASH 파티셔닝 |`,
           en: `## Data Mart
 
@@ -5418,7 +5418,7 @@ A data mart is a small-scale data store optimized for a **specific department or
 
 The most common modeling pattern for data marts.
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- Fact Table — measurements
 CREATE TABLE fact_sales (
   sale_id SERIAL PRIMARY KEY,
@@ -5444,13 +5444,13 @@ CREATE TABLE dim_product (
   category VARCHAR(50),
   brand VARCHAR(100)
 );
-\\\`\\\`\\\`
+\`\`\`
 
 ### Snowflake Schema
 
 A **normalized** form of star schema dimensions.
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- Star: category directly in dim_product
 -- Snowflake: category as separate table
 CREATE TABLE dim_category (
@@ -5463,11 +5463,11 @@ CREATE TABLE dim_product (
   product_name VARCHAR(200),
   category_key INT REFERENCES dim_category(category_key)
 );
-\\\`\\\`\\\`
+\`\`\`
 
 ### Mart Build Example — Monthly Sales
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 CREATE TABLE mart_monthly_sales AS
 SELECT
   DATE_TRUNC('month', o.order_date) AS sale_month,
@@ -5486,14 +5486,14 @@ GROUP BY 1, 2, 3;
 
 CREATE INDEX idx_mart_month ON mart_monthly_sales(sale_month);
 CREATE INDEX idx_mart_country ON mart_monthly_sales(country);
-\\\`\\\`\\\`
+\`\`\`
 
 ### PostgreSQL vs MySQL
 
 | Feature | PostgreSQL | MySQL |
 |---------|-----------|-------|
-| Materialized View | \\\`CREATE MATERIALIZED VIEW\\\` | Not supported (use tables) |
-| REFRESH | \\\`REFRESH MATERIALIZED VIEW CONCURRENTLY\\\` | Manual TRUNCATE + INSERT |
+| Materialized View | \`CREATE MATERIALIZED VIEW\` | Not supported (use tables) |
+| REFRESH | \`REFRESH MATERIALIZED VIEW CONCURRENTLY\` | Manual TRUNCATE + INSERT |
 | Partitioning | Declarative partitioning | RANGE/LIST/HASH partitioning |`,
         },
       },
@@ -5517,7 +5517,7 @@ CREATE INDEX idx_mart_country ON mart_monthly_sales(country);
 
 ### DW 아키텍처
 
-\\\`\\\`\\\`
+\`\`\`
 원천 시스템        ETL/ELT        DW           마트        사용자
 ┌─────────┐    ┌─────────┐   ┌──────┐    ┌──────┐    ┌──────┐
 │ 운영 DB  │───→│ Extract │──→│      │───→│ 매출  │───→│ BI   │
@@ -5525,7 +5525,7 @@ CREATE INDEX idx_mart_country ON mart_monthly_sales(country);
 │ CRM     │───→│ Load    │──→│      │───→│ 재무  │───→│ 리포트│
 │ 외부 API │───→│         │──→│      │    └──────┘    └──────┘
 └─────────┘    └─────────┘   └──────┘
-\\\`\\\`\\\`
+\`\`\`
 
 ### ETL vs ELT
 
@@ -5538,7 +5538,7 @@ CREATE INDEX idx_mart_country ON mart_monthly_sales(country);
 
 ### ETL 예시 — PostgreSQL
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- 1. Extract: 원천 테이블에서 신규 데이터 추출
 CREATE TEMP TABLE stg_orders AS
 SELECT * FROM dblink('host=source_db', '
@@ -5564,7 +5564,7 @@ WHERE total_amount > 0;
 INSERT INTO dw_fact_orders
 SELECT * FROM tfm_orders
 ON CONFLICT (id) DO NOTHING;
-\\\`\\\`\\\`
+\`\`\`
 
 ### SCD (Slowly Changing Dimension)
 
@@ -5576,7 +5576,7 @@ ON CONFLICT (id) DO NOTHING;
 | **SCD Type 2** | 이력 행 추가 (유효기간) | 고객 주소 변경 이력 전체 보존 |
 | **SCD Type 3** | 이전/현재 컬럼 분리 | current_address + previous_address |
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- SCD Type 2 예시
 CREATE TABLE dim_customer (
   customer_key SERIAL PRIMARY KEY,
@@ -5594,7 +5594,7 @@ WHERE customer_id = 1 AND is_current = TRUE;
 
 INSERT INTO dim_customer (customer_id, name, city, valid_from)
 VALUES (1, 'Kim Cheolsu', 'Busan', CURRENT_DATE);
-\\\`\\\`\\\`
+\`\`\`
 
 ### 클라우드 DW 서비스
 
@@ -5618,7 +5618,7 @@ A data warehouse is a central repository that integrates data from multiple sour
 
 ### DW Architecture
 
-\\\`\\\`\\\`
+\`\`\`
 Sources            ETL/ELT        DW           Marts       Users
 ┌─────────┐    ┌─────────┐   ┌──────┐    ┌──────┐    ┌──────┐
 │ OLTP DB  │───→│ Extract │──→│      │───→│ Sales │───→│ BI   │
@@ -5626,7 +5626,7 @@ Sources            ETL/ELT        DW           Marts       Users
 │ CRM     │───→│ Load    │──→│      │───→│Finance│───→│Dashbd│
 │ APIs    │───→│         │──→│      │    └──────┘    └──────┘
 └─────────┘    └─────────┘   └──────┘
-\\\`\\\`\\\`
+\`\`\`
 
 ### ETL vs ELT
 
@@ -5639,7 +5639,7 @@ Sources            ETL/ELT        DW           Marts       Users
 
 ### ETL Example — PostgreSQL
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- 1. Extract: pull new data from source
 CREATE TEMP TABLE stg_orders AS
 SELECT * FROM dblink('host=source_db', '
@@ -5662,7 +5662,7 @@ FROM stg_orders WHERE total_amount > 0;
 INSERT INTO dw_fact_orders
 SELECT * FROM tfm_orders
 ON CONFLICT (id) DO NOTHING;
-\\\`\\\`\\\`
+\`\`\`
 
 ### SCD (Slowly Changing Dimension)
 
@@ -5674,7 +5674,7 @@ Methods for managing historical changes in dimension data.
 | **SCD Type 2** | Add history row (validity period) | Full address change history |
 | **SCD Type 3** | Separate current/previous columns | current_address + previous_address |
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- SCD Type 2 example
 CREATE TABLE dim_customer (
   customer_key SERIAL PRIMARY KEY,
@@ -5692,7 +5692,7 @@ WHERE customer_id = 1 AND is_current = TRUE;
 
 INSERT INTO dim_customer (customer_id, name, city, valid_from)
 VALUES (1, 'Kim Cheolsu', 'Busan', CURRENT_DATE);
-\\\`\\\`\\\`
+\`\`\`
 
 ### Cloud DW Services
 
@@ -5732,7 +5732,7 @@ VALUES (1, 'Kim Cheolsu', 'Busan', CURRENT_DATE);
 
 ### PostgreSQL 이관 도구
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 # pg_dump — 논리적 백업
 pg_dump -h source_host -U postgres mydb > backup.sql
 pg_dump -Fc mydb > backup.custom          # 커스텀 포맷 (압축)
@@ -5747,11 +5747,11 @@ pg_upgrade --old-datadir /var/lib/pgsql/14/data \\
            --new-datadir /var/lib/pgsql/17/data \\
            --old-bindir /usr/pgsql-14/bin \\
            --new-bindir /usr/pgsql-17/bin
-\\\`\\\`\\\`
+\`\`\`
 
 ### MySQL 이관 도구
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 # mysqldump — 논리적 백업
 mysqldump -h source_host -u root -p mydb > backup.sql
 mysqldump --single-transaction mydb > backup.sql  # InnoDB 일관성 보장
@@ -5765,11 +5765,11 @@ mysql_upgrade -u root -p
 # MySQL Shell — 유틸리티 (MySQL 8.0+)
 mysqlsh -- util dump-instance /backup/full
 mysqlsh -- util load-dump /backup/full
-\\\`\\\`\\\`
+\`\`\`
 
 ### 이종 DB 이관 (Cross-Platform)
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- pgloader: MySQL → PostgreSQL 이관
 -- pgloader mysql://user:pass@mysql_host/mydb
 --          postgresql://user:pass@pg_host/mydb
@@ -5778,7 +5778,7 @@ mysqlsh -- util load-dump /backup/full
 -- 원천: MySQL (Source Endpoint)
 -- 타겟: PostgreSQL (Target Endpoint)
 -- 복제 유형: Full Load + CDC (Change Data Capture)
-\\\`\\\`\\\`
+\`\`\`
 
 ### 이관 체크리스트
 
@@ -5790,7 +5790,7 @@ mysqlsh -- util load-dump /backup/full
 | **성능 테스트** | 주요 쿼리 실행 계획 비교, 인덱스 유효성 |
 | **전환** | DNS 전환, 커넥션 풀 재설정, 애플리케이션 배포 |
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- 이관 후 데이터 검증 예시
 -- 행 수 비교
 SELECT 'customers' AS tbl, COUNT(*) FROM customers
@@ -5802,7 +5802,7 @@ SELECT 'products', COUNT(*) FROM products;
 -- 체크섬 비교 (PostgreSQL)
 SELECT md5(string_agg(t::text, ''))
 FROM (SELECT * FROM customers ORDER BY id) t;
-\\\`\\\`\\\``,
+\`\`\``,
           en: `## Data Migration
 
 Data migration is the process of **moving data** from one system to another. Essential for DB upgrades, cloud transitions, and system consolidation.
@@ -5827,7 +5827,7 @@ Data migration is the process of **moving data** from one system to another. Ess
 
 ### PostgreSQL Migration Tools
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 # pg_dump — logical backup
 pg_dump -h source_host -U postgres mydb > backup.sql
 pg_dump -Fc mydb > backup.custom            # custom format (compressed)
@@ -5842,11 +5842,11 @@ pg_upgrade --old-datadir /var/lib/pgsql/14/data \\
            --new-datadir /var/lib/pgsql/17/data \\
            --old-bindir /usr/pgsql-14/bin \\
            --new-bindir /usr/pgsql-17/bin
-\\\`\\\`\\\`
+\`\`\`
 
 ### MySQL Migration Tools
 
-\\\`\\\`\\\`bash
+\`\`\`bash
 # mysqldump — logical backup
 mysqldump -h source_host -u root -p mydb > backup.sql
 mysqldump --single-transaction mydb > backup.sql  # InnoDB consistency
@@ -5857,11 +5857,11 @@ mysqlpump --default-parallelism=4 mydb > backup.sql
 # MySQL Shell utilities (8.0+)
 mysqlsh -- util dump-instance /backup/full
 mysqlsh -- util load-dump /backup/full
-\\\`\\\`\\\`
+\`\`\`
 
 ### Cross-Platform Migration
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- pgloader: MySQL → PostgreSQL
 -- pgloader mysql://user:pass@mysql_host/mydb
 --          postgresql://user:pass@pg_host/mydb
@@ -5870,7 +5870,7 @@ mysqlsh -- util load-dump /backup/full
 -- Source: MySQL endpoint
 -- Target: PostgreSQL endpoint
 -- Replication type: Full Load + CDC (Change Data Capture)
-\\\`\\\`\\\`
+\`\`\`
 
 ### Migration Checklist
 
@@ -5882,7 +5882,7 @@ mysqlsh -- util load-dump /backup/full
 | **Performance test** | Execution plan comparison, index effectiveness |
 | **Cutover** | DNS switch, connection pool reset, app deployment |
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- Post-migration validation
 SELECT 'customers' AS tbl, COUNT(*) FROM customers
 UNION ALL
@@ -5893,7 +5893,7 @@ SELECT 'products', COUNT(*) FROM products;
 -- Checksum comparison (PostgreSQL)
 SELECT md5(string_agg(t::text, ''))
 FROM (SELECT * FROM customers ORDER BY id) t;
-\\\`\\\`\\\``,
+\`\`\``,
         },
       },
       {
@@ -5917,7 +5917,7 @@ MySQL은 **플러거블 스토리지 엔진** 아키텍처를 채택하여 테�
 | **Archive** | X | 행 잠금 | 로그/감사 데이터 |
 | **NDB (Cluster)** | O | 행 잠금 | 분산 클러스터 |
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- 현재 테이블의 엔진 확인
 SHOW TABLE STATUS FROM mydb;
 
@@ -5926,11 +5926,11 @@ ALTER TABLE orders ENGINE = InnoDB;
 
 -- 사용 가능한 엔진 목록
 SHOW ENGINES;
-\\\`\\\`\\\`
+\`\`\`
 
 #### InnoDB 내부 구조
 
-\\\`\\\`\\\`
+\`\`\`
 ┌─────────────────────────────────┐
 │         InnoDB Buffer Pool      │  ← 메모리 (캐시)
 │  ┌──────────┐ ┌──────────────┐  │
@@ -5944,21 +5944,21 @@ SHOW ENGINES;
 │  │ Data │ │Index │ │Undo Log│  │
 │  └──────┘ └──────┘ └────────┘  │
 └─────────────────────────────────┘
-\\\`\\\`\\\`
+\`\`\`
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- InnoDB 버퍼 풀 상태
 SHOW STATUS LIKE 'Innodb_buffer_pool%';
 
 -- 버퍼 풀 크기 설정 (전체 RAM의 70~80% 권장)
 -- my.cnf: innodb_buffer_pool_size = 4G
-\\\`\\\`\\\`
+\`\`\`
 
 ### PostgreSQL 스토리지 구조
 
 PostgreSQL은 단일 스토리지 엔진을 사용하며 **MVCC(다중 버전 동시성 제어)** 를 기반으로 합니다.
 
-\\\`\\\`\\\`
+\`\`\`
 ┌─────────────────────────────────┐
 │       Shared Buffers            │  ← 메모리 (캐시)
 │  ┌──────────┐ ┌──────────────┐  │
@@ -5973,9 +5973,9 @@ PostgreSQL은 단일 스토리지 엔진을 사용하며 **MVCC(다중 버전 �
 │  │File  │ │File  │ │(대형값) │  │
 │  └──────┘ └──────┘ └────────┘  │
 └─────────────────────────────────┘
-\\\`\\\`\\\`
+\`\`\`
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- 테이블의 물리적 파일 위치
 SELECT pg_relation_filepath('orders');
 
@@ -5987,7 +5987,7 @@ CREATE TABLE hot_data (...) TABLESPACE fast_ssd;
 SHOW shared_buffers;      -- 전체 RAM의 25% 권장
 SHOW effective_cache_size; -- OS 캐시 포함 전체 캐시
 SHOW work_mem;            -- 쿼리별 정렬/해시 메모리
-\\\`\\\`\\\`
+\`\`\`
 
 ### 행 기반 vs 컬럼 기반 스토리지
 
@@ -6003,7 +6003,7 @@ SHOW work_mem;            -- 쿼리별 정렬/해시 메모리
 
 데이터 변경 전에 **로그를 먼저 기록**하여 장애 복구를 보장합니다.
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- PostgreSQL WAL 상태
 SELECT pg_current_wal_lsn(), pg_wal_lsn_diff(
   pg_current_wal_lsn(), '0/0') AS wal_bytes;
@@ -6012,21 +6012,21 @@ SELECT pg_current_wal_lsn(), pg_wal_lsn_diff(
 SHOW archive_mode;
 SHOW archive_command;
 SHOW wal_level;  -- minimal, replica, logical
-\\\`\\\`\\\`
+\`\`\`
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- MySQL Redo Log 상태
 SHOW STATUS LIKE 'Innodb_redo_log%';
 -- Binary Log (복제/복구용)
 SHOW BINARY LOGS;
 SHOW VARIABLES LIKE 'binlog_format';  -- ROW, STATEMENT, MIXED
-\\\`\\\`\\\`
+\`\`\`
 
 ### TOAST (PostgreSQL)
 
 큰 데이터 값을 별도 테이블에 압축·저장하는 PostgreSQL 고유 메커니즘입니다.
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- TOAST 전략 확인
 SELECT attname, atttypid::regtype,
   CASE attstorage
@@ -6043,7 +6043,7 @@ SELECT pg_size_pretty(pg_total_relation_size('reviews')) AS total,
        pg_size_pretty(pg_relation_size('reviews')) AS main,
        pg_size_pretty(pg_total_relation_size('reviews')
          - pg_relation_size('reviews')) AS toast_and_index;
-\\\`\\\`\\\``,
+\`\`\``,
           en: `## Database Engine & Storage
 
 A database engine is the **core software that stores, retrieves, and modifies data**. Storage architecture determines how data is physically stored on disk.
@@ -6060,7 +6060,7 @@ MySQL uses a **pluggable storage engine** architecture — each table can use a 
 | **Archive** | No | Row-level | Log/audit data |
 | **NDB (Cluster)** | Yes | Row-level | Distributed cluster |
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- Check table engines
 SHOW TABLE STATUS FROM mydb;
 
@@ -6069,11 +6069,11 @@ ALTER TABLE orders ENGINE = InnoDB;
 
 -- List available engines
 SHOW ENGINES;
-\\\`\\\`\\\`
+\`\`\`
 
 #### InnoDB Internal Structure
 
-\\\`\\\`\\\`
+\`\`\`
 ┌─────────────────────────────────┐
 │         InnoDB Buffer Pool      │  ← Memory (cache)
 │  ┌──────────┐ ┌──────────────┐  │
@@ -6087,21 +6087,21 @@ SHOW ENGINES;
 │  │ Data │ │Index │ │Undo Log│  │
 │  └──────┘ └──────┘ └────────┘  │
 └─────────────────────────────────┘
-\\\`\\\`\\\`
+\`\`\`
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- InnoDB buffer pool status
 SHOW STATUS LIKE 'Innodb_buffer_pool%';
 
 -- Buffer pool size (70-80% of total RAM recommended)
 -- my.cnf: innodb_buffer_pool_size = 4G
-\\\`\\\`\\\`
+\`\`\`
 
 ### PostgreSQL Storage Structure
 
 PostgreSQL uses a single storage engine based on **MVCC (Multi-Version Concurrency Control)**.
 
-\\\`\\\`\\\`
+\`\`\`
 ┌─────────────────────────────────┐
 │       Shared Buffers            │  ← Memory (cache)
 │  ┌──────────┐ ┌──────────────┐  │
@@ -6116,9 +6116,9 @@ PostgreSQL uses a single storage engine based on **MVCC (Multi-Version Concurren
 │  │File  │ │File  │ │(large) │  │
 │  └──────┘ └──────┘ └────────┘  │
 └─────────────────────────────────┘
-\\\`\\\`\\\`
+\`\`\`
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- Physical file location of a table
 SELECT pg_relation_filepath('orders');
 
@@ -6130,7 +6130,7 @@ CREATE TABLE hot_data (...) TABLESPACE fast_ssd;
 SHOW shared_buffers;        -- 25% of RAM recommended
 SHOW effective_cache_size;  -- Total cache incl. OS
 SHOW work_mem;              -- Per-query sort/hash memory
-\\\`\\\`\\\`
+\`\`\`
 
 ### Row Store vs Column Store
 
@@ -6146,7 +6146,7 @@ SHOW work_mem;              -- Per-query sort/hash memory
 
 Ensures crash recovery by **writing logs before data changes**.
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- PostgreSQL WAL status
 SELECT pg_current_wal_lsn(), pg_wal_lsn_diff(
   pg_current_wal_lsn(), '0/0') AS wal_bytes;
@@ -6154,21 +6154,21 @@ SELECT pg_current_wal_lsn(), pg_wal_lsn_diff(
 -- WAL archive settings
 SHOW archive_mode;
 SHOW wal_level;  -- minimal, replica, logical
-\\\`\\\`\\\`
+\`\`\`
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- MySQL Redo Log status
 SHOW STATUS LIKE 'Innodb_redo_log%';
 -- Binary Log (replication/recovery)
 SHOW BINARY LOGS;
 SHOW VARIABLES LIKE 'binlog_format';  -- ROW, STATEMENT, MIXED
-\\\`\\\`\\\`
+\`\`\`
 
 ### TOAST (PostgreSQL)
 
 PostgreSQL mechanism for compressing and storing **large values** in a separate table.
 
-\\\`\\\`\\\`sql
+\`\`\`sql
 -- Check TOAST strategy
 SELECT attname, atttypid::regtype,
   CASE attstorage
@@ -6179,7 +6179,7 @@ SELECT attname, atttypid::regtype,
   END AS storage
 FROM pg_attribute
 WHERE attrelid = 'reviews'::regclass AND attnum > 0;
-\\\`\\\`\\\``,
+\`\`\``,
         },
       },
     ],
