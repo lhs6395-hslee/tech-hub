@@ -9136,26 +9136,39 @@ SET GLOBAL rpl_semi_sync_replica_enabled = ON;
 
 ### 고가용성 (HA) 아키텍처
 
+고가용성은 시스템 장애 시에도 서비스를 지속하기 위한 아키텍처입니다.
+
+#### 주요 HA 솔루션
+
 | 구성 | 설명 | 자동 Failover |
 |------|------|-------------|
-| **PostgreSQL + Patroni** | etcd 기반 클러스터 관리 | O |
-| **PostgreSQL + pgpool-II** | 로드밸런싱 + 커넥션 풀링 | O |
-| **MySQL InnoDB Cluster** | Group Replication + MySQL Router + Shell | O |
-| **MySQL + ProxySQL** | 쿼리 라우팅 + 로드밸런싱 | 수동/스크립트 |
-| **클라우드 관리형** | RDS Multi-AZ, Aurora, Cloud SQL | O (자동) |
+| **PostgreSQL + Patroni** | etcd/Consul 기반 클러스터 관리, 자동 리더 선출 | ✅ |
+| **PostgreSQL + pgpool-II** | 로드밸런싱 + 커넥션 풀링 + 자동 장애조치 | ✅ |
+| **MySQL InnoDB Cluster** | Group Replication + MySQL Router + Shell | ✅ |
+| **MySQL + ProxySQL** | 쿼리 라우팅 + 로드밸런싱 (수동 설정) | ⚠️ 수동/스크립트 |
+| **클라우드 관리형** | RDS Multi-AZ, Aurora, Cloud SQL | ✅ 완전 자동 |
 
-\`\`\`
-┌────────────┐     ┌──────────────────────────┐
-│ Application│────→│ Proxy / Load Balancer    │
-└────────────┘     │ (pgpool, ProxySQL, HAProxy)│
-                   └──────┬───────┬───────────┘
-                          │       │
-                   ┌──────▼──┐ ┌──▼────────┐
-                   │ Primary │ │ Standby(s) │
-                   │ (R/W)   │ │ (Read-Only)│
-                   └─────────┘ └────────────┘
-                         ↕ Replication
-\`\`\``,
+#### 일반적인 HA 아키텍처
+
+**계층 구조:**
+1. **애플리케이션 레이어**
+   - 다수의 애플리케이션 서버에서 DB 연결
+
+2. **프록시/로드밸런서 레이어**
+   - pgpool-II, ProxySQL, HAProxy 등
+   - 쓰기는 Primary로, 읽기는 Standby로 자동 라우팅
+   - 연결 풀링 및 헬스체크
+
+3. **데이터베이스 레이어**
+   - **Primary (주 서버)**: 읽기/쓰기 모두 처리
+   - **Standby (대기 서버)**: 읽기 전용, Primary 장애 시 승격
+   - Primary → Standby 간 실시간 복제 (Streaming/Binlog)
+
+**Failover 시나리오:**
+1. Primary 서버 장애 감지
+2. 자동으로 Standby 중 하나를 새로운 Primary로 승격
+3. 애플리케이션 연결을 새 Primary로 재라우팅
+4. 서비스 다운타임 최소화 (일반적으로 30초 이내)`,
           en: `## Replication & High Availability (HA)
 
 Replication synchronizes data across multiple servers for **read scaling** and **fault tolerance**.
@@ -9250,26 +9263,39 @@ FROM performance_schema.replication_group_members;
 
 ### HA Architecture
 
+High availability ensures continuous service even during system failures.
+
+#### Major HA Solutions
+
 | Setup | Description | Auto Failover |
 |-------|-------------|---------------|
-| **PG + Patroni** | etcd-based cluster mgmt | Yes |
-| **PG + pgpool-II** | Load balancing + connection pooling | Yes |
-| **MySQL InnoDB Cluster** | Group Replication + Router + Shell | Yes |
-| **MySQL + ProxySQL** | Query routing + load balancing | Manual/Script |
-| **Cloud Managed** | RDS Multi-AZ, Aurora, Cloud SQL | Yes (auto) |
+| **PG + Patroni** | etcd/Consul-based cluster management with automatic leader election | ✅ |
+| **PG + pgpool-II** | Load balancing + connection pooling + automatic failover | ✅ |
+| **MySQL InnoDB Cluster** | Group Replication + MySQL Router + Shell | ✅ |
+| **MySQL + ProxySQL** | Query routing + load balancing (manual configuration) | ⚠️ Manual/Script |
+| **Cloud Managed** | RDS Multi-AZ, Aurora, Cloud SQL | ✅ Fully automatic |
 
-\`\`\`
-┌────────────┐     ┌──────────────────────────┐
-│ Application│────→│ Proxy / Load Balancer    │
-└────────────┘     │ (pgpool, ProxySQL, HAProxy)│
-                   └──────┬───────┬───────────┘
-                          │       │
-                   ┌──────▼──┐ ┌──▼────────┐
-                   │ Primary │ │ Standby(s) │
-                   │ (R/W)   │ │ (Read-Only)│
-                   └─────────┘ └────────────┘
-                         ↕ Replication
-\`\`\``,
+#### Typical HA Architecture
+
+**Layer Structure:**
+1. **Application Layer**
+   - Multiple application servers connecting to the database
+
+2. **Proxy/Load Balancer Layer**
+   - pgpool-II, ProxySQL, HAProxy, etc.
+   - Automatically routes writes to Primary, reads to Standby
+   - Connection pooling and health checks
+
+3. **Database Layer**
+   - **Primary (Master)**: Handles both reads and writes
+   - **Standby (Replica)**: Read-only, promoted on Primary failure
+   - Real-time replication between Primary → Standby (Streaming/Binlog)
+
+**Failover Scenario:**
+1. Detect Primary server failure
+2. Automatically promote one Standby to new Primary
+3. Reroute application connections to new Primary
+4. Minimize service downtime (typically < 30 seconds)`,
         },
       },
       {
