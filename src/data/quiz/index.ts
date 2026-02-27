@@ -9,7 +9,10 @@ export type QuizCategory =
   | 'indexing'
   | 'query-processing'
   | 'recovery'
-  | 'storage';
+  | 'storage'
+  | 'concurrency'
+  | 'security'
+  | 'distributed';
 
 export interface OXQuestion {
   id: string;
@@ -56,6 +59,9 @@ export const quizCategories: {
   { id: 'query-processing', name: { ko: '쿼리 처리', en: 'Query Processing' }, icon: '⚙️' },
   { id: 'recovery', name: { ko: '복구', en: 'Recovery' }, icon: '🔄' },
   { id: 'storage', name: { ko: '스토리지', en: 'Storage' }, icon: '💾' },
+  { id: 'concurrency', name: { ko: '동시성 제어', en: 'Concurrency' }, icon: '🔀' },
+  { id: 'security', name: { ko: '보안', en: 'Security' }, icon: '🛡️' },
+  { id: 'distributed', name: { ko: '분산 DB', en: 'Distributed DB' }, icon: '🌐' },
 ];
 
 // ─── OX (True/False) Questions ───
@@ -390,6 +396,103 @@ export const oxQuestions: OXQuestion[] = [
       en: 'InnoDB physically sorts data by PK. If no PK exists, InnoDB internally generates a hidden cluster key.',
     },
   },
+
+  // Concurrency (MVCC)
+  {
+    id: 'ox-25',
+    category: 'concurrency',
+    statement: {
+      ko: 'MVCC에서 읽기 연산은 쓰기 연산을 차단(block)한다.',
+      en: 'In MVCC, read operations block write operations.',
+    },
+    answer: false,
+    explanation: {
+      ko: 'MVCC의 핵심은 "읽기는 쓰기를 차단하지 않는다"입니다. 각 트랜잭션은 자신의 스냅샷 시점의 데이터를 읽습니다.',
+      en: 'The core of MVCC is "reads never block writes." Each transaction reads data from its own snapshot point.',
+    },
+  },
+  {
+    id: 'ox-26',
+    category: 'concurrency',
+    statement: {
+      ko: 'PostgreSQL에서 UPDATE는 기존 행을 직접 수정하지 않고 DELETE + INSERT로 처리된다.',
+      en: 'In PostgreSQL, UPDATE does not modify the row in-place but works as DELETE + INSERT.',
+    },
+    answer: true,
+    explanation: {
+      ko: 'PostgreSQL은 UPDATE 시 기존 행에 xmax를 설정(논리적 삭제)하고 새 행을 삽입합니다. 이전 버전은 dead tuple이 되어 VACUUM으로 정리됩니다.',
+      en: 'PostgreSQL sets xmax on the old row (logical delete) and inserts a new row. Old versions become dead tuples cleaned up by VACUUM.',
+    },
+  },
+  {
+    id: 'ox-27',
+    category: 'concurrency',
+    statement: {
+      ko: 'MySQL InnoDB는 PostgreSQL과 달리 Undo Log를 사용하여 MVCC를 구현한다.',
+      en: 'MySQL InnoDB uses Undo Logs for MVCC implementation, unlike PostgreSQL.',
+    },
+    answer: true,
+    explanation: {
+      ko: 'InnoDB는 현재 행은 in-place 수정하고 이전 버전을 Undo Log에 저장합니다. PostgreSQL은 같은 테이블에 dead tuple로 유지합니다.',
+      en: 'InnoDB modifies current rows in-place and stores previous versions in Undo Logs. PostgreSQL keeps dead tuples in the same table.',
+    },
+  },
+
+  // Security
+  {
+    id: 'ox-28',
+    category: 'security',
+    statement: {
+      ko: 'Row-Level Security(RLS)를 사용하면 같은 테이블에서 사용자별로 다른 행을 보여줄 수 있다.',
+      en: 'Row-Level Security (RLS) allows showing different rows to different users from the same table.',
+    },
+    answer: true,
+    explanation: {
+      ko: 'RLS는 정책(Policy)을 정의하여 사용자/역할에 따라 접근 가능한 행을 제한합니다. 멀티테넌트 애플리케이션에 유용합니다.',
+      en: 'RLS defines policies to restrict accessible rows based on user/role. Useful for multi-tenant applications.',
+    },
+  },
+  {
+    id: 'ox-29',
+    category: 'security',
+    statement: {
+      ko: 'SQL Injection을 방지하는 가장 효과적인 방법은 사용자 입력을 직접 쿼리 문자열에 연결하되 특수문자를 이스케이프하는 것이다.',
+      en: 'The most effective way to prevent SQL Injection is to directly concatenate user input into query strings while escaping special characters.',
+    },
+    answer: false,
+    explanation: {
+      ko: '가장 효과적인 방법은 파라미터 바인딩(Prepared Statement)입니다. 이스케이프는 우회 가능성이 있어 완벽하지 않습니다.',
+      en: 'The most effective method is parameter binding (Prepared Statements). Escaping can be bypassed and is not foolproof.',
+    },
+  },
+
+  // Distributed
+  {
+    id: 'ox-30',
+    category: 'distributed',
+    statement: {
+      ko: 'CAP 정리에 의하면, 분산 시스템에서 일관성(C), 가용성(A), 분할 내성(P)을 모두 동시에 만족할 수 있다.',
+      en: 'According to the CAP theorem, a distributed system can simultaneously satisfy Consistency, Availability, and Partition Tolerance.',
+    },
+    answer: false,
+    explanation: {
+      ko: 'CAP 정리에 의하면 세 가지 중 최대 두 가지만 동시에 만족할 수 있습니다. 네트워크 분할은 불가피하므로 실질적으로 CP 또는 AP 중 선택합니다.',
+      en: 'The CAP theorem states only two of the three can be satisfied simultaneously. Since network partitions are inevitable, the practical choice is between CP and AP.',
+    },
+  },
+  {
+    id: 'ox-31',
+    category: 'distributed',
+    statement: {
+      ko: '2PC(Two-Phase Commit)에서 모든 참여자가 Prepare에 YES를 응답하면, Coordinator는 반드시 COMMIT을 진행한다.',
+      en: 'In 2PC (Two-Phase Commit), if all participants respond YES to Prepare, the Coordinator must proceed with COMMIT.',
+    },
+    answer: true,
+    explanation: {
+      ko: '2PC에서 모든 참여자가 YES(Prepare 성공)하면 Coordinator는 COMMIT 결정을 내립니다. 하나라도 NO이면 ROLLBACK합니다.',
+      en: 'In 2PC, if all participants vote YES (Prepare success), the Coordinator decides COMMIT. If any votes NO, it issues ROLLBACK.',
+    },
+  },
 ];
 
 // ─── Multiple Choice Questions ───
@@ -609,6 +712,80 @@ export const mcQuestions: MCQuestion[] = [
       en: 'Autovacuum formula: dead_tuples ≥ threshold(50) + scale_factor(0.2) × n_live_tup. For 100K rows, triggers at 20,050 dead tuples.',
     },
   },
+
+  // Concurrency
+  {
+    id: 'mc-13',
+    category: 'concurrency',
+    question: {
+      ko: 'PostgreSQL에서 행의 가시성을 판단하는 데 사용되는 시스템 컬럼은?',
+      en: 'Which system columns does PostgreSQL use to determine row visibility?',
+    },
+    choices: {
+      ko: ['ctid, oid', 'xmin, xmax', 'rowid, version', 'tid, cid'],
+      en: ['ctid, oid', 'xmin, xmax', 'rowid, version', 'tid, cid'],
+    },
+    answerIndex: 1,
+    explanation: {
+      ko: 'xmin은 행을 삽입한 트랜잭션 ID, xmax는 삭제/수정한 트랜잭션 ID입니다. 이 두 값으로 스냅샷 시점의 가시성을 판단합니다.',
+      en: 'xmin is the inserting transaction ID, xmax is the deleting/updating transaction ID. These determine visibility at a snapshot point.',
+    },
+  },
+  {
+    id: 'mc-14',
+    category: 'concurrency',
+    question: {
+      ko: 'PgBouncer의 커넥션 풀링 모드 중 웹 애플리케이션에 가장 권장되는 것은?',
+      en: 'Which PgBouncer pooling mode is most recommended for web applications?',
+    },
+    choices: {
+      ko: ['session 모드', 'transaction 모드', 'statement 모드', 'batch 모드'],
+      en: ['session mode', 'transaction mode', 'statement mode', 'batch mode'],
+    },
+    answerIndex: 1,
+    explanation: {
+      ko: 'transaction 모드는 트랜잭션 단위로 커넥션을 할당/반환하여 최적의 효율을 제공합니다. session 모드는 풀링 효과가 적고, statement 모드는 멀티 스테이트먼트 트랜잭션을 지원하지 않습니다.',
+      en: 'Transaction mode assigns/returns connections per transaction for optimal efficiency. Session mode has less pooling benefit, and statement mode doesn\'t support multi-statement transactions.',
+    },
+  },
+
+  // Security
+  {
+    id: 'mc-15',
+    category: 'security',
+    question: {
+      ko: 'PostgreSQL에서 권장되는 인증 방법은?',
+      en: 'What is the recommended authentication method in PostgreSQL?',
+    },
+    choices: {
+      ko: ['trust', 'md5', 'scram-sha-256', 'peer'],
+      en: ['trust', 'md5', 'scram-sha-256', 'peer'],
+    },
+    answerIndex: 2,
+    explanation: {
+      ko: 'scram-sha-256은 최신 보안 표준을 따르는 인증 방법입니다. trust는 무조건 허용(위험), md5는 레거시, peer는 로컬 전용입니다.',
+      en: 'scram-sha-256 follows modern security standards. trust allows all (dangerous), md5 is legacy, and peer is local-only.',
+    },
+  },
+
+  // Distributed
+  {
+    id: 'mc-16',
+    category: 'distributed',
+    question: {
+      ko: 'Hash Sharding의 주요 단점은?',
+      en: 'What is the main disadvantage of Hash Sharding?',
+    },
+    choices: {
+      ko: ['데이터 분산이 불균등함', '범위 쿼리가 어려움', '구현이 복잡함', '핫스팟이 발생함'],
+      en: ['Uneven data distribution', 'Range queries are difficult', 'Complex implementation', 'Hotspots occur'],
+    },
+    answerIndex: 1,
+    explanation: {
+      ko: 'Hash Sharding은 데이터를 균등하게 분산하지만, 해시 함수 특성상 범위 쿼리(BETWEEN, >, <)는 모든 샤드를 조회해야 합니다.',
+      en: 'Hash Sharding distributes data evenly, but due to hash function characteristics, range queries (BETWEEN, >, <) must query all shards.',
+    },
+  },
 ];
 
 // ─── Term Matching Sets ───
@@ -761,6 +938,83 @@ export const matchingSets: MatchingSet[] = [
       {
         term: { ko: 'CLR (보상 로그)', en: 'CLR (Compensation Log)' },
         definition: { ko: 'UNDO 중 생성, 복구 재시작 안전 보장', en: 'Generated during UNDO, ensures safe re-recovery' },
+      },
+    ],
+  },
+  {
+    id: 'match-07',
+    category: 'concurrency',
+    title: { ko: 'MVCC 개념 매칭', en: 'MVCC Concepts' },
+    pairs: [
+      {
+        term: { ko: 'xmin', en: 'xmin' },
+        definition: { ko: '행을 INSERT한 트랜잭션 ID', en: 'Transaction ID that INSERTed the row' },
+      },
+      {
+        term: { ko: 'xmax', en: 'xmax' },
+        definition: { ko: '행을 DELETE/UPDATE한 트랜잭션 ID', en: 'Transaction ID that DELETEd/UPDATEd the row' },
+      },
+      {
+        term: { ko: 'Dead Tuple', en: 'Dead Tuple' },
+        definition: { ko: 'UPDATE/DELETE 후 남은 이전 버전 행', en: 'Old version row left after UPDATE/DELETE' },
+      },
+      {
+        term: { ko: 'Snapshot', en: 'Snapshot' },
+        definition: { ko: '트랜잭션 시작 시점의 데이터 상태', en: 'Data state at transaction start time' },
+      },
+      {
+        term: { ko: 'VACUUM', en: 'VACUUM' },
+        definition: { ko: 'Dead tuple을 정리하고 공간을 회수', en: 'Clean up dead tuples and reclaim space' },
+      },
+    ],
+  },
+  {
+    id: 'match-08',
+    category: 'security',
+    title: { ko: 'DB 보안 개념 매칭', en: 'DB Security Concepts' },
+    pairs: [
+      {
+        term: { ko: 'Authentication (인증)', en: 'Authentication' },
+        definition: { ko: '사용자가 누구인지 확인', en: 'Verify who the user is' },
+      },
+      {
+        term: { ko: 'Authorization (인가)', en: 'Authorization' },
+        definition: { ko: '사용자가 무엇을 할 수 있는지 결정', en: 'Determine what the user can do' },
+      },
+      {
+        term: { ko: 'RLS (Row-Level Security)', en: 'RLS (Row-Level Security)' },
+        definition: { ko: '행 단위로 접근을 제어하는 정책', en: 'Policy that controls access at row level' },
+      },
+      {
+        term: { ko: 'RBAC (역할 기반 접근 제어)', en: 'RBAC (Role-Based Access Control)' },
+        definition: { ko: '역할을 통해 권한을 그룹으로 관리', en: 'Manage permissions through role groups' },
+      },
+    ],
+  },
+  {
+    id: 'match-09',
+    category: 'distributed',
+    title: { ko: 'CAP 정리 매칭', en: 'CAP Theorem Matching' },
+    pairs: [
+      {
+        term: { ko: 'Consistency (일관성)', en: 'Consistency' },
+        definition: { ko: '모든 노드가 같은 시점에 같은 데이터를 봄', en: 'All nodes see the same data at the same time' },
+      },
+      {
+        term: { ko: 'Availability (가용성)', en: 'Availability' },
+        definition: { ko: '모든 요청이 응답을 받음 (성공/실패)', en: 'Every request receives a response' },
+      },
+      {
+        term: { ko: 'Partition Tolerance (분할 내성)', en: 'Partition Tolerance' },
+        definition: { ko: '네트워크 분할에도 시스템이 동작', en: 'System operates despite network partitions' },
+      },
+      {
+        term: { ko: 'CP 시스템', en: 'CP System' },
+        definition: { ko: '일관성 + 분할 내성 (가용성 희생)', en: 'Consistency + Partition Tolerance (sacrifice availability)' },
+      },
+      {
+        term: { ko: 'AP 시스템', en: 'AP System' },
+        definition: { ko: '가용성 + 분할 내성 (일관성 희생)', en: 'Availability + Partition Tolerance (sacrifice consistency)' },
       },
     ],
   },

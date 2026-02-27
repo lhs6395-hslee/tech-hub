@@ -3998,6 +3998,345 @@ TRUNCATE TABLE logs;
 | Triggers | Fired | Not fired |`,
         },
       },
+      {
+        id: 'integrity-constraints',
+        title: { ko: '데이터 무결성 제약조건 심화', en: 'Data Integrity Constraints Deep Dive' },
+        level: 'intermediate',
+        content: {
+          ko: `## 데이터 무결성 제약조건 심화
+
+데이터 무결성(Integrity)은 데이터의 정확성과 일관성을 보장하는 규칙입니다. 데이터베이스는 제약조건(Constraint)을 통해 무결성을 강제합니다.
+
+### 무결성의 종류
+
+| 무결성 | 설명 | 제약조건 |
+|--------|------|---------|
+| **개체 무결성** (Entity) | 기본 키는 NULL이 될 수 없고 고유해야 함 | PRIMARY KEY |
+| **참조 무결성** (Referential) | 외래 키는 참조 테이블에 존재하는 값이어야 함 | FOREIGN KEY |
+| **도메인 무결성** (Domain) | 컬럼 값이 허용된 범위 내에 있어야 함 | CHECK, NOT NULL, DEFAULT |
+| **키 무결성** (Key) | 후보 키는 고유해야 함 | UNIQUE |
+| **사용자 정의 무결성** | 비즈니스 규칙에 의한 제약 | CHECK, TRIGGER |
+
+### PRIMARY KEY 심화
+
+\`\`\`sql
+-- 단일 컬럼 기본 키
+CREATE TABLE customers (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL
+);
+
+-- 복합 기본 키 (Composite PK)
+CREATE TABLE order_items (
+  order_id INTEGER REFERENCES orders(id),
+  product_id INTEGER REFERENCES products(id),
+  quantity INTEGER NOT NULL,
+  PRIMARY KEY (order_id, product_id)
+);
+
+-- 자연 키 vs 대리 키
+-- 자연 키: 비즈니스 의미가 있는 값 (email, 주민번호)
+-- 대리 키: 시스템이 생성한 값 (SERIAL, UUID) — 권장
+\`\`\`
+
+### FOREIGN KEY와 참조 액션
+
+\`\`\`sql
+CREATE TABLE orders (
+  id SERIAL PRIMARY KEY,
+  customer_id INTEGER NOT NULL,
+
+  -- 참조 액션 지정
+  FOREIGN KEY (customer_id) REFERENCES customers(id)
+    ON DELETE RESTRICT       -- 삭제 차단 (기본값)
+    ON UPDATE CASCADE        -- 부모 키 변경 시 같이 변경
+);
+\`\`\`
+
+| 참조 액션 | ON DELETE | ON UPDATE | 설명 |
+|----------|-----------|-----------|------|
+| **RESTRICT** | 삭제 차단 | 수정 차단 | 자식 존재 시 거부 (기본값) |
+| **CASCADE** | 자식도 삭제 | 자식도 수정 | 부모 따라 연쇄 작용 |
+| **SET NULL** | 자식을 NULL로 | 자식을 NULL로 | FK 컬럼이 NULL 허용이어야 함 |
+| **SET DEFAULT** | 기본값으로 | 기본값으로 | DEFAULT 정의 필요 |
+| **NO ACTION** | 트랜잭션 끝에 검사 | 트랜잭션 끝에 검사 | RESTRICT와 유사 (지연 가능) |
+
+\`\`\`sql
+-- 다양한 참조 액션 예시
+CREATE TABLE reviews (
+  id SERIAL PRIMARY KEY,
+  product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+  customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+  rating INTEGER NOT NULL,
+  comment TEXT
+);
+-- 상품 삭제 → 리뷰도 삭제
+-- 고객 삭제 → 리뷰 유지, customer_id = NULL
+\`\`\`
+
+### CHECK 제약조건
+
+\`\`\`sql
+-- 컬럼 레벨 CHECK
+CREATE TABLE products (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  price DECIMAL(10,2) CHECK (price > 0),
+  stock_quantity INTEGER CHECK (stock_quantity >= 0),
+  discount_rate DECIMAL(3,2) CHECK (discount_rate BETWEEN 0 AND 1)
+);
+
+-- 테이블 레벨 CHECK (여러 컬럼 참조)
+CREATE TABLE promotions (
+  id SERIAL PRIMARY KEY,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  min_price DECIMAL(10,2),
+  max_price DECIMAL(10,2),
+  CONSTRAINT chk_date_range CHECK (end_date > start_date),
+  CONSTRAINT chk_price_range CHECK (max_price >= min_price)
+);
+\`\`\`
+
+### UNIQUE 제약조건
+
+\`\`\`sql
+-- 단일 컬럼 UNIQUE
+CREATE TABLE customers (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(150) UNIQUE NOT NULL
+);
+
+-- 복합 UNIQUE (여러 컬럼의 조합이 고유)
+CREATE TABLE enrollments (
+  student_id INTEGER,
+  course_id INTEGER,
+  semester VARCHAR(10),
+  UNIQUE (student_id, course_id, semester)
+);
+
+-- Partial Unique Index (조건부 유일성)
+-- PostgreSQL: 활성 사용자의 email만 고유
+CREATE UNIQUE INDEX idx_active_email
+ON customers (email) WHERE is_premium = true;
+\`\`\`
+
+### EXCLUDE 제약조건 (PostgreSQL)
+
+범위 겹침 방지에 유용합니다:
+
+\`\`\`sql
+-- btree_gist 확장 필요
+CREATE EXTENSION btree_gist;
+
+CREATE TABLE room_reservations (
+  id SERIAL PRIMARY KEY,
+  room_id INTEGER NOT NULL,
+  reserved_during TSRANGE NOT NULL,
+  EXCLUDE USING GIST (room_id WITH =, reserved_during WITH &&)
+);
+
+-- 같은 room_id에 시간이 겹치는 예약은 자동 거부
+INSERT INTO room_reservations (room_id, reserved_during)
+VALUES (1, '[2024-01-01 10:00, 2024-01-01 12:00)');
+
+INSERT INTO room_reservations (room_id, reserved_during)
+VALUES (1, '[2024-01-01 11:00, 2024-01-01 13:00)');
+-- ERROR: conflicting key value violates exclusion constraint
+\`\`\`
+
+### 제약조건 관리
+
+\`\`\`sql
+-- 제약조건 추가
+ALTER TABLE products ADD CONSTRAINT chk_price CHECK (price > 0);
+
+-- 제약조건 삭제
+ALTER TABLE products DROP CONSTRAINT chk_price;
+
+-- 제약조건 일시 비활성화 (PostgreSQL: NOT VALID)
+ALTER TABLE orders ADD CONSTRAINT fk_customer
+  FOREIGN KEY (customer_id) REFERENCES customers(id) NOT VALID;
+-- 기존 데이터는 검증하지 않고, 새 데이터만 제약 적용
+
+-- 나중에 기존 데이터도 검증
+ALTER TABLE orders VALIDATE CONSTRAINT fk_customer;
+
+-- 제약조건 목록 확인
+SELECT conname, contype, conrelid::regclass
+FROM pg_constraint
+WHERE conrelid = 'products'::regclass;
+\`\`\`
+
+> **실무 팁**: 대량 데이터 마이그레이션 시 FK를 일시적으로 \`NOT VALID\`로 추가한 뒤, 데이터 적재 후 \`VALIDATE\`하면 성능이 크게 향상됩니다.`,
+          en: `## Data Integrity Constraints Deep Dive
+
+Data integrity ensures the accuracy and consistency of data. Databases enforce integrity through constraints.
+
+### Types of Integrity
+
+| Integrity | Description | Constraint |
+|-----------|-------------|-----------|
+| **Entity Integrity** | Primary key cannot be NULL and must be unique | PRIMARY KEY |
+| **Referential Integrity** | Foreign key must reference an existing value | FOREIGN KEY |
+| **Domain Integrity** | Column values must be within allowed range | CHECK, NOT NULL, DEFAULT |
+| **Key Integrity** | Candidate keys must be unique | UNIQUE |
+| **User-defined Integrity** | Business rule constraints | CHECK, TRIGGER |
+
+### PRIMARY KEY Deep Dive
+
+\`\`\`sql
+-- Single column primary key
+CREATE TABLE customers (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL
+);
+
+-- Composite primary key
+CREATE TABLE order_items (
+  order_id INTEGER REFERENCES orders(id),
+  product_id INTEGER REFERENCES products(id),
+  quantity INTEGER NOT NULL,
+  PRIMARY KEY (order_id, product_id)
+);
+
+-- Natural key vs Surrogate key
+-- Natural key: business-meaningful value (email, SSN)
+-- Surrogate key: system-generated value (SERIAL, UUID) — recommended
+\`\`\`
+
+### FOREIGN KEY and Referential Actions
+
+\`\`\`sql
+CREATE TABLE orders (
+  id SERIAL PRIMARY KEY,
+  customer_id INTEGER NOT NULL,
+
+  -- Specify referential actions
+  FOREIGN KEY (customer_id) REFERENCES customers(id)
+    ON DELETE RESTRICT       -- Block delete (default)
+    ON UPDATE CASCADE        -- Update child when parent key changes
+);
+\`\`\`
+
+| Action | ON DELETE | ON UPDATE | Description |
+|--------|-----------|-----------|-------------|
+| **RESTRICT** | Block delete | Block update | Reject if child exists (default) |
+| **CASCADE** | Delete child too | Update child too | Cascading action |
+| **SET NULL** | Set child to NULL | Set child to NULL | FK column must allow NULL |
+| **SET DEFAULT** | Set to default | Set to default | DEFAULT must be defined |
+| **NO ACTION** | Check at txn end | Check at txn end | Similar to RESTRICT (deferrable) |
+
+\`\`\`sql
+-- Various referential actions
+CREATE TABLE reviews (
+  id SERIAL PRIMARY KEY,
+  product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+  customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+  rating INTEGER NOT NULL,
+  comment TEXT
+);
+-- Product deleted → reviews deleted
+-- Customer deleted → reviews kept, customer_id = NULL
+\`\`\`
+
+### CHECK Constraints
+
+\`\`\`sql
+-- Column-level CHECK
+CREATE TABLE products (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  price DECIMAL(10,2) CHECK (price > 0),
+  stock_quantity INTEGER CHECK (stock_quantity >= 0),
+  discount_rate DECIMAL(3,2) CHECK (discount_rate BETWEEN 0 AND 1)
+);
+
+-- Table-level CHECK (references multiple columns)
+CREATE TABLE promotions (
+  id SERIAL PRIMARY KEY,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  min_price DECIMAL(10,2),
+  max_price DECIMAL(10,2),
+  CONSTRAINT chk_date_range CHECK (end_date > start_date),
+  CONSTRAINT chk_price_range CHECK (max_price >= min_price)
+);
+\`\`\`
+
+### UNIQUE Constraints
+
+\`\`\`sql
+-- Single column UNIQUE
+CREATE TABLE customers (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(150) UNIQUE NOT NULL
+);
+
+-- Composite UNIQUE (combination must be unique)
+CREATE TABLE enrollments (
+  student_id INTEGER,
+  course_id INTEGER,
+  semester VARCHAR(10),
+  UNIQUE (student_id, course_id, semester)
+);
+
+-- Partial Unique Index (conditional uniqueness)
+-- PostgreSQL: only premium users' emails must be unique
+CREATE UNIQUE INDEX idx_active_email
+ON customers (email) WHERE is_premium = true;
+\`\`\`
+
+### EXCLUDE Constraints (PostgreSQL)
+
+Useful for preventing range overlaps:
+
+\`\`\`sql
+-- Requires btree_gist extension
+CREATE EXTENSION btree_gist;
+
+CREATE TABLE room_reservations (
+  id SERIAL PRIMARY KEY,
+  room_id INTEGER NOT NULL,
+  reserved_during TSRANGE NOT NULL,
+  EXCLUDE USING GIST (room_id WITH =, reserved_during WITH &&)
+);
+
+-- Overlapping reservations for the same room are automatically rejected
+INSERT INTO room_reservations (room_id, reserved_during)
+VALUES (1, '[2024-01-01 10:00, 2024-01-01 12:00)');
+
+INSERT INTO room_reservations (room_id, reserved_during)
+VALUES (1, '[2024-01-01 11:00, 2024-01-01 13:00)');
+-- ERROR: conflicting key value violates exclusion constraint
+\`\`\`
+
+### Constraint Management
+
+\`\`\`sql
+-- Add constraint
+ALTER TABLE products ADD CONSTRAINT chk_price CHECK (price > 0);
+
+-- Drop constraint
+ALTER TABLE products DROP CONSTRAINT chk_price;
+
+-- Temporarily disable (PostgreSQL: NOT VALID)
+ALTER TABLE orders ADD CONSTRAINT fk_customer
+  FOREIGN KEY (customer_id) REFERENCES customers(id) NOT VALID;
+-- Existing data not validated, only new data constrained
+
+-- Validate existing data later
+ALTER TABLE orders VALIDATE CONSTRAINT fk_customer;
+
+-- List constraints
+SELECT conname, contype, conrelid::regclass
+FROM pg_constraint
+WHERE conrelid = 'products'::regclass;
+\`\`\`
+
+> **Practical tip**: During large data migrations, adding FK with \`NOT VALID\` first, loading data, then running \`VALIDATE\` significantly improves performance.`,
+        },
+      },
     ],
   },
 
@@ -4936,6 +5275,522 @@ ANALYZE customers;
 **Materialization Model:**
 - Each operator produces its entire result in memory, then passes it up
 - Higher memory usage, suitable for simple queries`,
+        },
+      },
+      {
+        id: 'materialized-views',
+        title: { ko: 'Materialized View (구체화된 뷰)', en: 'Materialized Views' },
+        level: 'advanced',
+        content: {
+          ko: `## Materialized View (구체화된 뷰)
+
+일반 뷰(VIEW)는 조회할 때마다 쿼리를 실행하지만, **Materialized View**는 쿼리 결과를 물리적으로 저장하여 빠르게 조회합니다.
+
+### 일반 뷰 vs Materialized View
+
+| 구분 | VIEW | MATERIALIZED VIEW |
+|------|------|-------------------|
+| 데이터 저장 | X (쿼리만 저장) | O (결과 물리 저장) |
+| 조회 속도 | 매번 쿼리 실행 | 저장된 데이터 조회 (빠름) |
+| 데이터 최신성 | 항상 최신 | REFRESH 필요 |
+| 인덱스 | 불가 | 가능 |
+| 공간 사용 | 없음 | 결과 크기만큼 |
+
+### 생성 및 사용
+
+\`\`\`sql
+-- Materialized View 생성
+CREATE MATERIALIZED VIEW mv_monthly_sales AS
+SELECT
+  DATE_TRUNC('month', o.order_date) AS month,
+  c.name AS category,
+  COUNT(*) AS order_count,
+  SUM(oi.quantity * oi.unit_price) AS total_revenue
+FROM orders o
+JOIN order_items oi ON o.id = oi.order_id
+JOIN products p ON oi.product_id = p.id
+JOIN categories c ON p.category_id = c.id
+WHERE o.status = 'delivered'
+GROUP BY DATE_TRUNC('month', o.order_date), c.name;
+
+-- 인덱스 생성 (성능 최적화)
+CREATE INDEX idx_mv_monthly_sales_month ON mv_monthly_sales (month);
+CREATE INDEX idx_mv_monthly_sales_cat ON mv_monthly_sales (category);
+
+-- 조회 (일반 테이블처럼 사용)
+SELECT * FROM mv_monthly_sales
+WHERE month >= '2024-01-01'
+ORDER BY month, total_revenue DESC;
+\`\`\`
+
+### 데이터 갱신 (REFRESH)
+
+\`\`\`sql
+-- 전체 갱신 (테이블 락 발생)
+REFRESH MATERIALIZED VIEW mv_monthly_sales;
+
+-- 동시 갱신 (조회를 차단하지 않음, UNIQUE 인덱스 필요)
+CREATE UNIQUE INDEX idx_mv_monthly_unique
+ON mv_monthly_sales (month, category);
+
+REFRESH MATERIALIZED VIEW CONCURRENTLY mv_monthly_sales;
+\`\`\`
+
+| REFRESH 방식 | 조회 차단 | 요구 사항 | 속도 |
+|-------------|---------|---------|------|
+| 일반 REFRESH | O (락) | 없음 | 빠름 |
+| CONCURRENTLY | X | UNIQUE 인덱스 | 느림 (diff 계산) |
+
+### 자동 갱신 전략
+
+\`\`\`sql
+-- 1. pg_cron으로 정기 갱신
+-- (pg_cron 확장 필요)
+SELECT cron.schedule('refresh_mv_sales', '0 */1 * * *',
+  'REFRESH MATERIALIZED VIEW CONCURRENTLY mv_monthly_sales');
+
+-- 2. 트리거 기반 갱신 (소량 데이터 변경 시)
+CREATE OR REPLACE FUNCTION refresh_mv_on_change()
+RETURNS TRIGGER AS $$
+BEGIN
+  REFRESH MATERIALIZED VIEW CONCURRENTLY mv_monthly_sales;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_refresh_mv
+AFTER INSERT OR UPDATE OR DELETE ON orders
+FOR EACH STATEMENT
+EXECUTE FUNCTION refresh_mv_on_change();
+\`\`\`
+
+### 활용 패턴
+
+\`\`\`sql
+-- 대시보드용 집계 뷰
+CREATE MATERIALIZED VIEW mv_customer_stats AS
+SELECT
+  c.id, c.name, c.city,
+  COUNT(DISTINCT o.id) AS total_orders,
+  COALESCE(SUM(o.total_amount), 0) AS lifetime_value,
+  MAX(o.order_date) AS last_order_date
+FROM customers c
+LEFT JOIN orders o ON c.id = o.customer_id
+GROUP BY c.id, c.name, c.city;
+
+-- 검색 최적화용 비정규화 뷰
+CREATE MATERIALIZED VIEW mv_product_search AS
+SELECT
+  p.id, p.name, p.price, p.stock_quantity,
+  c.name AS category_name,
+  AVG(r.rating) AS avg_rating,
+  COUNT(r.id) AS review_count
+FROM products p
+LEFT JOIN categories c ON p.category_id = c.id
+LEFT JOIN reviews r ON p.id = r.product_id
+GROUP BY p.id, p.name, p.price, p.stock_quantity, c.name;
+\`\`\`
+
+> **MySQL 참고**: MySQL은 Materialized View를 직접 지원하지 않습니다. 대안으로 일반 테이블 + 이벤트 스케줄러로 유사하게 구현하거나, 캐시 레이어(Redis 등)를 활용합니다.`,
+          en: `## Materialized Views
+
+A regular VIEW executes its query on each access, while a **Materialized View** physically stores the query results for fast retrieval.
+
+### VIEW vs Materialized View
+
+| Aspect | VIEW | MATERIALIZED VIEW |
+|--------|------|-------------------|
+| Data Storage | No (stores query only) | Yes (physically stored) |
+| Query Speed | Executes query each time | Reads stored data (fast) |
+| Data Freshness | Always current | Needs REFRESH |
+| Indexes | Not possible | Possible |
+| Space Usage | None | Proportional to result size |
+
+### Creation and Usage
+
+\`\`\`sql
+-- Create Materialized View
+CREATE MATERIALIZED VIEW mv_monthly_sales AS
+SELECT
+  DATE_TRUNC('month', o.order_date) AS month,
+  c.name AS category,
+  COUNT(*) AS order_count,
+  SUM(oi.quantity * oi.unit_price) AS total_revenue
+FROM orders o
+JOIN order_items oi ON o.id = oi.order_id
+JOIN products p ON oi.product_id = p.id
+JOIN categories c ON p.category_id = c.id
+WHERE o.status = 'delivered'
+GROUP BY DATE_TRUNC('month', o.order_date), c.name;
+
+-- Create indexes (performance optimization)
+CREATE INDEX idx_mv_monthly_sales_month ON mv_monthly_sales (month);
+CREATE INDEX idx_mv_monthly_sales_cat ON mv_monthly_sales (category);
+
+-- Query (use like a regular table)
+SELECT * FROM mv_monthly_sales
+WHERE month >= '2024-01-01'
+ORDER BY month, total_revenue DESC;
+\`\`\`
+
+### Data Refresh
+
+\`\`\`sql
+-- Full refresh (acquires table lock)
+REFRESH MATERIALIZED VIEW mv_monthly_sales;
+
+-- Concurrent refresh (doesn't block reads, requires UNIQUE index)
+CREATE UNIQUE INDEX idx_mv_monthly_unique
+ON mv_monthly_sales (month, category);
+
+REFRESH MATERIALIZED VIEW CONCURRENTLY mv_monthly_sales;
+\`\`\`
+
+| Refresh Method | Blocks Reads | Requirement | Speed |
+|---------------|-------------|-------------|-------|
+| Regular REFRESH | Yes (lock) | None | Fast |
+| CONCURRENTLY | No | UNIQUE index | Slower (diff computation) |
+
+### Auto-Refresh Strategies
+
+\`\`\`sql
+-- 1. Scheduled refresh with pg_cron
+-- (requires pg_cron extension)
+SELECT cron.schedule('refresh_mv_sales', '0 */1 * * *',
+  'REFRESH MATERIALIZED VIEW CONCURRENTLY mv_monthly_sales');
+
+-- 2. Trigger-based refresh (for small data changes)
+CREATE OR REPLACE FUNCTION refresh_mv_on_change()
+RETURNS TRIGGER AS $$
+BEGIN
+  REFRESH MATERIALIZED VIEW CONCURRENTLY mv_monthly_sales;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_refresh_mv
+AFTER INSERT OR UPDATE OR DELETE ON orders
+FOR EACH STATEMENT
+EXECUTE FUNCTION refresh_mv_on_change();
+\`\`\`
+
+### Usage Patterns
+
+\`\`\`sql
+-- Dashboard aggregation view
+CREATE MATERIALIZED VIEW mv_customer_stats AS
+SELECT
+  c.id, c.name, c.city,
+  COUNT(DISTINCT o.id) AS total_orders,
+  COALESCE(SUM(o.total_amount), 0) AS lifetime_value,
+  MAX(o.order_date) AS last_order_date
+FROM customers c
+LEFT JOIN orders o ON c.id = o.customer_id
+GROUP BY c.id, c.name, c.city;
+
+-- Search optimization denormalized view
+CREATE MATERIALIZED VIEW mv_product_search AS
+SELECT
+  p.id, p.name, p.price, p.stock_quantity,
+  c.name AS category_name,
+  AVG(r.rating) AS avg_rating,
+  COUNT(r.id) AS review_count
+FROM products p
+LEFT JOIN categories c ON p.category_id = c.id
+LEFT JOIN reviews r ON p.id = r.product_id
+GROUP BY p.id, p.name, p.price, p.stock_quantity, c.name;
+\`\`\`
+
+> **MySQL note**: MySQL doesn't natively support Materialized Views. Alternatives include regular tables + event scheduler for similar functionality, or using a caching layer (Redis, etc.).`,
+        },
+      },
+      {
+        id: 'json-semistructured',
+        title: { ko: 'JSON과 반정형 데이터', en: 'JSON & Semi-Structured Data' },
+        level: 'advanced',
+        content: {
+          ko: `## JSON과 반정형 데이터
+
+관계형 데이터베이스에서도 JSON, XML 등 반정형(Semi-structured) 데이터를 저장하고 쿼리할 수 있습니다.
+
+### PostgreSQL의 JSON 타입
+
+| 타입 | 저장 방식 | 인덱싱 | 중복 키 | 키 순서 |
+|-----|---------|-------|--------|--------|
+| **JSON** | 텍스트 그대로 | X | 허용 | 유지 |
+| **JSONB** | 바이너리 파싱 | **O (GIN)** | 마지막 값만 | 미유지 |
+
+> **실무에서는 거의 항상 JSONB를 사용합니다.** 인덱싱이 가능하고 쿼리 성능이 월등합니다.
+
+### JSONB 기본 조작
+
+\`\`\`sql
+-- 테이블 생성
+CREATE TABLE events (
+  id SERIAL PRIMARY KEY,
+  event_type VARCHAR(50),
+  payload JSONB NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 데이터 삽입
+INSERT INTO events (event_type, payload) VALUES
+('page_view', '{"url": "/products", "user_id": 42, "duration_ms": 1500}'),
+('purchase', '{"product_id": 7, "amount": 29900, "currency": "KRW", "items": [1, 2, 3]}'),
+('signup', '{"email": "test@example.com", "source": "google", "metadata": {"campaign": "spring2024"}}');
+\`\`\`
+
+### JSON 연산자
+
+\`\`\`sql
+-- -> : JSON 객체 반환
+SELECT payload -> 'url' FROM events;          -- "/products" (JSON)
+
+-- ->> : 텍스트 반환
+SELECT payload ->> 'url' FROM events;         -- /products (text)
+
+-- #> : 중첩 경로 (JSON)
+SELECT payload #> '{metadata,campaign}' FROM events;
+
+-- #>> : 중첩 경로 (텍스트)
+SELECT payload #>> '{metadata,campaign}' FROM events;  -- spring2024
+
+-- @> : 포함 여부 (인덱스 활용 가능!)
+SELECT * FROM events WHERE payload @> '{"user_id": 42}';
+
+-- ? : 키 존재 여부
+SELECT * FROM events WHERE payload ? 'email';
+
+-- ?| : 키 중 하나라도 존재
+SELECT * FROM events WHERE payload ?| array['email', 'url'];
+
+-- ?& : 모든 키 존재
+SELECT * FROM events WHERE payload ?& array['product_id', 'amount'];
+\`\`\`
+
+### JSONB 수정
+
+\`\`\`sql
+-- 키 추가/수정
+UPDATE events
+SET payload = payload || '{"status": "processed"}'
+WHERE id = 1;
+
+-- 키 삭제
+UPDATE events
+SET payload = payload - 'duration_ms'
+WHERE id = 1;
+
+-- 중첩 경로 수정
+UPDATE events
+SET payload = jsonb_set(payload, '{metadata,processed}', 'true')
+WHERE event_type = 'signup';
+\`\`\`
+
+### JSONB 인덱스
+
+\`\`\`sql
+-- GIN 인덱스 (범용, @>, ?, ?|, ?& 지원)
+CREATE INDEX idx_events_payload ON events USING GIN (payload);
+
+-- GIN 인덱스 (jsonb_path_ops, @>만 지원하지만 더 작고 빠름)
+CREATE INDEX idx_events_payload_path ON events USING GIN (payload jsonb_path_ops);
+
+-- 특정 키에 대한 B-tree 인덱스
+CREATE INDEX idx_events_user_id ON events ((payload ->> 'user_id'));
+
+-- 표현식 인덱스
+CREATE INDEX idx_events_amount ON events (((payload ->> 'amount')::numeric))
+WHERE event_type = 'purchase';
+\`\`\`
+
+### JSON 집계 함수
+
+\`\`\`sql
+-- 행을 JSON 배열로 변환
+SELECT json_agg(row_to_json(c))
+FROM customers c
+WHERE city = 'Seoul';
+
+-- 키-값 쌍으로 JSON 객체 생성
+SELECT json_object_agg(c.name, o.total)
+FROM customers c
+JOIN (SELECT customer_id, SUM(total_amount) AS total FROM orders GROUP BY customer_id) o
+ON c.id = o.customer_id;
+
+-- JSONB 배열 펼치기
+SELECT id, jsonb_array_elements(payload -> 'items') AS item
+FROM events WHERE event_type = 'purchase';
+\`\`\`
+
+### MySQL의 JSON
+
+\`\`\`sql
+-- MySQL JSON 기본 사용
+CREATE TABLE events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  payload JSON NOT NULL
+);
+
+-- 조회 (-> 는 JSON, ->> 는 텍스트)
+SELECT payload -> '$.url' FROM events;
+SELECT payload ->> '$.user_id' FROM events;
+
+-- JSON_EXTRACT (-> 와 동일)
+SELECT JSON_EXTRACT(payload, '$.metadata.campaign') FROM events;
+
+-- 수정
+UPDATE events SET payload = JSON_SET(payload, '$.status', 'done') WHERE id = 1;
+UPDATE events SET payload = JSON_REMOVE(payload, '$.temp_key') WHERE id = 1;
+
+-- 가상 컬럼 + 인덱스 (MySQL의 JSONB 인덱싱 대안)
+ALTER TABLE events ADD COLUMN user_id INT
+  GENERATED ALWAYS AS (payload ->> '$.user_id') STORED;
+CREATE INDEX idx_user_id ON events (user_id);
+\`\`\`
+
+> **설계 팁**: JSON은 스키마가 유동적인 데이터(이벤트 로그, 설정, 메타데이터)에 적합합니다. 자주 검색/조인하는 데이터는 정규 컬럼으로 분리하는 것이 성능상 유리합니다.`,
+          en: `## JSON & Semi-Structured Data
+
+Relational databases can store and query semi-structured data like JSON and XML.
+
+### PostgreSQL JSON Types
+
+| Type | Storage | Indexing | Duplicate Keys | Key Order |
+|------|---------|---------|----------------|-----------|
+| **JSON** | Stored as text | No | Allowed | Preserved |
+| **JSONB** | Binary parsed | **Yes (GIN)** | Last value only | Not preserved |
+
+> **In practice, almost always use JSONB.** It supports indexing and has superior query performance.
+
+### JSONB Basics
+
+\`\`\`sql
+-- Create table
+CREATE TABLE events (
+  id SERIAL PRIMARY KEY,
+  event_type VARCHAR(50),
+  payload JSONB NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert data
+INSERT INTO events (event_type, payload) VALUES
+('page_view', '{"url": "/products", "user_id": 42, "duration_ms": 1500}'),
+('purchase', '{"product_id": 7, "amount": 29900, "currency": "KRW", "items": [1, 2, 3]}'),
+('signup', '{"email": "test@example.com", "source": "google", "metadata": {"campaign": "spring2024"}}');
+\`\`\`
+
+### JSON Operators
+
+\`\`\`sql
+-- -> : returns JSON object
+SELECT payload -> 'url' FROM events;          -- "/products" (JSON)
+
+-- ->> : returns text
+SELECT payload ->> 'url' FROM events;         -- /products (text)
+
+-- #> : nested path (JSON)
+SELECT payload #> '{metadata,campaign}' FROM events;
+
+-- #>> : nested path (text)
+SELECT payload #>> '{metadata,campaign}' FROM events;  -- spring2024
+
+-- @> : containment (index-friendly!)
+SELECT * FROM events WHERE payload @> '{"user_id": 42}';
+
+-- ? : key existence
+SELECT * FROM events WHERE payload ? 'email';
+
+-- ?| : any key exists
+SELECT * FROM events WHERE payload ?| array['email', 'url'];
+
+-- ?& : all keys exist
+SELECT * FROM events WHERE payload ?& array['product_id', 'amount'];
+\`\`\`
+
+### JSONB Modification
+
+\`\`\`sql
+-- Add/update key
+UPDATE events
+SET payload = payload || '{"status": "processed"}'
+WHERE id = 1;
+
+-- Remove key
+UPDATE events
+SET payload = payload - 'duration_ms'
+WHERE id = 1;
+
+-- Modify nested path
+UPDATE events
+SET payload = jsonb_set(payload, '{metadata,processed}', 'true')
+WHERE event_type = 'signup';
+\`\`\`
+
+### JSONB Indexes
+
+\`\`\`sql
+-- GIN index (general, supports @>, ?, ?|, ?&)
+CREATE INDEX idx_events_payload ON events USING GIN (payload);
+
+-- GIN index (jsonb_path_ops, @> only but smaller and faster)
+CREATE INDEX idx_events_payload_path ON events USING GIN (payload jsonb_path_ops);
+
+-- B-tree index on specific key
+CREATE INDEX idx_events_user_id ON events ((payload ->> 'user_id'));
+
+-- Expression index
+CREATE INDEX idx_events_amount ON events (((payload ->> 'amount')::numeric))
+WHERE event_type = 'purchase';
+\`\`\`
+
+### JSON Aggregate Functions
+
+\`\`\`sql
+-- Convert rows to JSON array
+SELECT json_agg(row_to_json(c))
+FROM customers c
+WHERE city = 'Seoul';
+
+-- Build JSON object from key-value pairs
+SELECT json_object_agg(c.name, o.total)
+FROM customers c
+JOIN (SELECT customer_id, SUM(total_amount) AS total FROM orders GROUP BY customer_id) o
+ON c.id = o.customer_id;
+
+-- Expand JSONB array
+SELECT id, jsonb_array_elements(payload -> 'items') AS item
+FROM events WHERE event_type = 'purchase';
+\`\`\`
+
+### MySQL JSON
+
+\`\`\`sql
+-- MySQL JSON basics
+CREATE TABLE events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  payload JSON NOT NULL
+);
+
+-- Query (-> returns JSON, ->> returns text)
+SELECT payload -> '$.url' FROM events;
+SELECT payload ->> '$.user_id' FROM events;
+
+-- JSON_EXTRACT (same as ->)
+SELECT JSON_EXTRACT(payload, '$.metadata.campaign') FROM events;
+
+-- Modify
+UPDATE events SET payload = JSON_SET(payload, '$.status', 'done') WHERE id = 1;
+UPDATE events SET payload = JSON_REMOVE(payload, '$.temp_key') WHERE id = 1;
+
+-- Virtual column + index (MySQL alternative to JSONB indexing)
+ALTER TABLE events ADD COLUMN user_id INT
+  GENERATED ALWAYS AS (payload ->> '$.user_id') STORED;
+CREATE INDEX idx_user_id ON events (user_id);
+\`\`\`
+
+> **Design tip**: JSON is ideal for schema-flexible data (event logs, settings, metadata). Data that's frequently searched or joined should be separated into regular columns for better performance.`,
         },
       },
     ],
@@ -7255,6 +8110,1022 @@ CREATE TABLE product_images (
 \`\`\`
 
 > **Production recommendation**: Store small data (a few KB) directly in the DB, and for files larger than a few MB, use object storage (S3, GCS, etc.) and store only the URL in the database.`,
+        },
+      },
+      {
+        id: 'join-algorithms',
+        title: { ko: 'JOIN 알고리즘 심화', en: 'JOIN Algorithms Deep Dive' },
+        level: 'expert',
+        content: {
+          ko: `## JOIN 알고리즘 심화
+
+데이터베이스 엔진이 두 테이블을 결합할 때 사용하는 물리적 알고리즘을 이해하면 쿼리 성능을 진단하고 최적화할 수 있습니다.
+
+### 1. Nested Loop Join
+
+가장 단순한 알고리즘입니다. 외부 테이블의 각 행에 대해 내부 테이블을 전체 스캔합니다.
+
+\`\`\`
+for each row r in outer_table:
+    for each row s in inner_table:
+        if r.key == s.key:
+            emit (r, s)
+\`\`\`
+
+- **비용**: O(N × M) (N: 외부 행 수, M: 내부 행 수)
+- **적합한 경우**: 내부 테이블에 인덱스가 있거나, 한쪽 테이블이 매우 작을 때
+- **Index Nested Loop**: 내부 테이블의 인덱스를 사용하면 O(N × log M)
+
+\`\`\`sql
+-- 실행 계획에서 확인
+EXPLAIN ANALYZE
+SELECT c.name, o.total_amount
+FROM customers c
+JOIN orders o ON c.id = o.customer_id
+WHERE c.city = 'Seoul';
+-- → Nested Loop (customers가 적을 때 선택됨)
+\`\`\`
+
+### 2. Hash Join
+
+해시 테이블을 만들어 한 번에 매칭합니다.
+
+\`\`\`
+-- Build Phase
+hash_table = {}
+for each row r in build_table (작은 쪽):
+    hash_table[hash(r.key)] = r
+
+-- Probe Phase
+for each row s in probe_table (큰 쪽):
+    if hash(s.key) in hash_table:
+        emit (hash_table[hash(s.key)], s)
+\`\`\`
+
+- **비용**: O(N + M) — 해시 테이블 빌드 O(N) + 프로브 O(M)
+- **적합한 경우**: 등가 조인(=), 대량 데이터, 인덱스 없는 경우
+- **제한**: 등가 조건(=)에서만 사용 가능, 범위 조건(>, <)에는 사용 불가
+- **메모리**: work_mem에 해시 테이블이 들어가야 함, 초과 시 디스크 spill
+
+\`\`\`sql
+-- Hash Join 유도
+SET enable_nestloop = off;
+SET enable_mergejoin = off;
+EXPLAIN ANALYZE
+SELECT * FROM orders o JOIN customers c ON o.customer_id = c.id;
+-- → Hash Join
+\`\`\`
+
+### 3. Sort-Merge Join (Merge Join)
+
+양쪽 테이블을 정렬한 뒤 병합합니다.
+
+\`\`\`
+sort outer_table by key
+sort inner_table by key
+
+i = 0; j = 0
+while i < len(outer) and j < len(inner):
+    if outer[i].key == inner[j].key:
+        emit (outer[i], inner[j])
+        advance both
+    elif outer[i].key < inner[j].key:
+        i++
+    else:
+        j++
+\`\`\`
+
+- **비용**: O(N log N + M log M + N + M) — 정렬 + 병합
+- **적합한 경우**: 이미 정렬된 데이터(인덱스), 범위 조인, 대용량 등가 조인
+- **장점**: 범위 조건에도 사용 가능, 이미 정렬되어 있으면 매우 빠름
+
+### 알고리즘 비교
+
+| 알고리즘 | 시간 복잡도 | 메모리 | 등가 조인 | 범위 조인 | 최적 상황 |
+|---------|-----------|--------|----------|----------|----------|
+| **Nested Loop** | O(N×M) | 낮음 | O | O | 소량 데이터, 인덱스 있을 때 |
+| **Index NL** | O(N×logM) | 낮음 | O | O | 내부 테이블에 인덱스 |
+| **Hash Join** | O(N+M) | 높음 | O | X | 대량 등가 조인, 인덱스 없음 |
+| **Merge Join** | O(NlogN+MlogM) | 중간 | O | O | 정렬된 데이터, 범위 조인 |
+
+### PostgreSQL에서 제어
+
+\`\`\`sql
+-- 특정 알고리즘 비활성화 (테스트/디버깅용)
+SET enable_nestloop = off;
+SET enable_hashjoin = off;
+SET enable_mergejoin = off;
+
+-- work_mem 조정 (Hash Join에 영향)
+SET work_mem = '256MB';
+
+-- 실행 계획으로 어떤 알고리즘이 선택되는지 확인
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT * FROM orders o JOIN order_items oi ON o.id = oi.order_id;
+\`\`\`
+
+> PostgreSQL의 쿼리 옵티마이저는 테이블 크기, 인덱스 유무, 통계 정보를 기반으로 최적의 JOIN 알고리즘을 자동 선택합니다. \`enable_*\` 파라미터는 디버깅용이며 프로덕션에서는 권장하지 않습니다.`,
+          en: `## JOIN Algorithms Deep Dive
+
+Understanding the physical algorithms a database engine uses to combine two tables helps diagnose and optimize query performance.
+
+### 1. Nested Loop Join
+
+The simplest algorithm. Scans the inner table for each row in the outer table.
+
+\`\`\`
+for each row r in outer_table:
+    for each row s in inner_table:
+        if r.key == s.key:
+            emit (r, s)
+\`\`\`
+
+- **Cost**: O(N × M) (N: outer rows, M: inner rows)
+- **Best for**: Inner table has an index, or one table is very small
+- **Index Nested Loop**: Using inner table index reduces to O(N × log M)
+
+\`\`\`sql
+-- Check in execution plan
+EXPLAIN ANALYZE
+SELECT c.name, o.total_amount
+FROM customers c
+JOIN orders o ON c.id = o.customer_id
+WHERE c.city = 'Seoul';
+-- → Nested Loop (chosen when customers is small)
+\`\`\`
+
+### 2. Hash Join
+
+Builds a hash table for fast matching.
+
+\`\`\`
+-- Build Phase
+hash_table = {}
+for each row r in build_table (smaller):
+    hash_table[hash(r.key)] = r
+
+-- Probe Phase
+for each row s in probe_table (larger):
+    if hash(s.key) in hash_table:
+        emit (hash_table[hash(s.key)], s)
+\`\`\`
+
+- **Cost**: O(N + M) — build O(N) + probe O(M)
+- **Best for**: Equality joins (=), large datasets, no index
+- **Limitation**: Only works with equality conditions (=), not range (>, <)
+- **Memory**: Hash table must fit in work_mem; spills to disk if exceeded
+
+\`\`\`sql
+-- Force Hash Join for testing
+SET enable_nestloop = off;
+SET enable_mergejoin = off;
+EXPLAIN ANALYZE
+SELECT * FROM orders o JOIN customers c ON o.customer_id = c.id;
+-- → Hash Join
+\`\`\`
+
+### 3. Sort-Merge Join (Merge Join)
+
+Sorts both tables then merges them.
+
+\`\`\`
+sort outer_table by key
+sort inner_table by key
+
+i = 0; j = 0
+while i < len(outer) and j < len(inner):
+    if outer[i].key == inner[j].key:
+        emit (outer[i], inner[j])
+        advance both
+    elif outer[i].key < inner[j].key:
+        i++
+    else:
+        j++
+\`\`\`
+
+- **Cost**: O(N log N + M log M + N + M) — sort + merge
+- **Best for**: Pre-sorted data (index), range joins, large equality joins
+- **Advantage**: Works with range conditions, very fast if already sorted
+
+### Algorithm Comparison
+
+| Algorithm | Time Complexity | Memory | Equality | Range | Best Scenario |
+|-----------|----------------|--------|----------|-------|---------------|
+| **Nested Loop** | O(N×M) | Low | O | O | Small data, index available |
+| **Index NL** | O(N×logM) | Low | O | O | Inner table has index |
+| **Hash Join** | O(N+M) | High | O | X | Large equality join, no index |
+| **Merge Join** | O(NlogN+MlogM) | Medium | O | O | Sorted data, range joins |
+
+### Controlling in PostgreSQL
+
+\`\`\`sql
+-- Disable specific algorithms (for testing/debugging)
+SET enable_nestloop = off;
+SET enable_hashjoin = off;
+SET enable_mergejoin = off;
+
+-- Adjust work_mem (affects Hash Join)
+SET work_mem = '256MB';
+
+-- Check which algorithm is chosen
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT * FROM orders o JOIN order_items oi ON o.id = oi.order_id;
+\`\`\`
+
+> PostgreSQL's query optimizer automatically selects the optimal JOIN algorithm based on table size, index availability, and statistics. The \`enable_*\` parameters are for debugging and not recommended in production.`,
+        },
+      },
+      {
+        id: 'cost-based-optimization',
+        title: { ko: '비용 기반 쿼리 최적화', en: 'Cost-Based Query Optimization' },
+        level: 'expert',
+        content: {
+          ko: `## 비용 기반 쿼리 최적화 (CBO)
+
+쿼리 옵티마이저는 SQL 문을 실행하는 최적의 방법을 결정합니다. 비용 기반 최적화는 각 실행 계획의 예상 비용을 계산하고 가장 낮은 비용의 계획을 선택합니다.
+
+### 옵티마이저 구조
+
+\`\`\`
+SQL 쿼리
+  ↓
+Parser (구문 분석)
+  ↓
+Rewriter (뷰 확장, 규칙 적용)
+  ↓
+Optimizer (최적 실행 계획 선택)
+  ├── Plan Generator (후보 계획 생성)
+  ├── Cost Estimator (비용 추정)
+  │   ├── 통계 정보 (pg_statistic)
+  │   ├── 선택도(Selectivity) 계산
+  │   └── I/O + CPU 비용 계산
+  └── 최적 계획 선택
+  ↓
+Executor (실행)
+\`\`\`
+
+### 비용 모델
+
+PostgreSQL의 비용은 **디스크 I/O**와 **CPU 처리**의 가중합입니다:
+
+\`\`\`
+Total Cost = (disk pages read × seq_page_cost)
+           + (index pages read × random_page_cost)
+           + (rows processed × cpu_tuple_cost)
+           + (index entries × cpu_index_tuple_cost)
+           + (operators evaluated × cpu_operator_cost)
+\`\`\`
+
+| 파라미터 | 기본값 | 설명 |
+|---------|-------|------|
+| seq_page_cost | 1.0 | 순차 디스크 읽기 비용 (기준) |
+| random_page_cost | 4.0 | 랜덤 디스크 읽기 비용 (SSD: 1.1) |
+| cpu_tuple_cost | 0.01 | 행 처리 CPU 비용 |
+| cpu_index_tuple_cost | 0.005 | 인덱스 항목 처리 비용 |
+| cpu_operator_cost | 0.0025 | 연산자 평가 비용 |
+
+### 통계 정보
+
+옵티마이저는 \`pg_statistic\` (또는 \`pg_stats\` 뷰)의 통계를 활용합니다:
+
+\`\`\`sql
+-- 테이블 통계 확인
+SELECT
+  schemaname, tablename, n_live_tup,
+  n_dead_tup, last_analyze, last_autoanalyze
+FROM pg_stat_user_tables;
+
+-- 컬럼 통계 확인
+SELECT
+  attname, n_distinct, most_common_vals,
+  most_common_freqs, histogram_bounds
+FROM pg_stats
+WHERE tablename = 'orders' AND attname = 'status';
+\`\`\`
+
+핵심 통계:
+- **n_distinct**: 고유값 수 (음수면 비율, -1 = 모두 고유)
+- **most_common_vals / freqs**: 최빈값과 빈도
+- **histogram_bounds**: 균등 분포 히스토그램 경계
+- **correlation**: 물리적 정렬과 논리적 정렬의 상관관계
+
+### 선택도 (Selectivity) 추정
+
+\`WHERE\` 조건이 걸러내는 행의 비율입니다:
+
+\`\`\`
+-- 등가 조건: status = 'delivered'
+selectivity = most_common_freq('delivered')
+-- 또는 히스토그램에서 추정
+
+-- 범위 조건: price > 50000
+selectivity = (max - 50000) / (max - min)  -- 균등 분포 가정
+
+-- AND: sel(A AND B) = sel(A) × sel(B)  -- 독립 가정
+-- OR:  sel(A OR B) = sel(A) + sel(B) - sel(A) × sel(B)
+\`\`\`
+
+### EXPLAIN으로 옵티마이저 결정 확인
+
+\`\`\`sql
+-- 비용만 확인
+EXPLAIN SELECT * FROM orders WHERE status = 'delivered';
+-- → Seq Scan on orders  (cost=0.00..35.50 rows=100 width=48)
+--   cost: 시작비용..총비용  rows: 예상 행수  width: 행 너비(bytes)
+
+-- 실제 실행 통계 비교
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT * FROM orders WHERE status = 'delivered';
+-- → actual time=0.015..0.234 rows=95 loops=1
+--   Buffers: shared hit=20 read=5
+\`\`\`
+
+### 통계 갱신
+
+\`\`\`sql
+-- 수동 통계 갱신 (대량 데이터 변경 후)
+ANALYZE orders;
+ANALYZE orders (status);  -- 특정 컬럼만
+
+-- 통계 샘플링 비율 조정 (기본 100행, 최대 10000행)
+ALTER TABLE orders ALTER COLUMN status SET STATISTICS 500;
+ANALYZE orders;
+\`\`\`
+
+> **핵심**: 통계가 오래되면 옵티마이저가 잘못된 계획을 선택합니다. 대량 INSERT/UPDATE/DELETE 후 반드시 \`ANALYZE\`를 실행하세요. autovacuum이 자동으로 하지만 급격한 변화에는 수동 실행이 필요합니다.`,
+          en: `## Cost-Based Query Optimization (CBO)
+
+The query optimizer determines the most efficient way to execute an SQL statement. Cost-based optimization calculates the estimated cost of each execution plan and selects the one with the lowest cost.
+
+### Optimizer Architecture
+
+\`\`\`
+SQL Query
+  ↓
+Parser (syntax analysis)
+  ↓
+Rewriter (view expansion, rule application)
+  ↓
+Optimizer (select optimal execution plan)
+  ├── Plan Generator (generate candidate plans)
+  ├── Cost Estimator (estimate costs)
+  │   ├── Statistics (pg_statistic)
+  │   ├── Selectivity calculation
+  │   └── I/O + CPU cost computation
+  └── Select optimal plan
+  ↓
+Executor (execute)
+\`\`\`
+
+### Cost Model
+
+PostgreSQL's cost is a weighted sum of **disk I/O** and **CPU processing**:
+
+\`\`\`
+Total Cost = (disk pages read × seq_page_cost)
+           + (index pages read × random_page_cost)
+           + (rows processed × cpu_tuple_cost)
+           + (index entries × cpu_index_tuple_cost)
+           + (operators evaluated × cpu_operator_cost)
+\`\`\`
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| seq_page_cost | 1.0 | Sequential disk read cost (baseline) |
+| random_page_cost | 4.0 | Random disk read cost (SSD: 1.1) |
+| cpu_tuple_cost | 0.01 | Row processing CPU cost |
+| cpu_index_tuple_cost | 0.005 | Index entry processing cost |
+| cpu_operator_cost | 0.0025 | Operator evaluation cost |
+
+### Statistics
+
+The optimizer uses statistics from \`pg_statistic\` (or the \`pg_stats\` view):
+
+\`\`\`sql
+-- Check table statistics
+SELECT
+  schemaname, tablename, n_live_tup,
+  n_dead_tup, last_analyze, last_autoanalyze
+FROM pg_stat_user_tables;
+
+-- Check column statistics
+SELECT
+  attname, n_distinct, most_common_vals,
+  most_common_freqs, histogram_bounds
+FROM pg_stats
+WHERE tablename = 'orders' AND attname = 'status';
+\`\`\`
+
+Key statistics:
+- **n_distinct**: Number of distinct values (negative = ratio, -1 = all unique)
+- **most_common_vals / freqs**: Most frequent values and their frequencies
+- **histogram_bounds**: Equi-depth histogram boundaries
+- **correlation**: Correlation between physical and logical ordering
+
+### Selectivity Estimation
+
+The fraction of rows that a \`WHERE\` condition filters:
+
+\`\`\`
+-- Equality: status = 'delivered'
+selectivity = most_common_freq('delivered')
+-- or estimated from histogram
+
+-- Range: price > 50000
+selectivity = (max - 50000) / (max - min)  -- uniform distribution assumption
+
+-- AND: sel(A AND B) = sel(A) × sel(B)  -- independence assumption
+-- OR:  sel(A OR B) = sel(A) + sel(B) - sel(A) × sel(B)
+\`\`\`
+
+### Checking Optimizer Decisions with EXPLAIN
+
+\`\`\`sql
+-- Cost only
+EXPLAIN SELECT * FROM orders WHERE status = 'delivered';
+-- → Seq Scan on orders  (cost=0.00..35.50 rows=100 width=48)
+--   cost: startup..total  rows: estimated  width: row width (bytes)
+
+-- Compare with actual execution
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT * FROM orders WHERE status = 'delivered';
+-- → actual time=0.015..0.234 rows=95 loops=1
+--   Buffers: shared hit=20 read=5
+\`\`\`
+
+### Refreshing Statistics
+
+\`\`\`sql
+-- Manual statistics update (after bulk data changes)
+ANALYZE orders;
+ANALYZE orders (status);  -- specific column only
+
+-- Adjust statistics sampling rate (default 100, max 10000)
+ALTER TABLE orders ALTER COLUMN status SET STATISTICS 500;
+ANALYZE orders;
+\`\`\`
+
+> **Key point**: Stale statistics cause the optimizer to choose suboptimal plans. Always run \`ANALYZE\` after large INSERT/UPDATE/DELETE operations. Autovacuum handles this automatically, but manual runs are needed after drastic changes.`,
+        },
+      },
+      {
+        id: 'mvcc',
+        title: { ko: 'MVCC (다중 버전 동시성 제어)', en: 'MVCC (Multi-Version Concurrency Control)' },
+        level: 'expert',
+        content: {
+          ko: `## MVCC (Multi-Version Concurrency Control)
+
+MVCC는 동시에 여러 트랜잭션이 데이터를 읽고 쓸 때 **읽기가 쓰기를 차단하지 않도록** 하는 동시성 제어 기법입니다.
+
+### 핵심 원리
+
+\`\`\`
+트랜잭션이 데이터를 수정하면 → 기존 버전을 유지하고 새 버전을 생성
+트랜잭션이 데이터를 읽으면 → 자신의 스냅샷 시점에 유효한 버전을 읽음
+→ 읽기는 절대 쓰기를 차단하지 않음!
+\`\`\`
+
+### PostgreSQL의 MVCC 구현
+
+PostgreSQL은 각 행에 **트랜잭션 ID(xid)**를 기록합니다:
+
+| 시스템 컬럼 | 설명 |
+|-----------|------|
+| **xmin** | 이 행을 INSERT한 트랜잭션 ID |
+| **xmax** | 이 행을 DELETE/UPDATE한 트랜잭션 ID (0이면 유효) |
+| **ctid** | 행의 물리적 위치 (page, offset) |
+
+\`\`\`sql
+-- 시스템 컬럼 확인 (PostgreSQL)
+SELECT xmin, xmax, ctid, * FROM customers LIMIT 5;
+\`\`\`
+
+### 행 가시성 판단
+
+\`\`\`
+행이 보이려면:
+1. xmin이 커밋됨 AND (xmax가 없거나 xmax가 아직 커밋 안 됨)
+2. xmin < 현재 트랜잭션의 스냅샷 시점
+
+행이 안 보이려면:
+1. xmin이 아직 커밋 안 됨 (다른 트랜잭션이 삽입 중)
+2. xmax가 커밋됨 (이미 삭제됨)
+\`\`\`
+
+### UPDATE는 DELETE + INSERT
+
+PostgreSQL에서 UPDATE는 기존 행을 삭제(xmax 설정)하고 새 행을 삽입합니다:
+
+\`\`\`
+[Before UPDATE]
+Row v1: xmin=100, xmax=0, data='old'    ← 현재 유효
+
+[After UPDATE by txid 200]
+Row v1: xmin=100, xmax=200, data='old'  ← 이전 버전 (dead tuple)
+Row v2: xmin=200, xmax=0, data='new'    ← 새 버전 (live tuple)
+\`\`\`
+
+이로 인해 **dead tuple**이 축적되며, \`VACUUM\`이 이를 정리합니다.
+
+### 스냅샷 격리 수준
+
+| 격리 수준 | 스냅샷 시점 | 특징 |
+|----------|-----------|------|
+| **READ COMMITTED** | 각 SQL 문 시작 시 | 같은 트랜잭션 내에서도 다른 문마다 다른 데이터 볼 수 있음 |
+| **REPEATABLE READ** | 트랜잭션 시작 시 | 트랜잭션 동안 일관된 데이터 보장 |
+| **SERIALIZABLE** | 트랜잭션 시작 시 + SSI | 직렬화 가능성 보장, 충돌 시 abort |
+
+\`\`\`sql
+-- 격리 수준 설정
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+
+BEGIN;
+-- 이 트랜잭션 동안 다른 트랜잭션의 커밋을 볼 수 없음
+SELECT * FROM orders WHERE status = 'pending';
+-- ... (다른 트랜잭션이 orders를 수정하고 커밋해도)
+SELECT * FROM orders WHERE status = 'pending';  -- 같은 결과
+COMMIT;
+\`\`\`
+
+### InnoDB (MySQL)의 MVCC
+
+MySQL InnoDB는 **Undo Log**를 사용하여 MVCC를 구현합니다:
+
+\`\`\`
+[현재 행] → Undo Log (이전 버전) → Undo Log (더 이전 버전) → ...
+
+- 현재 행: 최신 버전이 클러스터드 인덱스에 저장
+- Undo Log: 이전 버전들의 체인
+- Read View: 트랜잭션 시작 시 생성되는 활성 트랜잭션 목록
+\`\`\`
+
+### PostgreSQL vs MySQL MVCC 비교
+
+| 구분 | PostgreSQL | MySQL (InnoDB) |
+|------|-----------|----------------|
+| **이전 버전 저장** | 같은 테이블에 dead tuple | Undo Log에 별도 저장 |
+| **UPDATE 방식** | DELETE + INSERT (새 행 생성) | In-place update + Undo Log |
+| **정리 방식** | VACUUM (dead tuple 회수) | Purge Thread (Undo Log 정리) |
+| **인덱스 영향** | UPDATE 시 모든 인덱스 갱신 | 기본키는 유지, 보조 인덱스만 갱신 |
+| **테이블 비대화** | Bloat 발생 가능 (VACUUM 필요) | Undo Log 공간만 증가 |
+
+### MVCC와 VACUUM의 관계
+
+\`\`\`sql
+-- Dead tuple 현황 확인
+SELECT relname, n_live_tup, n_dead_tup,
+       round(n_dead_tup::numeric / NULLIF(n_live_tup, 0) * 100, 2) AS dead_pct
+FROM pg_stat_user_tables
+WHERE n_dead_tup > 0
+ORDER BY n_dead_tup DESC;
+\`\`\`
+
+> MVCC는 현대 RDBMS의 핵심 메커니즘입니다. "읽기는 쓰기를 차단하지 않는다"는 원칙이 높은 동시성을 가능하게 하지만, 대가로 이전 버전을 정리하는 비용(VACUUM/Purge)이 발생합니다.`,
+          en: `## MVCC (Multi-Version Concurrency Control)
+
+MVCC is a concurrency control technique that ensures **reads never block writes** when multiple transactions access data simultaneously.
+
+### Core Principle
+
+\`\`\`
+When a transaction modifies data → keep the old version, create a new version
+When a transaction reads data → read the version valid at its snapshot point
+→ Reads NEVER block writes!
+\`\`\`
+
+### PostgreSQL's MVCC Implementation
+
+PostgreSQL records a **transaction ID (xid)** on each row:
+
+| System Column | Description |
+|--------------|-------------|
+| **xmin** | Transaction ID that INSERTed this row |
+| **xmax** | Transaction ID that DELETEd/UPDATEd this row (0 = still valid) |
+| **ctid** | Physical location of the row (page, offset) |
+
+\`\`\`sql
+-- Check system columns (PostgreSQL)
+SELECT xmin, xmax, ctid, * FROM customers LIMIT 5;
+\`\`\`
+
+### Row Visibility Rules
+
+\`\`\`
+A row IS visible when:
+1. xmin is committed AND (xmax is absent or xmax is not yet committed)
+2. xmin < current transaction's snapshot point
+
+A row is NOT visible when:
+1. xmin is not yet committed (another transaction is inserting)
+2. xmax is committed (already deleted)
+\`\`\`
+
+### UPDATE = DELETE + INSERT
+
+In PostgreSQL, UPDATE marks the old row as deleted (sets xmax) and inserts a new row:
+
+\`\`\`
+[Before UPDATE]
+Row v1: xmin=100, xmax=0, data='old'    ← currently valid
+
+[After UPDATE by txid 200]
+Row v1: xmin=100, xmax=200, data='old'  ← old version (dead tuple)
+Row v2: xmin=200, xmax=0, data='new'    ← new version (live tuple)
+\`\`\`
+
+This causes **dead tuple** accumulation, which \`VACUUM\` cleans up.
+
+### Snapshot Isolation Levels
+
+| Isolation Level | Snapshot Taken | Behavior |
+|----------------|---------------|----------|
+| **READ COMMITTED** | At each SQL statement start | Different statements may see different data |
+| **REPEATABLE READ** | At transaction start | Consistent data throughout transaction |
+| **SERIALIZABLE** | At transaction start + SSI | Guarantees serializability, aborts on conflict |
+
+\`\`\`sql
+-- Set isolation level
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+
+BEGIN;
+-- Cannot see commits from other transactions during this transaction
+SELECT * FROM orders WHERE status = 'pending';
+-- ... (even if other transactions modify orders and commit)
+SELECT * FROM orders WHERE status = 'pending';  -- same result
+COMMIT;
+\`\`\`
+
+### InnoDB (MySQL) MVCC
+
+MySQL InnoDB implements MVCC using **Undo Logs**:
+
+\`\`\`
+[Current row] → Undo Log (previous version) → Undo Log (older version) → ...
+
+- Current row: latest version stored in clustered index
+- Undo Log: chain of previous versions
+- Read View: list of active transactions created at transaction start
+\`\`\`
+
+### PostgreSQL vs MySQL MVCC Comparison
+
+| Aspect | PostgreSQL | MySQL (InnoDB) |
+|--------|-----------|----------------|
+| **Old version storage** | Dead tuples in same table | Separate Undo Log |
+| **UPDATE method** | DELETE + INSERT (new row) | In-place update + Undo Log |
+| **Cleanup method** | VACUUM (reclaim dead tuples) | Purge Thread (clean Undo Log) |
+| **Index impact** | All indexes updated on UPDATE | Primary key preserved, secondary indexes updated |
+| **Table bloat** | Bloat possible (needs VACUUM) | Only Undo Log space grows |
+
+### MVCC and VACUUM Relationship
+
+\`\`\`sql
+-- Check dead tuple status
+SELECT relname, n_live_tup, n_dead_tup,
+       round(n_dead_tup::numeric / NULLIF(n_live_tup, 0) * 100, 2) AS dead_pct
+FROM pg_stat_user_tables
+WHERE n_dead_tup > 0
+ORDER BY n_dead_tup DESC;
+\`\`\`
+
+> MVCC is a core mechanism in modern RDBMS. The principle "reads never block writes" enables high concurrency, but the trade-off is the cost of cleaning up old versions (VACUUM/Purge).`,
+        },
+      },
+      {
+        id: 'security-permissions',
+        title: { ko: '보안과 권한 관리 심화', en: 'Security & Permissions Deep Dive' },
+        level: 'expert',
+        content: {
+          ko: `## 보안과 권한 관리 심화
+
+데이터베이스 보안은 인증(Authentication), 권한 부여(Authorization), 데이터 보호(Data Protection)의 세 축으로 구성됩니다.
+
+### 인증 (Authentication)
+
+PostgreSQL의 인증은 \`pg_hba.conf\` 파일에서 관리합니다:
+
+\`\`\`
+# TYPE  DATABASE  USER  ADDRESS       METHOD
+local   all       all                 peer
+host    all       all   127.0.0.1/32  scram-sha-256
+host    all       all   0.0.0.0/0     scram-sha-256
+host    replication repl 10.0.0.0/8   scram-sha-256
+\`\`\`
+
+| 인증 방법 | 설명 | 보안 수준 |
+|----------|------|----------|
+| **trust** | 무조건 허용 | 최하 (개발용만) |
+| **peer** | OS 사용자명 일치 | 로컬 전용 |
+| **md5** | MD5 해시 비밀번호 | 중간 (레거시) |
+| **scram-sha-256** | SCRAM 인증 | **권장** |
+| **cert** | SSL 인증서 | 최상 |
+
+### 역할 기반 접근 제어 (RBAC)
+
+\`\`\`sql
+-- 역할 생성 (로그인 불가 그룹)
+CREATE ROLE analytics_team;
+CREATE ROLE dev_team;
+
+-- 로그인 가능한 사용자 생성
+CREATE ROLE analyst LOGIN PASSWORD 'secure_pw'
+  VALID UNTIL '2026-12-31'
+  CONNECTION LIMIT 5;
+
+-- 그룹에 사용자 추가
+GRANT analytics_team TO analyst;
+GRANT dev_team TO analyst;
+
+-- 그룹에 권한 부여
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO analytics_team;
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO dev_team;
+
+-- 기본 권한 설정 (향후 생성되는 테이블에도 적용)
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT ON TABLES TO analytics_team;
+\`\`\`
+
+### Row-Level Security (RLS)
+
+행 수준 보안으로 사용자별 데이터 접근을 제어합니다:
+
+\`\`\`sql
+-- RLS 활성화
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
+-- 정책 생성: 각 고객은 자기 주문만 볼 수 있음
+CREATE POLICY customer_orders ON orders
+  FOR SELECT
+  USING (customer_id = current_setting('app.current_customer_id')::int);
+
+-- 관리자는 모든 행 접근 가능
+CREATE POLICY admin_all ON orders
+  FOR ALL
+  TO admin_role
+  USING (true);
+
+-- 애플리케이션에서 사용
+SET app.current_customer_id = '42';
+SELECT * FROM orders;  -- customer_id = 42인 행만 반환
+\`\`\`
+
+### Column-Level Permissions
+
+\`\`\`sql
+-- 특정 컬럼만 접근 허용
+GRANT SELECT (id, name, city) ON customers TO analyst;
+-- analyst는 email, country, signup_date, is_premium 조회 불가
+
+-- 특정 컬럼만 수정 허용
+GRANT UPDATE (city, is_premium) ON customers TO support_team;
+\`\`\`
+
+### SQL Injection 방지
+
+\`\`\`sql
+-- 취약한 코드 (절대 사용 금지!)
+query = "SELECT * FROM users WHERE name = '" + user_input + "'"
+-- user_input = "'; DROP TABLE users; --"
+
+-- 안전한 코드: 파라미터 바인딩 사용
+-- PostgreSQL (PL/pgSQL)
+EXECUTE 'SELECT * FROM users WHERE name = $1' USING user_input;
+
+-- 애플리케이션 레벨
+-- Node.js: pool.query('SELECT * FROM users WHERE name = $1', [userInput])
+-- Python:  cursor.execute('SELECT * FROM users WHERE name = %s', (user_input,))
+-- Java:    preparedStmt.setString(1, userInput)
+\`\`\`
+
+### 데이터 암호화
+
+\`\`\`sql
+-- 전송 중 암호화: SSL/TLS 설정
+-- postgresql.conf
+-- ssl = on
+-- ssl_cert_file = 'server.crt'
+-- ssl_key_file = 'server.key'
+
+-- 저장 시 암호화: pgcrypto 확장
+CREATE EXTENSION pgcrypto;
+
+-- 단방향 해시 (비밀번호)
+INSERT INTO users (name, password_hash)
+VALUES ('john', crypt('my_password', gen_salt('bf')));
+
+-- 검증
+SELECT * FROM users
+WHERE password_hash = crypt('my_password', password_hash);
+
+-- 양방향 암호화 (민감 데이터)
+INSERT INTO sensitive_data (encrypted_ssn)
+VALUES (pgp_sym_encrypt('123-45-6789', 'encryption_key'));
+
+SELECT pgp_sym_decrypt(encrypted_ssn, 'encryption_key')
+FROM sensitive_data;
+\`\`\`
+
+### 감사 로깅 (Audit Logging)
+
+\`\`\`sql
+-- 감사 로그 테이블
+CREATE TABLE audit_log (
+  id SERIAL PRIMARY KEY,
+  table_name TEXT NOT NULL,
+  operation TEXT NOT NULL,
+  old_data JSONB,
+  new_data JSONB,
+  changed_by TEXT DEFAULT current_user,
+  changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 감사 트리거 함수
+CREATE OR REPLACE FUNCTION audit_trigger_func()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO audit_log (table_name, operation, old_data, new_data)
+  VALUES (
+    TG_TABLE_NAME,
+    TG_OP,
+    CASE WHEN TG_OP IN ('UPDATE','DELETE') THEN row_to_json(OLD)::jsonb END,
+    CASE WHEN TG_OP IN ('INSERT','UPDATE') THEN row_to_json(NEW)::jsonb END
+  );
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
+-- 테이블에 감사 트리거 적용
+CREATE TRIGGER audit_customers
+AFTER INSERT OR UPDATE OR DELETE ON customers
+FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
+\`\`\`
+
+> **보안 원칙**: 최소 권한 원칙(Principle of Least Privilege)을 항상 따르세요. 필요한 최소한의 권한만 부여하고, 정기적으로 불필요한 권한을 회수하세요.`,
+          en: `## Security & Permissions Deep Dive
+
+Database security consists of three pillars: Authentication, Authorization, and Data Protection.
+
+### Authentication
+
+PostgreSQL authentication is managed in the \`pg_hba.conf\` file:
+
+\`\`\`
+# TYPE  DATABASE  USER  ADDRESS       METHOD
+local   all       all                 peer
+host    all       all   127.0.0.1/32  scram-sha-256
+host    all       all   0.0.0.0/0     scram-sha-256
+host    replication repl 10.0.0.0/8   scram-sha-256
+\`\`\`
+
+| Auth Method | Description | Security Level |
+|------------|-------------|---------------|
+| **trust** | Always allow | Lowest (dev only) |
+| **peer** | OS username match | Local only |
+| **md5** | MD5 hash password | Medium (legacy) |
+| **scram-sha-256** | SCRAM authentication | **Recommended** |
+| **cert** | SSL certificate | Highest |
+
+### Role-Based Access Control (RBAC)
+
+\`\`\`sql
+-- Create roles (non-login groups)
+CREATE ROLE analytics_team;
+CREATE ROLE dev_team;
+
+-- Create login-capable user
+CREATE ROLE analyst LOGIN PASSWORD 'secure_pw'
+  VALID UNTIL '2026-12-31'
+  CONNECTION LIMIT 5;
+
+-- Add user to groups
+GRANT analytics_team TO analyst;
+GRANT dev_team TO analyst;
+
+-- Grant permissions to groups
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO analytics_team;
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO dev_team;
+
+-- Set default privileges (applies to future tables too)
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT ON TABLES TO analytics_team;
+\`\`\`
+
+### Row-Level Security (RLS)
+
+Control data access per user at the row level:
+
+\`\`\`sql
+-- Enable RLS
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
+-- Policy: customers can only see their own orders
+CREATE POLICY customer_orders ON orders
+  FOR SELECT
+  USING (customer_id = current_setting('app.current_customer_id')::int);
+
+-- Admins can access all rows
+CREATE POLICY admin_all ON orders
+  FOR ALL
+  TO admin_role
+  USING (true);
+
+-- Application usage
+SET app.current_customer_id = '42';
+SELECT * FROM orders;  -- returns only rows where customer_id = 42
+\`\`\`
+
+### Column-Level Permissions
+
+\`\`\`sql
+-- Allow access to specific columns only
+GRANT SELECT (id, name, city) ON customers TO analyst;
+-- analyst cannot query email, country, signup_date, is_premium
+
+-- Allow updates on specific columns only
+GRANT UPDATE (city, is_premium) ON customers TO support_team;
+\`\`\`
+
+### SQL Injection Prevention
+
+\`\`\`sql
+-- Vulnerable code (NEVER do this!)
+query = "SELECT * FROM users WHERE name = '" + user_input + "'"
+-- user_input = "'; DROP TABLE users; --"
+
+-- Safe code: use parameter binding
+-- PostgreSQL (PL/pgSQL)
+EXECUTE 'SELECT * FROM users WHERE name = $1' USING user_input;
+
+-- Application level
+-- Node.js: pool.query('SELECT * FROM users WHERE name = $1', [userInput])
+-- Python:  cursor.execute('SELECT * FROM users WHERE name = %s', (user_input,))
+-- Java:    preparedStmt.setString(1, userInput)
+\`\`\`
+
+### Data Encryption
+
+\`\`\`sql
+-- Encryption in transit: SSL/TLS configuration
+-- postgresql.conf
+-- ssl = on
+-- ssl_cert_file = 'server.crt'
+-- ssl_key_file = 'server.key'
+
+-- Encryption at rest: pgcrypto extension
+CREATE EXTENSION pgcrypto;
+
+-- One-way hash (passwords)
+INSERT INTO users (name, password_hash)
+VALUES ('john', crypt('my_password', gen_salt('bf')));
+
+-- Verification
+SELECT * FROM users
+WHERE password_hash = crypt('my_password', password_hash);
+
+-- Two-way encryption (sensitive data)
+INSERT INTO sensitive_data (encrypted_ssn)
+VALUES (pgp_sym_encrypt('123-45-6789', 'encryption_key'));
+
+SELECT pgp_sym_decrypt(encrypted_ssn, 'encryption_key')
+FROM sensitive_data;
+\`\`\`
+
+### Audit Logging
+
+\`\`\`sql
+-- Audit log table
+CREATE TABLE audit_log (
+  id SERIAL PRIMARY KEY,
+  table_name TEXT NOT NULL,
+  operation TEXT NOT NULL,
+  old_data JSONB,
+  new_data JSONB,
+  changed_by TEXT DEFAULT current_user,
+  changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Audit trigger function
+CREATE OR REPLACE FUNCTION audit_trigger_func()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO audit_log (table_name, operation, old_data, new_data)
+  VALUES (
+    TG_TABLE_NAME,
+    TG_OP,
+    CASE WHEN TG_OP IN ('UPDATE','DELETE') THEN row_to_json(OLD)::jsonb END,
+    CASE WHEN TG_OP IN ('INSERT','UPDATE') THEN row_to_json(NEW)::jsonb END
+  );
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply audit trigger to table
+CREATE TRIGGER audit_customers
+AFTER INSERT OR UPDATE OR DELETE ON customers
+FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
+\`\`\`
+
+> **Security principle**: Always follow the Principle of Least Privilege. Grant only the minimum necessary permissions and regularly revoke unnecessary ones.`,
         },
       },
     ],
@@ -10409,6 +12280,641 @@ SHOW wal_level;                -- minimal/replica/logical
 SHOW random_page_cost;         -- SSD: 1.1, HDD: 4.0
 SHOW effective_io_concurrency; -- SSD: 200, HDD: 2
 \`\`\``,
+        },
+      },
+      {
+        id: 'distributed-database',
+        title: { ko: '분산 데이터베이스', en: 'Distributed Databases' },
+        level: 'database',
+        content: {
+          ko: `## 분산 데이터베이스
+
+분산 데이터베이스는 데이터를 여러 노드(서버)에 분산 저장하여 확장성, 가용성, 성능을 향상시키는 시스템입니다.
+
+### 분산 DB vs 복제 vs 파티셔닝
+
+| 개념 | 설명 | 목적 |
+|------|------|------|
+| **복제(Replication)** | 같은 데이터를 여러 노드에 복사 | 가용성, 읽기 성능 |
+| **파티셔닝(Sharding)** | 데이터를 분할하여 각 노드에 배치 | 쓰기 확장성 |
+| **분산 DB** | 복제 + 파티셔닝 + 분산 트랜잭션 | 종합적 확장 |
+
+### 분산 전략: 샤딩 (Sharding)
+
+\`\`\`
+[Hash Sharding]
+customer_id % 4 = 0 → Shard 0
+customer_id % 4 = 1 → Shard 1
+customer_id % 4 = 2 → Shard 2
+customer_id % 4 = 3 → Shard 3
+
+[Range Sharding]
+customer_id 1-1000    → Shard 0
+customer_id 1001-2000 → Shard 1
+customer_id 2001-3000 → Shard 2
+
+[Directory Sharding]
+Lookup table이 어떤 데이터가 어디에 있는지 관리
+\`\`\`
+
+| 샤딩 방식 | 장점 | 단점 |
+|----------|------|------|
+| **Hash** | 균등 분산 | 범위 쿼리 어려움 |
+| **Range** | 범위 쿼리 효율 | 핫스팟(특정 샤드에 집중) |
+| **Directory** | 유연한 배치 | Lookup 병목 |
+
+### CAP 정리
+
+분산 시스템에서 세 가지를 동시에 만족할 수 없습니다:
+
+\`\`\`
+      Consistency (일관성)
+         /\\
+        /  \\
+       / CP \\
+      /______\\
+     /\\      /\\
+    /  \\ ?? /  \\
+   / CA \\  / AP \\
+  /______\\/______\\
+Availability    Partition
+(가용성)      Tolerance
+              (분할 내성)
+\`\`\`
+
+| 조합 | 특징 | 예시 |
+|------|------|------|
+| **CP** | 일관성 + 분할 내성 (가용성 포기) | PostgreSQL (단일), HBase |
+| **AP** | 가용성 + 분할 내성 (일관성 포기) | Cassandra, DynamoDB |
+| **CA** | 일관성 + 가용성 (네트워크 분할 시 작동 안 함) | 단일 노드 RDBMS |
+
+### 분산 트랜잭션: 2PC (Two-Phase Commit)
+
+\`\`\`
+[Phase 1: Prepare (투표)]
+Coordinator → Node A: "PREPARE" → Node A: "YES"
+Coordinator → Node B: "PREPARE" → Node B: "YES"
+Coordinator → Node C: "PREPARE" → Node C: "YES"
+
+[Phase 2: Commit (확정)]
+모두 YES → Coordinator → All: "COMMIT"
+하나라도 NO → Coordinator → All: "ROLLBACK"
+\`\`\`
+
+\`\`\`sql
+-- PostgreSQL의 Prepared Transaction (2PC 지원)
+-- postgresql.conf: max_prepared_transactions = 10
+
+BEGIN;
+UPDATE accounts SET balance = balance - 1000 WHERE id = 1;
+PREPARE TRANSACTION 'transfer_001';
+
+-- 다른 노드에서도 PREPARE 완료 후
+COMMIT PREPARED 'transfer_001';
+-- 또는
+ROLLBACK PREPARED 'transfer_001';
+\`\`\`
+
+### PostgreSQL의 분산 솔루션
+
+\`\`\`sql
+-- 1. Citus (분산 PostgreSQL 확장)
+-- 분산 테이블 생성
+SELECT create_distributed_table('orders', 'customer_id');
+
+-- 일반 SQL로 쿼리 (자동으로 분산 실행)
+SELECT customer_id, SUM(total_amount)
+FROM orders GROUP BY customer_id;
+
+-- 2. Foreign Data Wrapper (FDW)
+CREATE EXTENSION postgres_fdw;
+
+CREATE SERVER remote_db
+FOREIGN DATA WRAPPER postgres_fdw
+OPTIONS (host 'db2.example.com', port '5432', dbname 'analytics');
+
+CREATE USER MAPPING FOR current_user
+SERVER remote_db
+OPTIONS (user 'reader', password 'secret');
+
+IMPORT FOREIGN SCHEMA public
+FROM SERVER remote_db INTO foreign_schema;
+
+-- 원격 테이블을 로컬처럼 쿼리
+SELECT * FROM foreign_schema.remote_orders
+WHERE order_date > '2024-01-01';
+\`\`\`
+
+### NewSQL: 분산 + ACID
+
+전통적 RDBMS의 ACID와 NoSQL의 확장성을 결합한 시스템:
+
+| 시스템 | 기반 | 특징 |
+|--------|------|------|
+| **CockroachDB** | PostgreSQL 호환 | Raft 합의, 자동 샤딩 |
+| **YugabyteDB** | PostgreSQL 호환 | Google Spanner 영감 |
+| **TiDB** | MySQL 호환 | TiKV 분산 스토리지 |
+| **Google Spanner** | 독자 프로토콜 | TrueTime, 글로벌 일관성 |
+
+> **실무 팁**: 분산 DB 도입 전 단일 서버 최적화(인덱스, 쿼리 튜닝, 읽기 복제)를 먼저 시도하세요. 분산은 복잡성과 운영 비용이 크게 증가합니다.`,
+          en: `## Distributed Databases
+
+Distributed databases spread data across multiple nodes (servers) to improve scalability, availability, and performance.
+
+### Distributed DB vs Replication vs Partitioning
+
+| Concept | Description | Purpose |
+|---------|-------------|---------|
+| **Replication** | Copy same data to multiple nodes | Availability, read performance |
+| **Partitioning (Sharding)** | Split data across nodes | Write scalability |
+| **Distributed DB** | Replication + Partitioning + Distributed txn | Comprehensive scaling |
+
+### Sharding Strategies
+
+\`\`\`
+[Hash Sharding]
+customer_id % 4 = 0 → Shard 0
+customer_id % 4 = 1 → Shard 1
+customer_id % 4 = 2 → Shard 2
+customer_id % 4 = 3 → Shard 3
+
+[Range Sharding]
+customer_id 1-1000    → Shard 0
+customer_id 1001-2000 → Shard 1
+customer_id 2001-3000 → Shard 2
+
+[Directory Sharding]
+Lookup table manages which data lives where
+\`\`\`
+
+| Strategy | Pros | Cons |
+|----------|------|------|
+| **Hash** | Even distribution | Range queries difficult |
+| **Range** | Efficient range queries | Hotspots (data skew) |
+| **Directory** | Flexible placement | Lookup bottleneck |
+
+### CAP Theorem
+
+In a distributed system, you cannot satisfy all three simultaneously:
+
+\`\`\`
+      Consistency
+         /\\
+        /  \\
+       / CP \\
+      /______\\
+     /\\      /\\
+    /  \\ ?? /  \\
+   / CA \\  / AP \\
+  /______\\/______\\
+Availability    Partition
+                Tolerance
+\`\`\`
+
+| Combination | Characteristics | Examples |
+|------------|----------------|---------|
+| **CP** | Consistency + Partition Tolerance (sacrifice availability) | PostgreSQL (single), HBase |
+| **AP** | Availability + Partition Tolerance (sacrifice consistency) | Cassandra, DynamoDB |
+| **CA** | Consistency + Availability (fails on network partition) | Single-node RDBMS |
+
+### Distributed Transactions: 2PC (Two-Phase Commit)
+
+\`\`\`
+[Phase 1: Prepare (vote)]
+Coordinator → Node A: "PREPARE" → Node A: "YES"
+Coordinator → Node B: "PREPARE" → Node B: "YES"
+Coordinator → Node C: "PREPARE" → Node C: "YES"
+
+[Phase 2: Commit (finalize)]
+All YES → Coordinator → All: "COMMIT"
+Any NO  → Coordinator → All: "ROLLBACK"
+\`\`\`
+
+\`\`\`sql
+-- PostgreSQL Prepared Transactions (2PC support)
+-- postgresql.conf: max_prepared_transactions = 10
+
+BEGIN;
+UPDATE accounts SET balance = balance - 1000 WHERE id = 1;
+PREPARE TRANSACTION 'transfer_001';
+
+-- After PREPARE completes on other nodes too
+COMMIT PREPARED 'transfer_001';
+-- or
+ROLLBACK PREPARED 'transfer_001';
+\`\`\`
+
+### PostgreSQL Distribution Solutions
+
+\`\`\`sql
+-- 1. Citus (distributed PostgreSQL extension)
+-- Create distributed table
+SELECT create_distributed_table('orders', 'customer_id');
+
+-- Query with regular SQL (automatically distributed)
+SELECT customer_id, SUM(total_amount)
+FROM orders GROUP BY customer_id;
+
+-- 2. Foreign Data Wrapper (FDW)
+CREATE EXTENSION postgres_fdw;
+
+CREATE SERVER remote_db
+FOREIGN DATA WRAPPER postgres_fdw
+OPTIONS (host 'db2.example.com', port '5432', dbname 'analytics');
+
+CREATE USER MAPPING FOR current_user
+SERVER remote_db
+OPTIONS (user 'reader', password 'secret');
+
+IMPORT FOREIGN SCHEMA public
+FROM SERVER remote_db INTO foreign_schema;
+
+-- Query remote tables as if local
+SELECT * FROM foreign_schema.remote_orders
+WHERE order_date > '2024-01-01';
+\`\`\`
+
+### NewSQL: Distributed + ACID
+
+Systems combining traditional RDBMS ACID with NoSQL scalability:
+
+| System | Compatibility | Features |
+|--------|--------------|----------|
+| **CockroachDB** | PostgreSQL-compatible | Raft consensus, auto-sharding |
+| **YugabyteDB** | PostgreSQL-compatible | Google Spanner-inspired |
+| **TiDB** | MySQL-compatible | TiKV distributed storage |
+| **Google Spanner** | Proprietary | TrueTime, global consistency |
+
+> **Practical tip**: Before adopting a distributed DB, first optimize the single server (indexes, query tuning, read replicas). Distribution significantly increases complexity and operational costs.`,
+        },
+      },
+      {
+        id: 'connection-pooling',
+        title: { ko: '커넥션 풀링과 관리', en: 'Connection Pooling & Management' },
+        level: 'database',
+        content: {
+          ko: `## 커넥션 풀링과 관리
+
+데이터베이스 커넥션은 비용이 큰 리소스입니다. 커넥션 풀링은 미리 생성된 커넥션을 재사용하여 성능을 향상시킵니다.
+
+### 커넥션 생성 비용
+
+\`\`\`
+[커넥션 없이 매 요청마다]
+Client → TCP 3-way handshake → SSL/TLS 핸드셰이크 → 인증
+→ 프로세스/스레드 생성 → 메모리 할당 → 쿼리 실행 → 정리 → 종료
+
+비용: ~50-200ms per connection (PostgreSQL fork 포함)
+
+[커넥션 풀 사용]
+Client → Pool에서 유휴 커넥션 가져옴 → 쿼리 실행 → Pool에 반환
+
+비용: ~0.1-1ms (이미 연결됨)
+\`\`\`
+
+### PostgreSQL의 커넥션 구조
+
+\`\`\`
+PostgreSQL은 커넥션당 프로세스(fork) 모델:
+
+Postmaster (메인 프로세스)
+  ├── Backend Process (client 1) — ~10MB RAM
+  ├── Backend Process (client 2) — ~10MB RAM
+  ├── Backend Process (client 3) — ~10MB RAM
+  └── ... (max_connections까지)
+
+문제: 커넥션 500개 = ~5GB RAM (쿼리 처리 전에도!)
+\`\`\`
+
+\`\`\`sql
+-- 현재 커넥션 상태 확인
+SELECT count(*) AS total,
+       count(*) FILTER (WHERE state = 'active') AS active,
+       count(*) FILTER (WHERE state = 'idle') AS idle,
+       count(*) FILTER (WHERE state = 'idle in transaction') AS idle_in_txn
+FROM pg_stat_activity
+WHERE backend_type = 'client backend';
+
+-- 최대 커넥션 확인
+SHOW max_connections;  -- 기본: 100
+\`\`\`
+
+### PgBouncer (외부 커넥션 풀러)
+
+가장 널리 사용되는 PostgreSQL 커넥션 풀러입니다:
+
+\`\`\`ini
+; pgbouncer.ini
+[databases]
+mydb = host=127.0.0.1 port=5432 dbname=mydb
+
+[pgbouncer]
+listen_addr = 0.0.0.0
+listen_port = 6432
+auth_type = scram-sha-256
+auth_file = /etc/pgbouncer/userlist.txt
+
+; 풀링 모드
+pool_mode = transaction
+
+; 풀 크기
+default_pool_size = 20
+max_client_conn = 1000
+min_pool_size = 5
+
+; 타임아웃
+server_idle_timeout = 600
+client_idle_timeout = 0
+query_timeout = 30
+\`\`\`
+
+### 풀링 모드
+
+| 모드 | 설명 | 장점 | 제한 |
+|------|------|------|------|
+| **session** | 클라이언트 연결 동안 같은 서버 커넥션 | 모든 기능 지원 | 풀링 효과 적음 |
+| **transaction** | 트랜잭션 단위로 커넥션 할당/반환 | **최적 효율** | SET, PREPARE 등 세션 기능 제한 |
+| **statement** | 쿼리 단위로 커넥션 할당/반환 | 최대 효율 | 멀티 스테이트먼트 트랜잭션 불가 |
+
+> **권장**: 대부분의 웹 애플리케이션에서는 \`transaction\` 모드가 최적입니다.
+
+### 풀 사이즈 가이드라인
+
+\`\`\`
+최적 풀 크기 공식 (PostgreSQL wiki):
+pool_size = (core_count * 2) + effective_spindle_count
+
+예시:
+- 4코어 CPU, SSD → pool_size = (4 * 2) + 1 = 9
+- 8코어 CPU, SSD → pool_size = (8 * 2) + 1 = 17
+- 16코어 CPU, RAID 4 HDD → pool_size = (16 * 2) + 4 = 36
+\`\`\`
+
+| 워크로드 | 추천 pool_size | 이유 |
+|---------|---------------|------|
+| OLTP (짧은 쿼리) | CPU cores × 2 | CPU 바운드 |
+| OLAP (긴 쿼리) | CPU cores × 1 | I/O 바운드 |
+| 혼합 | CPU cores × 1.5 | 절충 |
+
+### 애플리케이션 레벨 풀링
+
+\`\`\`javascript
+// Node.js (pg 라이브러리)
+const { Pool } = require('pg');
+const pool = new Pool({
+  host: 'localhost',
+  port: 5432,  // PgBouncer: 6432
+  database: 'mydb',
+  user: 'app_user',
+  password: 'secret',
+  max: 20,              // 최대 커넥션 수
+  min: 5,               // 최소 유지 커넥션
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+});
+
+// 자동 반환
+const result = await pool.query('SELECT * FROM customers WHERE id = $1', [42]);
+
+// 수동 관리 (트랜잭션)
+const client = await pool.connect();
+try {
+  await client.query('BEGIN');
+  await client.query('UPDATE accounts SET balance = balance - $1 WHERE id = $2', [100, 1]);
+  await client.query('UPDATE accounts SET balance = balance + $1 WHERE id = $2', [100, 2]);
+  await client.query('COMMIT');
+} catch (e) {
+  await client.query('ROLLBACK');
+  throw e;
+} finally {
+  client.release();  // 반드시 반환!
+}
+\`\`\`
+
+### 커넥션 누수 모니터링
+
+\`\`\`sql
+-- 오래된 idle 커넥션 찾기
+SELECT pid, usename, application_name, client_addr,
+       state, state_change,
+       NOW() - state_change AS idle_duration,
+       query
+FROM pg_stat_activity
+WHERE state = 'idle'
+  AND NOW() - state_change > INTERVAL '10 minutes'
+ORDER BY idle_duration DESC;
+
+-- idle in transaction (위험! 락 유지 중)
+SELECT pid, usename, NOW() - xact_start AS txn_duration, query
+FROM pg_stat_activity
+WHERE state = 'idle in transaction'
+  AND NOW() - xact_start > INTERVAL '5 minutes';
+
+-- 강제 종료
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE state = 'idle in transaction'
+  AND NOW() - xact_start > INTERVAL '30 minutes';
+\`\`\`
+
+### 타임아웃 설정
+
+\`\`\`sql
+-- 쿼리 타임아웃 (쿼리 실행 시간 제한)
+SET statement_timeout = '30s';
+
+-- 유휴 트랜잭션 타임아웃 (PG 9.6+)
+SET idle_in_transaction_session_timeout = '5min';
+
+-- 커넥션 타임아웃 (TCP level)
+-- postgresql.conf
+-- tcp_keepalives_idle = 60
+-- tcp_keepalives_interval = 10
+-- tcp_keepalives_count = 6
+\`\`\`
+
+> **핵심**: 커넥션 풀링은 단순히 성능 최적화가 아니라 **서버 안정성의 핵심**입니다. 풀 없이 수백 개 커넥션이 생기면 메모리 부족, 컨텍스트 스위칭, OOM killer로 DB가 다운될 수 있습니다.`,
+          en: `## Connection Pooling & Management
+
+Database connections are expensive resources. Connection pooling improves performance by reusing pre-established connections.
+
+### Connection Creation Cost
+
+\`\`\`
+[Without pool - each request]
+Client → TCP 3-way handshake → SSL/TLS handshake → Authentication
+→ Process/thread creation → Memory allocation → Query → Cleanup → Close
+
+Cost: ~50-200ms per connection (including PostgreSQL fork)
+
+[With connection pool]
+Client → Get idle connection from pool → Query → Return to pool
+
+Cost: ~0.1-1ms (already connected)
+\`\`\`
+
+### PostgreSQL Connection Architecture
+
+\`\`\`
+PostgreSQL uses a process-per-connection (fork) model:
+
+Postmaster (main process)
+  ├── Backend Process (client 1) — ~10MB RAM
+  ├── Backend Process (client 2) — ~10MB RAM
+  ├── Backend Process (client 3) — ~10MB RAM
+  └── ... (up to max_connections)
+
+Problem: 500 connections = ~5GB RAM (before any query processing!)
+\`\`\`
+
+\`\`\`sql
+-- Check current connection status
+SELECT count(*) AS total,
+       count(*) FILTER (WHERE state = 'active') AS active,
+       count(*) FILTER (WHERE state = 'idle') AS idle,
+       count(*) FILTER (WHERE state = 'idle in transaction') AS idle_in_txn
+FROM pg_stat_activity
+WHERE backend_type = 'client backend';
+
+-- Check max connections
+SHOW max_connections;  -- default: 100
+\`\`\`
+
+### PgBouncer (External Connection Pooler)
+
+The most widely used PostgreSQL connection pooler:
+
+\`\`\`ini
+; pgbouncer.ini
+[databases]
+mydb = host=127.0.0.1 port=5432 dbname=mydb
+
+[pgbouncer]
+listen_addr = 0.0.0.0
+listen_port = 6432
+auth_type = scram-sha-256
+auth_file = /etc/pgbouncer/userlist.txt
+
+; Pooling mode
+pool_mode = transaction
+
+; Pool size
+default_pool_size = 20
+max_client_conn = 1000
+min_pool_size = 5
+
+; Timeouts
+server_idle_timeout = 600
+client_idle_timeout = 0
+query_timeout = 30
+\`\`\`
+
+### Pooling Modes
+
+| Mode | Description | Pros | Limitations |
+|------|-------------|------|------------|
+| **session** | Same server conn for client's session | All features supported | Less pooling benefit |
+| **transaction** | Conn assigned/returned per transaction | **Optimal efficiency** | SET, PREPARE restricted |
+| **statement** | Conn assigned/returned per query | Maximum efficiency | No multi-statement txns |
+
+> **Recommended**: \`transaction\` mode is optimal for most web applications.
+
+### Pool Size Guidelines
+
+\`\`\`
+Optimal pool size formula (PostgreSQL wiki):
+pool_size = (core_count * 2) + effective_spindle_count
+
+Examples:
+- 4-core CPU, SSD → pool_size = (4 * 2) + 1 = 9
+- 8-core CPU, SSD → pool_size = (8 * 2) + 1 = 17
+- 16-core CPU, RAID 4 HDD → pool_size = (16 * 2) + 4 = 36
+\`\`\`
+
+| Workload | Recommended pool_size | Reason |
+|----------|----------------------|--------|
+| OLTP (short queries) | CPU cores × 2 | CPU bound |
+| OLAP (long queries) | CPU cores × 1 | I/O bound |
+| Mixed | CPU cores × 1.5 | Compromise |
+
+### Application-Level Pooling
+
+\`\`\`javascript
+// Node.js (pg library)
+const { Pool } = require('pg');
+const pool = new Pool({
+  host: 'localhost',
+  port: 5432,  // PgBouncer: 6432
+  database: 'mydb',
+  user: 'app_user',
+  password: 'secret',
+  max: 20,              // max connections
+  min: 5,               // min idle connections
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+});
+
+// Auto-return
+const result = await pool.query('SELECT * FROM customers WHERE id = $1', [42]);
+
+// Manual management (transactions)
+const client = await pool.connect();
+try {
+  await client.query('BEGIN');
+  await client.query('UPDATE accounts SET balance = balance - $1 WHERE id = $2', [100, 1]);
+  await client.query('UPDATE accounts SET balance = balance + $1 WHERE id = $2', [100, 2]);
+  await client.query('COMMIT');
+} catch (e) {
+  await client.query('ROLLBACK');
+  throw e;
+} finally {
+  client.release();  // must return!
+}
+\`\`\`
+
+### Connection Leak Monitoring
+
+\`\`\`sql
+-- Find stale idle connections
+SELECT pid, usename, application_name, client_addr,
+       state, state_change,
+       NOW() - state_change AS idle_duration,
+       query
+FROM pg_stat_activity
+WHERE state = 'idle'
+  AND NOW() - state_change > INTERVAL '10 minutes'
+ORDER BY idle_duration DESC;
+
+-- Idle in transaction (dangerous! holding locks)
+SELECT pid, usename, NOW() - xact_start AS txn_duration, query
+FROM pg_stat_activity
+WHERE state = 'idle in transaction'
+  AND NOW() - xact_start > INTERVAL '5 minutes';
+
+-- Force terminate
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE state = 'idle in transaction'
+  AND NOW() - xact_start > INTERVAL '30 minutes';
+\`\`\`
+
+### Timeout Settings
+
+\`\`\`sql
+-- Query timeout (limit query execution time)
+SET statement_timeout = '30s';
+
+-- Idle transaction timeout (PG 9.6+)
+SET idle_in_transaction_session_timeout = '5min';
+
+-- Connection timeout (TCP level)
+-- postgresql.conf
+-- tcp_keepalives_idle = 60
+-- tcp_keepalives_interval = 10
+-- tcp_keepalives_count = 6
+\`\`\`
+
+> **Key point**: Connection pooling isn't just a performance optimization—it's **critical for server stability**. Without a pool, hundreds of connections can cause memory exhaustion, context switching overhead, and OOM killer taking down the database.`,
         },
       },
     ],
