@@ -1,9 +1,19 @@
 # IT Tech Hub
 
 Database, AI/ML, Kubernetes 등 IT 핵심 기술을 체계적으로 학습할 수 있는 웹 기반 학습 플랫폼입니다.
-현재 Database 학습 경로가 활성화되어 있으며, 실제 PostgreSQL / MySQL 데이터베이스에 SQL을 실행하고 즉시 채점과 설명을 받을 수 있습니다.
+현재 **Database** 학습 경로가 활성화되어 있으며, AI/ML과 Kubernetes는 준비 중입니다.
 
 > **한국어 / English** 전환 지원 | **다크 / 라이트** 테마 | **PostgreSQL / MySQL** 선택 실행
+
+---
+
+## Learning Paths
+
+| Path | Status | Description |
+|------|--------|-------------|
+| **Database** | Available | SQL 쿼리 작성부터 DBA 실무까지 체계적 학습 |
+| **AI / ML** | Coming Soon | 인공지능과 머신러닝 핵심 개념 학습 |
+| **Kubernetes** | Coming Soon | 컨테이너 오케스트레이션과 클라우드 네이티브 기술 학습 |
 
 ---
 
@@ -13,7 +23,15 @@ Database, AI/ML, Kubernetes 등 IT 핵심 기술을 체계적으로 학습할 �
 
 ```mermaid
 graph TB
-    subgraph CLIENT["🖥️ Client Layer"]
+    subgraph HUB["🖥️ IT Tech Hub"]
+        direction LR
+        HOME["🏠 Hub Home<br/><small>Learning Path 선택</small>"]
+        DB_PATH["🗄️ Database Path"]
+        AI_PATH["🧠 AI/ML Path<br/><small>Coming Soon</small>"]
+        K8S_PATH["☸️ Kubernetes Path<br/><small>Coming Soon</small>"]
+    end
+
+    subgraph CLIENT["🖥️ Database Client Layer"]
         direction LR
         DASH["📊 Dashboard<br/><small>React 19 + Zustand</small>"]
         WORK["⌨️ SQL Workspace<br/><small>CodeMirror 6</small>"]
@@ -41,17 +59,13 @@ graph TB
         MY["🐬 MySQL 8.0"]
     end
 
+    HOME --> DB_PATH
+    DB_PATH --> CLIENT
     CLIENT --> API
     API --> LOGIC
     LOGIC --> DB
 
-    WORK --> EXEC
-    EXEC --> VALID
-    VALID --> PG
-    VALID --> MY
-    EXEC --> GRADE
-    CHAT --> CHATAPI
-
+    style HUB fill:#eef2ff,stroke:#6366f1,color:#312e81
     style CLIENT fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     style API fill:#ede9fe,stroke:#8b5cf6,color:#3b1f7a
     style LOGIC fill:#fef3c7,stroke:#f59e0b,color:#78350f
@@ -150,6 +164,7 @@ erDiagram
 | UI | **React 19** + **Tailwind CSS 4** + **shadcn/ui** (Radix) |
 | SQL Editor | **CodeMirror 6** (`@codemirror/lang-sql`, one-dark theme) |
 | Database | **PostgreSQL 16** + **MySQL 8.0** (Docker Compose) |
+| AI Chat | **AWS Bedrock** (Claude) |
 | State | **Zustand 5** (localStorage 영속화) |
 | Docs Rendering | **react-markdown** + **remark-gfm** |
 | i18n | Custom hook (한국어/영어) |
@@ -222,33 +237,24 @@ tech-hub/
 │   │   │   ├── chat/               # AI 챗봇 API (AWS Bedrock)
 │   │   │   ├── execute-sql/        # SQL 실행 API
 │   │   │   └── reset-db/           # DB 초기화 API
-│   │   ├── docs/                   # 이론 문서 페이지
-│   │   ├── levels/
-│   │   │   └── [level]/
-│   │   │       ├── page.tsx        # 레벨별 문제 목록
-│   │   │       └── [problemId]/
-│   │   │           └── page.tsx    # 문제 풀이 워크스페이스
+│   │   ├── database/               # Database 학습 경로
+│   │   │   ├── page.tsx            # Database 대시보드
+│   │   │   ├── docs/               # 이론 문서 페이지
+│   │   │   ├── learn/              # 레벨별 학습
+│   │   │   └── simulator/          # SQL 시뮬레이터
 │   │   ├── layout.tsx              # 루트 레이아웃
-│   │   ├── page.tsx                # 대시보드 (랜딩)
+│   │   ├── page.tsx                # Hub 홈 (학습 경로 선택)
 │   │   └── providers.tsx           # 클라이언트 프로바이더
 │   │
 │   ├── components/
-│   │   ├── chat/
-│   │   │   └── ChatBot.tsx         # 플로팅 AI 챗봇 (AWS Bedrock)
+│   │   ├── chat/                   # 플로팅 AI 챗봇 (AWS Bedrock)
 │   │   ├── editor/                 # SQL 에디터 관련
 │   │   │   ├── SqlEditor.tsx       # CodeMirror 6 에디터
 │   │   │   ├── EditorToolbar.tsx   # 실행/초기화/힌트/채점 버튼
 │   │   │   └── ResultTable.tsx     # 쿼리 결과 테이블
 │   │   ├── home/                   # 홈페이지 다이어그램
-│   │   │   ├── ArchitectureDiagram.tsx    # 인터랙티브 아키텍처
-│   │   │   └── ExecutionFlowDiagram.tsx   # SQL 실행 흐름도
 │   │   ├── problem/                # 문제 관련
-│   │   │   ├── ProblemDescription.tsx
-│   │   │   ├── ProblemList.tsx
-│   │   │   ├── GradingResult.tsx
-│   │   │   └── Explanation.tsx
-│   │   ├── docs/
-│   │   │   └── DocDiagrams.tsx     # 인터랙티브 SVG 다이어그램
+│   │   ├── docs/                   # 인터랙티브 SVG 다이어그램
 │   │   ├── common/                 # DB/언어/테마 토글
 │   │   ├── layout/                 # Header
 │   │   ├── progress/               # LevelCard
@@ -261,8 +267,8 @@ tech-hub/
 │   │   │   ├── advanced/           # 15문제
 │   │   │   ├── expert/             # 16문제
 │   │   │   └── database/           # 8문제
-│   │   └── docs/
-│   │       └── index.ts            # 이론 문서 (한/영, 22개 섹션)
+│   │   ├── docs/                   # 이론 문서 (한/영, 22개 섹션)
+│   │   └── quiz/                   # 퀴즈 데이터
 │   │
 │   ├── lib/
 │   │   ├── db/                     # DB 엔진 (postgres-engine, mysql-engine)
@@ -276,8 +282,6 @@ tech-hub/
 │   │   └── locale-store.ts         # 언어 설정
 │   │
 │   └── types/                      # TypeScript 타입
-│       ├── problem.ts
-│       └── progress.ts
 │
 ├── docker/
 │   ├── docker-compose.yml          # PostgreSQL 16 + MySQL 8.0
@@ -291,7 +295,13 @@ tech-hub/
 
 ## Features
 
-### SQL Editor
+### Hub System
+
+- **멀티 학습 경로**: Database, AI/ML, Kubernetes 등 기술 분야별 독립 학습 경로
+- **학습 경로 선택 화면**: 메인 페이지에서 원하는 기술 분야 선택
+- **확장 가능한 구조**: 새로운 학습 경로를 쉽게 추가 가능
+
+### Database Path - SQL Editor
 
 - **CodeMirror 6** 기반 문법 하이라이팅 + 자동완성
 - **VSCode Dark Plus 테마** SQL 구문 색상 강조 (react-syntax-highlighter)
@@ -300,7 +310,7 @@ tech-hub/
 - PostgreSQL / MySQL 방언 자동 전환
 - 다크/라이트 테마 연동 (one-dark / light)
 
-### Problem System (70문제)
+### Database Path - Problem System (70문제)
 
 | Level | Problems | Topics |
 |-------|----------|--------|
@@ -316,7 +326,7 @@ tech-hub/
 - **풀이 설명**: 정답 후 관련 개념 설명
 - **레벨 잠금**: 이전 레벨 80% 완료 시 다음 레벨 해제
 
-### Theory Documentation (22개 섹션)
+### Database Path - Theory Documentation (22개 섹션)
 
 5개 챕터, 22개 섹션의 체계적인 SQL/DBA 이론 문서:
 
@@ -332,24 +342,12 @@ tech-hub/
 
 - **E-Commerce ERD** — 7개 테이블, 1:1/1:N/N:1/N:M 관계
 - **PK/FK 연결 다이어그램** — 실제 데이터 예시로 관계 시각화
-- **관계 유형 다이어그램** — 4가지 관계 타입 비교
 - **JOIN 벤 다이어그램** — INNER/LEFT/RIGHT/FULL 시각화
 - **SQL 실행 순서** — 작성 순서 vs 실행 순서
-- **파티션 테이블** — RANGE/LIST/HASH 탭 전환
-- **함수 vs 프로시저** — 실행 흐름 비교
-- **LOB 저장 전략** — 데이터 크기별 4단계 티어
-- **트랜잭션 격리 수준** — READ UNCOMMITTED/COMMITTED/REPEATABLE READ/SERIALIZABLE 비교 (문제점 시각화)
-- **정규화 과정** — UNF → 1NF → 2NF → 3NF → BCNF 단계별 변환 예시
+- **트랜잭션 격리 수준** — 4단계 비교 (문제점 시각화)
+- **정규화 과정** — UNF → 1NF → 2NF → 3NF → BCNF 단계별 변환
 - **인덱스 구조 (B-tree)** — 클릭 가능한 노드로 탐색 과정 시각화
-- **InnoDB 아키텍처** — 메모리/디스크 레이어 구조 (Buffer Pool, Redo Log, Doublewrite Buffer 등)
-- **PostgreSQL 프로세스 아키텍처** — 클라이언트 연결부터 Background Writers까지 전체 흐름
-
-**문서 가독성 개선**:
-
-- **수학 기호 설명** — 관계 대수/관계 해석의 ∃(존재 한정자), ∀(전체 한정자), ⊃(포함) 등 기호에 대한 평문 해석 추가
-- **정규화 표현** — `1NF ⊃ 2NF ⊃ 3NF` 같은 추상적 표현을 단계별 박스 다이어그램으로 변환
-- **SQL 구문 색상 강조** — 모든 SQL 코드 블록에 VSCode Dark Plus 테마 구문 강조 적용
-- **구조화된 마크다운** — ASCII 다이어그램을 표, 리스트, 비교 차트로 변환하여 가독성 향상
+- **InnoDB / PostgreSQL 아키텍처** — 내부 구조 시각화
 
 ### Dual Database Engine
 
@@ -371,16 +369,6 @@ tech-hub/
 - 모든 UI 텍스트 + 70개 문제 + 22개 이론 섹션 완전 번역
 - Zustand + localStorage로 설정 유지
 - 원클릭 언어 전환
-
----
-
-## Database Schema
-
-E-Commerce 스키마를 사용합니다 (상세 ERD는 [Architecture](#database-schema-erd) 섹션 참조):
-
-- 7개 테이블: `customers`, `customer_profiles`, `orders`, `order_items`, `products`, `categories`, `reviews`
-- 관계: 1:1, 1:N, N:M (junction table), self-referencing
-- 시드 데이터: ~50 customers, ~20 categories, ~100 products, ~500 orders, ~1200 order_items, ~300 reviews
 
 ---
 
@@ -408,25 +396,15 @@ SQL 쿼리를 선택한 DB 엔진에서 실행합니다.
     "executionTime": 12
   }
 }
-
-// Response (error)
-{
-  "success": false,
-  "error": "permission denied: DELETE is not allowed at beginner level"
-}
 ```
 
 ### `POST /api/reset-db`
 
 데이터베이스를 초기 상태로 복원합니다.
 
-```json
-// Request
-{ "engine": "postgresql" }
+### `POST /api/chat`
 
-// Response
-{ "success": true }
-```
+AI 챗봇 (AWS Bedrock Claude)과 대화합니다.
 
 ---
 
@@ -437,27 +415,6 @@ SQL 쿼리를 선택한 DB 엔진에서 실행합니다.
 | **exact** | 행 순서 + 데이터 정확히 일치 | ORDER BY가 있는 SELECT |
 | **unordered** | 행 순서 무관, 데이터 일치 | GROUP BY, 집합 연산 |
 | **contains** | 영향받은 행 수 또는 부분 일치 | DML (INSERT/UPDATE/DELETE) |
-
-점수 기준:
-
-| Score | Condition |
-|-------|-----------|
-| 100 | 완전 정답 |
-| 50 | 행 수 불일치 |
-| 20 | 컬럼 불일치 |
-| 10~80 | 부분 일치 (정답 행 비율) |
-
----
-
-## State Management
-
-3개의 Zustand 스토어가 localStorage에 영속화됩니다:
-
-| Store | Key | Purpose |
-|-------|-----|---------|
-| `progress-store` | `sql-dba-progress` | 문제 완료 상태, 시도 횟수, 최고 쿼리, 레벨 잠금 해제 |
-| `settings-store` | `sql-dba-settings` | DB 엔진 선택 (postgresql / mysql) |
-| `locale-store` | `sql-dba-locale` | 언어 설정 (ko / en) |
 
 ---
 
