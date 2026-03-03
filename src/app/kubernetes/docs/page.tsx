@@ -7,6 +7,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useLocaleStore } from '@/stores/locale-store';
 import { k8sDocChapters, type K8sDocChapter, type K8sDocSection } from '@/data/kubernetes/docs';
+import { k8sSectionDiagrams } from '@/components/docs/K8sDocDiagrams';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -330,6 +331,16 @@ export default function K8sDocsPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Diagram (if available for this section) */}
+              {k8sSectionDiagrams[selectedSection] && (() => {
+                const Diagram = k8sSectionDiagrams[selectedSection];
+                return (
+                  <div className="max-w-3xl mx-auto px-6 pt-6">
+                    <Diagram locale={locale} />
+                  </div>
+                );
+              })()}
 
               <div className="max-w-3xl mx-auto px-6 py-10">
                 <div className="prose dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-p:leading-7 prose-li:leading-7 prose-ul:my-4 prose-ol:my-4">
