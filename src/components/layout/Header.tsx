@@ -13,13 +13,26 @@ export default function Header() {
   const { t } = useTranslation();
   const pathname = usePathname();
   const isDatabaseSection = pathname.startsWith('/database');
+  const isKubernetesSection = pathname.startsWith('/kubernetes');
 
-  const navLinks = [
+  const databaseNavLinks = [
     { href: '/database', label: t('nav.home') },
     { href: '/database/docs', label: t('nav.docs') },
     { href: '/database/learn', label: t('nav.learn') },
     { href: '/database/simulator', label: t('nav.simulator') },
   ];
+
+  const kubernetesNavLinks = [
+    { href: '/kubernetes', label: t('nav.home') },
+    { href: '/kubernetes/docs', label: t('nav.docs') },
+    { href: '/kubernetes/learn', label: t('nav.learn') },
+  ];
+
+  const navLinks = isDatabaseSection
+    ? databaseNavLinks
+    : isKubernetesSection
+      ? kubernetesNavLinks
+      : [];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -33,7 +46,7 @@ export default function Header() {
           </span>
         </Link>
 
-        {isDatabaseSection && (
+        {(isDatabaseSection || isKubernetesSection) && (
           <nav className="flex items-center gap-4 text-sm">
             {navLinks.map((link) => (
               <Link

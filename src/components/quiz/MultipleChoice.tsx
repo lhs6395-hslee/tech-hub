@@ -2,8 +2,28 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useLocaleStore } from '@/stores/locale-store';
-import { mcQuestions, quizCategories, type QuizCategory } from '@/data/quiz';
+import { mcQuestions as defaultMCQuestions, quizCategories as defaultCategories } from '@/data/quiz';
 import { ArrowRight, RotateCcw, Trophy, CheckCircle, XCircle } from 'lucide-react';
+
+interface MCQuestionData {
+  id: string;
+  category: string;
+  question: { ko: string; en: string };
+  choices: { ko: string[]; en: string[] };
+  answerIndex: number;
+  explanation: { ko: string; en: string };
+}
+
+interface CategoryData {
+  id: string;
+  name: { ko: string; en: string };
+  icon: string;
+}
+
+interface MultipleChoiceProps {
+  questionsData?: MCQuestionData[];
+  categoriesData?: CategoryData[];
+}
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -14,10 +34,12 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-export default function MultipleChoice() {
+export default function MultipleChoice({ questionsData, categoriesData }: MultipleChoiceProps = {}) {
   const locale = useLocaleStore((s) => s.locale);
-  const [category, setCategory] = useState<QuizCategory | 'all'>('all');
-  const [questions, setQuestions] = useState(() => shuffle(mcQuestions));
+  const sourceQuestions = questionsData ?? defaultMCQuestions;
+  const sourceCategories = categoriesData ?? defaultCategories;
+  const [category, setCategory] = useState<string>('all');
+  const [questions, setQuestions] = useState(() => shuffle(sourceQuestions));
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
@@ -60,7 +82,7 @@ export default function MultipleChoice() {
   };
 
   const handleRestart = () => {
-    setQuestions(shuffle(mcQuestions));
+    setQuestions(shuffle(sourceQuestions));
     setCurrent(0);
     setSelected(null);
     setScore(0);
@@ -69,7 +91,7 @@ export default function MultipleChoice() {
     setFinished(false);
   };
 
-  const handleCategoryChange = (cat: QuizCategory | 'all') => {
+  const handleCategoryChange = (cat: string) => {
     setCategory(cat);
     setCurrent(0);
     setSelected(null);
@@ -123,7 +145,7 @@ export default function MultipleChoice() {
   if (!q) return null;
 
   const isCorrect = selected === q.answerIndex;
-  const catMeta = quizCategories.find((c) => c.id === q.category);
+  const catMeta = sourceCategories.find((c) => c.id === q.category);
   const labels = ['A', 'B', 'C', 'D'];
 
   return (
@@ -140,7 +162,7 @@ export default function MultipleChoice() {
         >
           {locale === 'ko' ? '전체' : 'All'}
         </button>
-        {quizCategories.map((cat) => (
+        {sourceCategories.map((cat) => (
           <button
             key={cat.id}
             onClick={() => handleCategoryChange(cat.id)}

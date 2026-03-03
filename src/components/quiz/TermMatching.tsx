@@ -2,8 +2,31 @@
 
 import { useState, useMemo } from 'react';
 import { useLocaleStore } from '@/stores/locale-store';
-import { matchingSets, quizCategories } from '@/data/quiz';
+import { matchingSets as defaultMatchingSets, quizCategories as defaultCategories } from '@/data/quiz';
 import { RotateCcw, Trophy, ArrowRight, CheckCircle, XCircle, Shuffle } from 'lucide-react';
+
+interface MatchPairData {
+  term: { ko: string; en: string };
+  definition: { ko: string; en: string };
+}
+
+interface MatchingSetData {
+  id: string;
+  category: string;
+  title: { ko: string; en: string };
+  pairs: MatchPairData[];
+}
+
+interface CategoryData {
+  id: string;
+  name: { ko: string; en: string };
+  icon: string;
+}
+
+interface TermMatchingProps {
+  setsData?: MatchingSetData[];
+  categoriesData?: CategoryData[];
+}
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -14,11 +37,13 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-export default function TermMatching() {
+export default function TermMatching({ setsData, categoriesData }: TermMatchingProps = {}) {
   const locale = useLocaleStore((s) => s.locale);
+  const sourceSets = setsData ?? defaultMatchingSets;
+  const sourceCategories = categoriesData ?? defaultCategories;
   const [setIndex, setSetIndex] = useState(0);
   const [shuffledDefs, setShuffledDefs] = useState<number[]>(() =>
-    shuffle(matchingSets[0].pairs.map((_, i) => i))
+    shuffle(sourceSets[0].pairs.map((_, i) => i))
   );
   const [selectedTerm, setSelectedTerm] = useState<number | null>(null);
   const [matches, setMatches] = useState<Map<number, number>>(new Map());
@@ -27,9 +52,9 @@ export default function TermMatching() {
   const [totalSets, setTotalSets] = useState(0);
   const [finished, setFinished] = useState(false);
 
-  const currentSet = matchingSets[setIndex];
+  const currentSet = sourceSets[setIndex];
   const allMatched = matches.size === currentSet.pairs.length;
-  const catMeta = quizCategories.find((c) => c.id === currentSet.category);
+  const catMeta = sourceCategories.find((c) => c.id === currentSet.category);
 
   const handleTermClick = (termIdx: number) => {
     if (matches.has(termIdx)) return;
@@ -67,12 +92,12 @@ export default function TermMatching() {
     setTotalScore((s) => s + correctCount);
     setTotalSets((s) => s + 1);
 
-    if (setIndex + 1 >= matchingSets.length) {
+    if (setIndex + 1 >= sourceSets.length) {
       setFinished(true);
     } else {
       const nextIdx = setIndex + 1;
       setSetIndex(nextIdx);
-      setShuffledDefs(shuffle(matchingSets[nextIdx].pairs.map((_, i) => i)));
+      setShuffledDefs(shuffle(sourceSets[nextIdx].pairs.map((_, i) => i)));
       setSelectedTerm(null);
       setMatches(new Map());
       setWrong(null);
@@ -81,7 +106,7 @@ export default function TermMatching() {
 
   const handleRestart = () => {
     setSetIndex(0);
-    setShuffledDefs(shuffle(matchingSets[0].pairs.map((_, i) => i)));
+    setShuffledDefs(shuffle(sourceSets[0].pairs.map((_, i) => i)));
     setSelectedTerm(null);
     setMatches(new Map());
     setWrong(null);
@@ -92,7 +117,7 @@ export default function TermMatching() {
 
   // Finished
   if (finished) {
-    const totalPairs = matchingSets.reduce((s, m) => s + m.pairs.length, 0);
+    const totalPairs = sourceSets.reduce((s, m) => s + m.pairs.length, 0);
     const finalScore = totalScore + matches.size;
     const pct = Math.round((finalScore / totalPairs) * 100);
 
@@ -107,7 +132,7 @@ export default function TermMatching() {
             {locale === 'ko' ? '정답' : 'Score'}: {finalScore} / {totalPairs} ({pct}%)
           </p>
           <p>
-            {locale === 'ko' ? '완료한 세트' : 'Sets Completed'}: {matchingSets.length}
+            {locale === 'ko' ? '완료한 세트' : 'Sets Completed'}: {sourceSets.length}
           </p>
         </div>
         <button
@@ -136,7 +161,7 @@ export default function TermMatching() {
           <h3 className="text-lg font-semibold">{currentSet.title[locale]}</h3>
         </div>
         <span className="text-sm text-muted-foreground">
-          {setIndex + 1} / {matchingSets.length}
+          {setIndex + 1} / {sourceSets.length}
         </span>
       </div>
 
@@ -221,7 +246,7 @@ export default function TermMatching() {
           onClick={handleNextSet}
           className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
         >
-          {setIndex + 1 >= matchingSets.length
+          {setIndex + 1 >= sourceSets.length
             ? locale === 'ko'
               ? '결과 보기'
               : 'See Results'

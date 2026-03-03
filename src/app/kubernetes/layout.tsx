@@ -1,6 +1,6 @@
 import ChatBot from "@/components/chat/ChatBot";
 
-export default function DatabaseLayout({
+export default function KubernetesLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -8,7 +8,7 @@ export default function DatabaseLayout({
   return (
     <>
       {children}
-      <ChatBot context="database" />
+      <ChatBot context="kubernetes" />
     </>
   );
 }

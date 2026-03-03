@@ -2,8 +2,27 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useLocaleStore } from '@/stores/locale-store';
-import { oxQuestions, quizCategories, type QuizCategory } from '@/data/quiz';
+import { oxQuestions as defaultOXQuestions, quizCategories as defaultCategories } from '@/data/quiz';
 import { CheckCircle, XCircle, ArrowRight, RotateCcw, Trophy, Filter } from 'lucide-react';
+
+interface OXQuestionData {
+  id: string;
+  category: string;
+  statement: { ko: string; en: string };
+  answer: boolean;
+  explanation: { ko: string; en: string };
+}
+
+interface CategoryData {
+  id: string;
+  name: { ko: string; en: string };
+  icon: string;
+}
+
+interface OXQuizProps {
+  questionsData?: OXQuestionData[];
+  categoriesData?: CategoryData[];
+}
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -14,10 +33,12 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-export default function OXQuiz() {
+export default function OXQuiz({ questionsData, categoriesData }: OXQuizProps = {}) {
   const locale = useLocaleStore((s) => s.locale);
-  const [category, setCategory] = useState<QuizCategory | 'all'>('all');
-  const [questions, setQuestions] = useState(() => shuffle(oxQuestions));
+  const sourceQuestions = questionsData ?? defaultOXQuestions;
+  const sourceCategories = categoriesData ?? defaultCategories;
+  const [category, setCategory] = useState<string>('all');
+  const [questions, setQuestions] = useState(() => shuffle(sourceQuestions));
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
@@ -60,7 +81,7 @@ export default function OXQuiz() {
   };
 
   const handleRestart = () => {
-    setQuestions(shuffle(oxQuestions));
+    setQuestions(shuffle(sourceQuestions));
     setCurrent(0);
     setSelected(null);
     setScore(0);
@@ -69,7 +90,7 @@ export default function OXQuiz() {
     setFinished(false);
   };
 
-  const handleCategoryChange = (cat: QuizCategory | 'all') => {
+  const handleCategoryChange = (cat: string) => {
     setCategory(cat);
     setCurrent(0);
     setSelected(null);
@@ -123,7 +144,7 @@ export default function OXQuiz() {
   if (!q) return null;
 
   const isCorrect = selected === q.answer;
-  const catMeta = quizCategories.find((c) => c.id === q.category);
+  const catMeta = sourceCategories.find((c) => c.id === q.category);
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -139,7 +160,7 @@ export default function OXQuiz() {
         >
           {locale === 'ko' ? '전체' : 'All'}
         </button>
-        {quizCategories.map((cat) => (
+        {sourceCategories.map((cat) => (
           <button
             key={cat.id}
             onClick={() => handleCategoryChange(cat.id)}

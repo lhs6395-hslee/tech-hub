@@ -9,36 +9,120 @@ import {
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
+export type ChatContext = 'hub' | 'database' | 'ai' | 'kubernetes';
+
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
 }
 
+interface ChatBotProps {
+  context: ChatContext;
+}
+
 /* ------------------------------------------------------------------ */
-/*  i18n                                                               */
+/*  i18n (per-context)                                                 */
 /* ------------------------------------------------------------------ */
-const chatI18n = {
-  ko: {
-    title: 'SQL 학습 도우미',
-    subtitle: 'AI 어시스턴트',
-    placeholder: 'SQL에 대해 질문하세요...',
-    send: '보내기',
-    greeting:
-      '안녕하세요! SQL 학습을 도와드리겠습니다. 쿼리 작성, 개념 설명, PostgreSQL/MySQL 차이점 등 무엇이든 질문하세요.',
-    errorGeneric: '오류가 발생했습니다. 다시 시도해주세요.',
-    clear: '대화 초기화',
+const chatI18nByContext: Record<ChatContext, { ko: ChatI18nStrings; en: ChatI18nStrings }> = {
+  hub: {
+    ko: {
+      title: 'IT Tech Hub 도우미',
+      subtitle: 'AI 어시스턴트',
+      placeholder: '플랫폼에 대해 질문하세요...',
+      send: '보내기',
+      greeting:
+        '안녕하세요! IT Tech Hub에 오신 것을 환영합니다. Database, AI/ML, Kubernetes 등 학습 경로 안내와 플랫폼 사용법에 대해 질문하세요.',
+      errorGeneric: '오류가 발생했습니다. 다시 시도해주세요.',
+      clear: '대화 초기화',
+    },
+    en: {
+      title: 'IT Tech Hub Assistant',
+      subtitle: 'AI Assistant',
+      placeholder: 'Ask about the platform...',
+      send: 'Send',
+      greeting:
+        'Welcome to IT Tech Hub! Ask me about our learning paths — Database, AI/ML, Kubernetes — or how to get started.',
+      errorGeneric: 'An error occurred. Please try again.',
+      clear: 'Clear chat',
+    },
   },
-  en: {
-    title: 'SQL Learning Assistant',
-    subtitle: 'AI Assistant',
-    placeholder: 'Ask about SQL...',
-    send: 'Send',
-    greeting:
-      'Hello! I\'m here to help you learn SQL. Ask me anything about query writing, concepts, PostgreSQL/MySQL differences, and more.',
-    errorGeneric: 'An error occurred. Please try again.',
-    clear: 'Clear chat',
+  database: {
+    ko: {
+      title: 'SQL 학습 도우미',
+      subtitle: 'Database AI 어시스턴트',
+      placeholder: 'SQL에 대해 질문하세요...',
+      send: '보내기',
+      greeting:
+        '안녕하세요! SQL 학습을 도와드리겠습니다. 쿼리 작성, 개념 설명, PostgreSQL/MySQL 차이점 등 무엇이든 질문하세요.',
+      errorGeneric: '오류가 발생했습니다. 다시 시도해주세요.',
+      clear: '대화 초기화',
+    },
+    en: {
+      title: 'SQL Learning Assistant',
+      subtitle: 'Database AI Assistant',
+      placeholder: 'Ask about SQL...',
+      send: 'Send',
+      greeting:
+        'Hello! I\'m here to help you learn SQL. Ask me anything about query writing, concepts, PostgreSQL/MySQL differences, and more.',
+      errorGeneric: 'An error occurred. Please try again.',
+      clear: 'Clear chat',
+    },
   },
-} as const;
+  ai: {
+    ko: {
+      title: 'AI/ML 학습 도우미',
+      subtitle: 'AI/ML AI 어시스턴트',
+      placeholder: 'AI/ML에 대해 질문하세요...',
+      send: '보내기',
+      greeting:
+        '안녕하세요! AI와 머신러닝 학습을 도와드리겠습니다. 딥러닝, 신경망, 모델 학습 등 무엇이든 질문하세요.',
+      errorGeneric: '오류가 발생했습니다. 다시 시도해주세요.',
+      clear: '대화 초기화',
+    },
+    en: {
+      title: 'AI/ML Learning Assistant',
+      subtitle: 'AI/ML AI Assistant',
+      placeholder: 'Ask about AI/ML...',
+      send: 'Send',
+      greeting:
+        'Hello! I\'m here to help you learn AI and Machine Learning. Ask me anything about deep learning, neural networks, model training, and more.',
+      errorGeneric: 'An error occurred. Please try again.',
+      clear: 'Clear chat',
+    },
+  },
+  kubernetes: {
+    ko: {
+      title: 'Kubernetes 학습 도우미',
+      subtitle: 'Kubernetes AI 어시스턴트',
+      placeholder: 'Kubernetes에 대해 질문하세요...',
+      send: '보내기',
+      greeting:
+        '안녕하세요! Kubernetes 학습을 도와드리겠습니다. Pod, Service, Deployment 등 무엇이든 질문하세요.',
+      errorGeneric: '오류가 발생했습니다. 다시 시도해주세요.',
+      clear: '대화 초기화',
+    },
+    en: {
+      title: 'Kubernetes Learning Assistant',
+      subtitle: 'Kubernetes AI Assistant',
+      placeholder: 'Ask about Kubernetes...',
+      send: 'Send',
+      greeting:
+        'Hello! I\'m here to help you learn Kubernetes. Ask me anything about Pods, Services, Deployments, and more.',
+      errorGeneric: 'An error occurred. Please try again.',
+      clear: 'Clear chat',
+    },
+  },
+};
+
+interface ChatI18nStrings {
+  title: string;
+  subtitle: string;
+  placeholder: string;
+  send: string;
+  greeting: string;
+  errorGeneric: string;
+  clear: string;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Markdown-lite renderer                                             */
@@ -93,9 +177,9 @@ function renderMessageContent(content: string) {
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
-export default function ChatBot() {
+export default function ChatBot({ context }: ChatBotProps) {
   const locale = useLocaleStore((s) => s.locale);
-  const t = chatI18n[locale];
+  const t = chatI18nByContext[context][locale];
 
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -141,7 +225,7 @@ export default function ChatBot() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: newMessages, context }),
       });
 
       if (!res.ok) {

@@ -7,6 +7,7 @@ import { useTranslation } from '@/lib/i18n';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Database, Brain, Container, Monitor } from 'lucide-react';
+import ChatBot from '@/components/chat/ChatBot';
 
 const techPaths = [
   {
@@ -33,8 +34,8 @@ const techPaths = [
     gradient: 'from-blue-500 to-cyan-600',
     cardGradient: 'from-blue-500/20 to-cyan-600/5 hover:from-blue-500/30 hover:to-cyan-600/10',
     iconColor: 'text-blue-500',
-    href: null,
-    comingSoon: true,
+    href: '/kubernetes',
+    comingSoon: false,
   },
 ] as const;
 
@@ -127,6 +128,8 @@ export default function HubPage() {
           );
         })}
       </section>
+
+      <ChatBot context="hub" />
     </div>
   );
 }

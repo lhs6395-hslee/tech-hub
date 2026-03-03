@@ -7,7 +7,7 @@ import { useProgressStore } from '@/stores/progress-store';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Lock, Sprout, Flame, Zap, Crown, Database } from 'lucide-react';
+import { Lock, Sprout, Flame, Zap, Crown, Database, Server, Container, Network, HardDrive, Search } from 'lucide-react';
 
 const ICONS = {
   Sprout,
@@ -15,6 +15,11 @@ const ICONS = {
   Zap,
   Crown,
   Database,
+  Server,
+  Container,
+  Network,
+  HardDrive,
+  Search,
 };
 
 const GRADIENTS = {
@@ -43,9 +48,10 @@ const PROGRESS_COLORS = {
 
 interface LevelCardProps {
   config: LevelConfig;
+  basePath?: string;
 }
 
-export default function LevelCard({ config }: LevelCardProps) {
+export default function LevelCard({ config, basePath = '/database' }: LevelCardProps) {
   const locale = useLocaleStore((s) => s.locale);
   const levelProgress = useProgressStore((s) => s.progress.levelProgress);
 
@@ -79,7 +85,7 @@ export default function LevelCard({ config }: LevelCardProps) {
   }
 
   return (
-    <Link href={`/database/levels/${config.id}`}>
+    <Link href={`${basePath}/levels/${config.id}`}>
       <Card className="relative overflow-hidden group cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1">
         <div className={`absolute inset-0 bg-gradient-to-br ${gradient} transition-all`} />
         <CardContent className="relative p-6 flex flex-col items-center text-center space-y-3">
