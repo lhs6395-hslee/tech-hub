@@ -37,6 +37,7 @@ const LEVEL_GRADIENTS: Record<string, string> = {
   'services-networking': 'from-cyan-500/20 via-cyan-500/5 to-transparent',
   'storage': 'from-amber-500/20 via-amber-500/5 to-transparent',
   'troubleshooting': 'from-purple-500/20 via-purple-500/5 to-transparent',
+  'hands-on': 'from-rose-500/20 via-rose-500/5 to-transparent',
 };
 
 const LEVEL_BADGE_COLORS: Record<string, string> = {
@@ -45,6 +46,7 @@ const LEVEL_BADGE_COLORS: Record<string, string> = {
   'services-networking': 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/20',
   'storage': 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/20',
   'troubleshooting': 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/20',
+  'hands-on': 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/20',
 };
 
 const LEVEL_ACCENT: Record<string, string> = {
@@ -53,6 +55,7 @@ const LEVEL_ACCENT: Record<string, string> = {
   'services-networking': 'border-cyan-500/40',
   'storage': 'border-amber-500/40',
   'troubleshooting': 'border-purple-500/40',
+  'hands-on': 'border-rose-500/40',
 };
 
 function CopyButton({ text }: { text: string }) {

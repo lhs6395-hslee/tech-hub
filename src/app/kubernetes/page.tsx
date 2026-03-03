@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useLocaleStore } from '@/stores/locale-store';
 import { K8S_LEVEL_CONFIGS } from '@/types/kubernetes';
-import { Container, Server, Network, HardDrive, Search, BookOpen, GraduationCap, MessageSquare } from 'lucide-react';
+import { Container, Server, Network, HardDrive, Search, BookOpen, GraduationCap, MessageSquare, Terminal } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const DOMAIN_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -61,7 +61,7 @@ export default function KubernetesPage() {
       </section>
 
       {/* Features */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
         <Link href="/kubernetes/docs" className="flex flex-col items-center text-center p-6 rounded-xl bg-muted/30 space-y-3 hover:bg-muted/50 transition-colors">
           <BookOpen className="h-8 w-8 text-blue-500" />
           <h3 className="font-semibold">
@@ -71,6 +71,17 @@ export default function KubernetesPage() {
             {locale === 'ko'
               ? '5개 핵심 도메인에 대한 상세한 이론 문서를 학습합니다'
               : 'Study detailed theory documents for 5 Kubernetes domains'}
+          </p>
+        </Link>
+        <Link href="/kubernetes/docs" className="flex flex-col items-center text-center p-6 rounded-xl bg-muted/30 space-y-3 hover:bg-muted/50 transition-colors">
+          <Terminal className="h-8 w-8 text-rose-500" />
+          <h3 className="font-semibold">
+            {locale === 'ko' ? 'k3s 실습' : 'k3s Hands-On'}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {locale === 'ko'
+              ? 'k3s로 Kubernetes를 직접 설치하고 실습합니다'
+              : 'Install and practice with k3s lightweight Kubernetes'}
           </p>
         </Link>
         <Link href="/kubernetes/learn" className="flex flex-col items-center text-center p-6 rounded-xl bg-muted/30 space-y-3 hover:bg-muted/50 transition-colors">

@@ -3,6 +3,7 @@ import { ch2Sections } from './ch2-workloads-scheduling';
 import { ch3Sections } from './ch3-services-networking';
 import { ch4Sections } from './ch4-storage';
 import { ch5Sections } from './ch5-troubleshooting';
+import { ch6Sections } from './ch6-k3s-hands-on';
 
 export interface K8sDocSection {
   id: string;
@@ -54,5 +55,12 @@ export const k8sDocChapters: K8sDocChapter[] = [
     level: 'troubleshooting',
     icon: '🔍',
     sections: ch5Sections,
+  },
+  {
+    id: 'hands-on',
+    title: { ko: 'k3s 실습', en: 'k3s Hands-On' },
+    level: 'hands-on',
+    icon: '🛠️',
+    sections: ch6Sections,
   },
 ];
