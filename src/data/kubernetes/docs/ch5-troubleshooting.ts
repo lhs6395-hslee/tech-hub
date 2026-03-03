@@ -8,7 +8,7 @@ export const ch5Sections: K8sDocSection[] = [
     content: {
       ko: `## kubectl 디버깅
 
-CKA 시험에서 **트러블슈팅은 30%** 비중을 차지합니다. kubectl 명령어를 활용한 디버깅 능력이 핵심입니다.
+Kubernetes 운영에서 **트러블슈팅**은 핵심적인 역할을 합니다. kubectl 명령어를 활용한 디버깅 능력이 핵심입니다.
 
 ### 핵심 디버깅 명령어
 
@@ -108,10 +108,10 @@ kubectl get events --field-selector type=Warning
 kubectl get events --field-selector involvedObject.name=<pod-name>
 \`\`\`
 
-> **CKA 시험 팁**: \`kubectl describe\`의 Events 섹션을 가장 먼저 확인하세요. 대부분의 문제 원인이 여기에 기록됩니다.`,
+> **실무 팁**: \`kubectl describe\`의 Events 섹션을 가장 먼저 확인하세요. 대부분의 문제 원인이 여기에 기록됩니다.`,
       en: `## kubectl Debugging
 
-**Troubleshooting makes up 30%** of the CKA exam. Mastering kubectl debugging commands is essential.
+**Troubleshooting** is a critical part of Kubernetes operations. Mastering kubectl debugging commands is essential.
 
 ### Essential Debugging Commands
 
@@ -211,7 +211,7 @@ kubectl get events --field-selector type=Warning
 kubectl get events --field-selector involvedObject.name=<pod-name>
 \`\`\`
 
-> **CKA Exam Tip**: Always check the Events section of \`kubectl describe\` first. Most problem causes are recorded there.`,
+> **Practical Tip**: Always check the Events section of \`kubectl describe\` first. Most problem causes are recorded there.`,
     },
   },
   {
@@ -303,7 +303,7 @@ readinessProbe:
   periodSeconds: 5
 \`\`\`
 
-> **CKA 시험 팁**: Pod 문제 해결 시 항상 \`describe → logs → exec\` 순서로 확인하세요.`,
+> **실무 팁**: Pod 문제 해결 시 항상 \`describe → logs → exec\` 순서로 확인하세요.`,
       en: `## Pod Troubleshooting
 
 ### Diagnosing Issues by Pod Status
@@ -388,7 +388,7 @@ readinessProbe:
   periodSeconds: 5
 \`\`\`
 
-> **CKA Exam Tip**: When troubleshooting Pods, always follow the \`describe → logs → exec\` sequence.`,
+> **Practical Tip**: When troubleshooting Pods, always follow the \`describe → logs → exec\` sequence.`,
     },
   },
   {
@@ -476,7 +476,7 @@ kubectl uncordon <node-name>
 kubectl cordon <node-name>
 \`\`\`
 
-> **CKA 시험 팁**: Node 문제는 kubelet과 컨테이너 런타임 상태를 먼저 확인하세요. \`systemctl status kubelet\`이 첫 번째 명령어입니다.`,
+> **실무 팁**: Node 문제는 kubelet과 컨테이너 런타임 상태를 먼저 확인하세요. \`systemctl status kubelet\`이 첫 번째 명령어입니다.`,
       en: `## Node Troubleshooting
 
 ### Checking Node Status
@@ -557,7 +557,7 @@ kubectl uncordon <node-name>
 kubectl cordon <node-name>
 \`\`\`
 
-> **CKA Exam Tip**: For Node issues, always check kubelet and container runtime first. \`systemctl status kubelet\` is your first command.`,
+> **Practical Tip**: For Node issues, always check kubelet and container runtime first. \`systemctl status kubelet\` is your first command.`,
     },
   },
   {
@@ -652,7 +652,7 @@ kubectl describe networkpolicy <name>
 kubectl get networkpolicy -n <ns> -o yaml | grep -A5 podSelector
 \`\`\`
 
-> **CKA 시험 팁**: 네트워크 문제 시 먼저 Endpoint가 있는지 확인하세요. Endpoint가 없으면 selector와 label 불일치입니다.`,
+> **실무 팁**: 네트워크 문제 시 먼저 Endpoint가 있는지 확인하세요. Endpoint가 없으면 selector와 label 불일치입니다.`,
       en: `## Network Troubleshooting
 
 ### Network Diagnosis Order
@@ -740,7 +740,7 @@ kubectl describe networkpolicy <name>
 kubectl get networkpolicy -n <ns> -o yaml | grep -A5 podSelector
 \`\`\`
 
-> **CKA Exam Tip**: When facing network issues, first check if Endpoints exist. No Endpoints means a selector/label mismatch.`,
+> **Practical Tip**: When facing network issues, first check if Endpoints exist. No Endpoints means a selector/label mismatch.`,
     },
   },
   {
@@ -837,7 +837,7 @@ kubeadm certs renew all
 # (Static Pod 매니페스트 이동 후 복원)
 \`\`\`
 
-> **CKA 시험 팁**: Control Plane 문제는 \`/etc/kubernetes/manifests/\` 의 Static Pod 매니페스트를 확인하세요. 설정 오류가 가장 흔한 원인입니다.`,
+> **실무 팁**: Control Plane 문제는 \`/etc/kubernetes/manifests/\` 의 Static Pod 매니페스트를 확인하세요. 설정 오류가 가장 흔한 원인입니다.`,
       en: `## Cluster Troubleshooting
 
 ### Checking Control Plane Components
@@ -927,7 +927,7 @@ kubeadm certs renew all
 # (Move Static Pod manifests out and back)
 \`\`\`
 
-> **CKA Exam Tip**: For Control Plane issues, check Static Pod manifests in \`/etc/kubernetes/manifests/\`. Configuration errors are the most common cause.`,
+> **Practical Tip**: For Control Plane issues, check Static Pod manifests in \`/etc/kubernetes/manifests/\`. Configuration errors are the most common cause.`,
     },
   },
   {
@@ -1011,7 +1011,7 @@ kubectl top pod <pod-name> --containers
 | Controller Manager | \`kubectl logs -n kube-system kube-controller-manager-*\` |
 | Container Runtime | \`journalctl -u containerd\` |
 
-> **CKA 시험 팁**: \`kubectl top\`은 metrics-server가 설치되어 있어야 동작합니다. 시험 환경에서는 보통 이미 설치되어 있습니다.`,
+> **실무 팁**: \`kubectl top\`은 metrics-server가 설치되어 있어야 동작합니다. 운영 환경에서는 보통 이미 설치되어 있습니다.`,
       en: `## Logging & Monitoring
 
 ### Container Logging Architecture
@@ -1088,7 +1088,7 @@ kubectl top pod <pod-name> --containers
 | Controller Manager | \`kubectl logs -n kube-system kube-controller-manager-*\` |
 | Container Runtime | \`journalctl -u containerd\` |
 
-> **CKA Exam Tip**: \`kubectl top\` requires metrics-server to be installed. In exam environments, it's usually pre-installed.`,
+> **Practical Tip**: \`kubectl top\` requires metrics-server to be installed. In production environments, it's usually pre-installed.`,
     },
   },
   {
@@ -1211,7 +1211,7 @@ spec:
 | Blue-Green | O | 2배 | 즉시 |
 | Canary | O | 약간 추가 | 즉시 |
 
-> **CKA 시험 팁**: \`kubectl rollout\` 명령어 시리즈를 숙지하세요. 특히 \`undo --to-revision\`은 자주 출제됩니다.`,
+> **실무 팁**: \`kubectl rollout\` 명령어 시리즈를 숙지하세요. 특히 \`undo --to-revision\`은 자주 사용됩니다.`,
       en: `## Application Lifecycle Management
 
 ### Rolling Update
@@ -1327,7 +1327,7 @@ spec:
 | Blue-Green | Yes | 2x | Instant |
 | Canary | Yes | Slightly extra | Instant |
 
-> **CKA Exam Tip**: Master the \`kubectl rollout\` command series. \`undo --to-revision\` is frequently tested.`,
+> **Practical Tip**: Master the \`kubectl rollout\` command series. \`undo --to-revision\` is frequently used in practice.`,
     },
   },
 ];

@@ -142,8 +142,8 @@ export const k8sOXQuestions: K8sOXQuestion[] = [
     },
     answer: true,
     explanation: {
-      ko: 'ETCDCTL_API=3 etcdctl snapshot save <filename>으로 etcd 스냅샷을 생성합니다. CKA 시험에서 필수적으로 알아야 하는 백업/복구 절차입니다.',
-      en: 'Use ETCDCTL_API=3 etcdctl snapshot save <filename> to create an etcd snapshot. This backup/restore procedure is essential for the CKA exam.',
+      ko: 'ETCDCTL_API=3 etcdctl snapshot save <filename>으로 etcd 스냅샷을 생성합니다. 실무에서 필수적으로 알아야 하는 백업/복구 절차입니다.',
+      en: 'Use ETCDCTL_API=3 etcdctl snapshot save <filename> to create an etcd snapshot. This backup/restore procedure is essential in practice.',
     },
   },
   {
@@ -1109,26 +1109,26 @@ export const k8sMatchingSets: K8sMatchingSet[] = [
   {
     id: 'k8s-match-04',
     category: 'core-concepts',
-    title: { ko: 'CKA 시험 도메인 매칭', en: 'CKA Exam Domains' },
+    title: { ko: 'Kubernetes 도메인 매칭', en: 'Kubernetes Domains' },
     pairs: [
       {
-        term: { ko: '클러스터 아키텍처, 설치 및 구성 (25%)', en: 'Cluster Architecture, Installation & Configuration (25%)' },
+        term: { ko: '클러스터 아키텍처, 설치 및 구성', en: 'Cluster Architecture, Installation & Configuration' },
         definition: { ko: 'kubeadm, etcd 백업/복구, RBAC, 클러스터 업그레이드', en: 'kubeadm, etcd backup/restore, RBAC, cluster upgrades' },
       },
       {
-        term: { ko: '워크로드 및 스케줄링 (15%)', en: 'Workloads & Scheduling (15%)' },
+        term: { ko: '워크로드 및 스케줄링', en: 'Workloads & Scheduling' },
         definition: { ko: 'Deployment, Pod 스케줄링, ConfigMap/Secret, 리소스 관리', en: 'Deployment, Pod scheduling, ConfigMap/Secret, resource management' },
       },
       {
-        term: { ko: '서비스 및 네트워킹 (20%)', en: 'Services & Networking (20%)' },
+        term: { ko: '서비스 및 네트워킹', en: 'Services & Networking' },
         definition: { ko: 'Service 타입, Ingress, CoreDNS, NetworkPolicy', en: 'Service types, Ingress, CoreDNS, NetworkPolicy' },
       },
       {
-        term: { ko: '스토리지 (10%)', en: 'Storage (10%)' },
+        term: { ko: '스토리지', en: 'Storage' },
         definition: { ko: 'PV/PVC, StorageClass, 볼륨 타입과 접근 모드', en: 'PV/PVC, StorageClass, volume types and access modes' },
       },
       {
-        term: { ko: '트러블슈팅 (30%)', en: 'Troubleshooting (30%)' },
+        term: { ko: '트러블슈팅', en: 'Troubleshooting' },
         definition: { ko: '클러스터/노드 로그, Pod 디버깅, 네트워크 문제 해결', en: 'Cluster/node logs, Pod debugging, network troubleshooting' },
       },
     ],

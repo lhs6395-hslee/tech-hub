@@ -14,7 +14,6 @@ import {
   k8sMatchingSets,
 } from '@/data/kubernetes/quiz';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Server, Container as ContainerIcon, Network, HardDrive, Search } from 'lucide-react';
 import Link from 'next/link';
 
@@ -56,8 +55,8 @@ const gameModes: {
     id: 'ox',
     title: { ko: 'OX 퀴즈', en: 'True / False' },
     desc: {
-      ko: '문장이 맞으면 O, 틀리면 X! CKA 핵심 개념을 빠르게 확인하세요.',
-      en: 'O if true, X if false! Quickly verify CKA core concepts.',
+      ko: '문장이 맞으면 O, 틀리면 X! Kubernetes 핵심 개념을 빠르게 확인하세요.',
+      en: 'O if true, X if false! Quickly verify Kubernetes core concepts.',
     },
     icon: CheckCircle,
     gradient: 'from-green-500 to-emerald-500',
@@ -66,8 +65,8 @@ const gameModes: {
     id: 'mc',
     title: { ko: '4지선다', en: 'Multiple Choice' },
     desc: {
-      ko: '4개 보기 중 정답을 골라보세요. CKA 시험과 유사한 형식입니다.',
-      en: 'Choose the correct answer from 4 options. CKA exam-style format.',
+      ko: '4개 보기 중 정답을 골라보세요. 실전 시험과 유사한 형식입니다.',
+      en: 'Choose the correct answer from 4 options. Exam-style format.',
     },
     icon: Zap,
     gradient: 'from-blue-500 to-cyan-500',
@@ -97,8 +96,8 @@ export default function K8sLearnPage() {
         </h1>
         <p className="text-muted-foreground mt-2">
           {locale === 'ko'
-            ? 'CKA 도메인별 이론을 학습하거나, 퀴즈로 개념을 복습하세요.'
-            : 'Study CKA domain topics or review concepts with quizzes.'}
+            ? '도메인별 이론을 학습하거나, 퀴즈로 개념을 복습하세요.'
+            : 'Study Kubernetes topics by domain or review concepts with quizzes.'}
         </p>
       </div>
 
@@ -111,7 +110,7 @@ export default function K8sLearnPage() {
               : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
           }`}
         >
-          {locale === 'ko' ? 'CKA 도메인' : 'CKA Domains'}
+          {locale === 'ko' ? '학습 도메인' : 'Learning Domains'}
         </button>
         <button
           onClick={() => { setTab('quiz'); setSelectedGame(null); }}
@@ -129,8 +128,8 @@ export default function K8sLearnPage() {
         <div className="space-y-6">
           <p className="text-sm text-muted-foreground">
             {locale === 'ko'
-              ? 'CKA 시험의 5개 도메인별로 이론을 학습하세요. 각 도메인을 클릭하면 상세 이론 문서로 이동합니다.'
-              : 'Study theory for each of the 5 CKA exam domains. Click a domain to view detailed documentation.'}
+              ? 'Kubernetes의 5개 도메인별로 이론을 학습하세요. 각 도메인을 클릭하면 상세 이론 문서로 이동합니다.'
+              : 'Study theory for each of the 5 Kubernetes domains. Click a domain to view detailed documentation.'}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {K8S_LEVEL_CONFIGS.map((config) => {
@@ -150,9 +149,6 @@ export default function K8sLearnPage() {
                           {config.description[locale]}
                         </p>
                       </div>
-                      <Badge variant="secondary" className="text-[10px]">
-                        CKA {config.weight}%
-                      </Badge>
                     </CardContent>
                   </Card>
                 </Link>
@@ -168,8 +164,8 @@ export default function K8sLearnPage() {
             <div className="space-y-6">
               <p className="text-sm text-muted-foreground">
                 {locale === 'ko'
-                  ? '게임을 통해 Kubernetes & CKA 이론을 재미있게 복습하세요!'
-                  : 'Review Kubernetes & CKA theory through fun games!'}
+                  ? '게임을 통해 Kubernetes 이론을 재미있게 복습하세요!'
+                  : 'Review Kubernetes theory through fun games!'}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {gameModes.map((mode) => (

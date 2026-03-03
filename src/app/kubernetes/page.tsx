@@ -5,7 +5,6 @@ import { useLocaleStore } from '@/stores/locale-store';
 import { K8S_LEVEL_CONFIGS } from '@/types/kubernetes';
 import { Container, Server, Network, HardDrive, Search, BookOpen, GraduationCap, MessageSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 
 const DOMAIN_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Server,
@@ -52,12 +51,12 @@ export default function KubernetesPage() {
           </div>
         </div>
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          {locale === 'ko' ? 'CKA 시험 준비' : 'CKA Exam Preparation'}
+          {locale === 'ko' ? 'Kubernetes 학습' : 'Kubernetes Learning'}
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           {locale === 'ko'
-            ? 'Certified Kubernetes Administrator(CKA) 시험 커리큘럼 기반으로 Kubernetes를 체계적으로 학습합니다'
-            : 'Master Kubernetes systematically based on the CKA exam curriculum'}
+            ? 'Kubernetes의 핵심 개념부터 실전 운영까지 체계적으로 학습합니다'
+            : 'Master Kubernetes systematically from core concepts to production operations'}
         </p>
       </section>
 
@@ -66,12 +65,12 @@ export default function KubernetesPage() {
         <Link href="/kubernetes/docs" className="flex flex-col items-center text-center p-6 rounded-xl bg-muted/30 space-y-3 hover:bg-muted/50 transition-colors">
           <BookOpen className="h-8 w-8 text-blue-500" />
           <h3 className="font-semibold">
-            {locale === 'ko' ? 'CKA 이론 학습' : 'CKA Theory'}
+            {locale === 'ko' ? 'Kubernetes 이론' : 'K8s Theory'}
           </h3>
           <p className="text-sm text-muted-foreground">
             {locale === 'ko'
-              ? '5개 CKA 도메인에 대한 상세한 이론 문서를 학습합니다'
-              : 'Study detailed theory documents for 5 CKA domains'}
+              ? '5개 핵심 도메인에 대한 상세한 이론 문서를 학습합니다'
+              : 'Study detailed theory documents for 5 Kubernetes domains'}
           </p>
         </Link>
         <Link href="/kubernetes/learn" className="flex flex-col items-center text-center p-6 rounded-xl bg-muted/30 space-y-3 hover:bg-muted/50 transition-colors">
@@ -98,16 +97,16 @@ export default function KubernetesPage() {
         </div>
       </section>
 
-      {/* CKA Domain Cards */}
+      {/* Domain Cards */}
       <section className="space-y-6 max-w-4xl mx-auto">
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold">
-            {locale === 'ko' ? 'CKA 시험 도메인' : 'CKA Exam Domains'}
+            {locale === 'ko' ? 'Kubernetes 학습 도메인' : 'Kubernetes Learning Domains'}
           </h2>
           <p className="text-muted-foreground">
             {locale === 'ko'
-              ? 'CKA 시험은 5개 도메인으로 구성되어 있습니다'
-              : 'The CKA exam consists of 5 domains'}
+              ? 'Kubernetes는 5개 핵심 도메인으로 구성되어 있습니다'
+              : 'Kubernetes consists of 5 core domains'}
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -130,18 +129,6 @@ export default function KubernetesPage() {
                       <p className="text-xs text-muted-foreground mt-1">
                         {config.description[locale]}
                       </p>
-                    </div>
-                    {/* Weight Badge */}
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-[10px]">
-                        CKA {config.weight}%
-                      </Badge>
-                      <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className={`h-full bg-gradient-to-r ${gradient} rounded-full`}
-                          style={{ width: `${config.weight * 3.3}%` }}
-                        />
-                      </div>
                     </div>
                   </CardContent>
                 </Card>

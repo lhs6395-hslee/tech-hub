@@ -148,7 +148,7 @@ kubectl describe svc my-clusterip-svc
 kubectl get pods -l app=my-app -o wide
 \`\`\`
 
-### CKA 시험 핵심 포인트
+### 핵심 포인트
 
 - **\`port\`**: Service가 노출하는 포트
 - **\`targetPort\`**: 파드 컨테이너의 실제 포트
@@ -298,7 +298,7 @@ kubectl describe svc my-clusterip-svc
 kubectl get pods -l app=my-app -o wide
 \`\`\`
 
-### CKA Exam Key Points
+### Key Points
 
 - **\`port\`**: The port the Service exposes
 - **\`targetPort\`**: The actual container port on the Pod
@@ -459,7 +459,7 @@ kubectl logs -n kube-system -l k8s-app=kube-dns
 kubectl exec dnsutils -- cat /etc/resolv.conf
 \`\`\`
 
-### CKA 시험 핵심 포인트
+### 핵심 포인트
 
 - CoreDNS는 \`kube-system\` 네임스페이스의 Deployment로 실행
 - Service FQDN: \`<svc>.<ns>.svc.cluster.local\`
@@ -614,7 +614,7 @@ kubectl logs -n kube-system -l k8s-app=kube-dns
 kubectl exec dnsutils -- cat /etc/resolv.conf
 \`\`\`
 
-### CKA Exam Key Points
+### Key Points
 
 - CoreDNS runs as a Deployment in \`kube-system\` namespace
 - Service FQDN: \`<svc>.<ns>.svc.cluster.local\`
@@ -643,7 +643,7 @@ Ingress 리소스만으로는 작동하지 않으며, 반드시 Ingress Controll
 
 | Controller | 특징 |
 |-----------|------|
-| **NGINX Ingress** | 가장 널리 사용, CKA 시험 기본 |
+| **NGINX Ingress** | 가장 널리 사용, 가장 널리 사용 |
 | **Traefik** | 자동 설정, Let's Encrypt 통합 |
 | **HAProxy** | 고성능, 고급 로드 밸런싱 |
 | **Contour** | Envoy 기반, HTTPProxy CRD |
@@ -806,7 +806,7 @@ spec:
 
 ---
 
-### CKA 시험 핵심 포인트
+### 핵심 포인트
 
 - Ingress Controller가 반드시 설치되어 있어야 함
 - \`ingressClassName\` 필드로 IngressClass 지정
@@ -830,7 +830,7 @@ An Ingress resource alone does nothing -- an Ingress Controller is required.
 
 | Controller | Characteristics |
 |-----------|----------------|
-| **NGINX Ingress** | Most widely used, CKA exam default |
+| **NGINX Ingress** | Most widely used, Most commonly used |
 | **Traefik** | Auto-config, Let's Encrypt integration |
 | **HAProxy** | High performance, advanced load balancing |
 | **Contour** | Envoy-based, HTTPProxy CRD |
@@ -993,7 +993,7 @@ spec:
 
 ---
 
-### CKA Exam Key Points
+### Key Points
 
 - An Ingress Controller must be installed for Ingress to work
 - Use \`ingressClassName\` to specify the IngressClass
@@ -1213,7 +1213,7 @@ kubectl get pods --show-labels
 kubectl label namespace monitoring purpose=monitoring
 \`\`\`
 
-### CKA 시험 핵심 포인트
+### 핵심 포인트
 
 - \`podSelector: {}\`는 네임스페이스의 모든 파드를 선택
 - \`policyTypes\`에 명시하지 않은 방향은 영향 없음
@@ -1426,7 +1426,7 @@ kubectl get pods --show-labels
 kubectl label namespace monitoring purpose=monitoring
 \`\`\`
 
-### CKA Exam Key Points
+### Key Points
 
 - \`podSelector: {}\` selects all Pods in the namespace
 - Directions not listed in \`policyTypes\` are unaffected
@@ -1570,7 +1570,7 @@ ipvsadm -L -n
 
 ---
 
-### CKA 시험 핵심 포인트
+### 핵심 포인트
 
 - CNI 플러그인 바이너리: \`/opt/cni/bin/\`, 설정: \`/etc/cni/net.d/\`
 - kubelet의 \`--network-plugin=cni\` 옵션으로 CNI 활성화
@@ -1708,7 +1708,7 @@ ipvsadm -L -n
 
 ---
 
-### CKA Exam Key Points
+### Key Points
 
 - CNI plugin binaries: \`/opt/cni/bin/\`, config: \`/etc/cni/net.d/\`
 - kubelet uses \`--network-plugin=cni\` to enable CNI
@@ -1907,7 +1907,7 @@ kubectl describe pod my-pod | grep -A 5 "Readiness"
 
 ---
 
-### CKA 시험 핵심 포인트
+### 핵심 포인트
 
 - EndpointSlice는 Endpoints의 확장 가능한 대체 리소스
 - \`kubernetes.io/service-name\` 레이블로 Service와 연결
@@ -2100,7 +2100,7 @@ kubectl describe pod my-pod | grep -A 5 "Readiness"
 
 ---
 
-### CKA Exam Key Points
+### Key Points
 
 - EndpointSlice is the scalable replacement for Endpoints
 - Linked to Services via the \`kubernetes.io/service-name\` label

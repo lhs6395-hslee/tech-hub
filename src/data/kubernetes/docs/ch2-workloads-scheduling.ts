@@ -132,7 +132,7 @@ kubectl exec -it my-app -- /bin/bash
 # Pod 삭제
 kubectl delete pod my-app
 
-# 드라이런으로 YAML 생성 (CKA 시험 팁!)
+# 드라이런으로 YAML 생성 (실전 팁!)
 kubectl run nginx --image=nginx --dry-run=client -o yaml > pod.yaml
 \`\`\`
 
@@ -144,7 +144,7 @@ kubectl run nginx --image=nginx --dry-run=client -o yaml > pod.yaml
 | **OnFailure** | 실패 시에만 재시작 | Job, 배치 작업 |
 | **Never** | 재시작하지 않음 | 디버깅, 일회성 작업 |
 
-### CKA 시험 포인트
+### 핵심 포인트
 
 - Pod는 **일시적(ephemeral)** 리소스 — 직접 생성보다 Deployment를 사용
 - \`kubectl run\`으로 빠르게 Pod 생성 가능
@@ -276,7 +276,7 @@ kubectl exec -it my-app -- /bin/bash
 # Delete a Pod
 kubectl delete pod my-app
 
-# Dry-run to generate YAML (CKA exam tip!)
+# Dry-run to generate YAML (Practical tip!)
 kubectl run nginx --image=nginx --dry-run=client -o yaml > pod.yaml
 \`\`\`
 
@@ -288,11 +288,11 @@ kubectl run nginx --image=nginx --dry-run=client -o yaml > pod.yaml
 | **OnFailure** | Restart only on failure | Jobs, batch workloads |
 | **Never** | Never restart | Debugging, one-off tasks |
 
-### CKA Exam Tips
+### Practical Tips
 
 - Pods are **ephemeral** — use Deployments instead of creating Pods directly
 - Use \`kubectl run\` for quick Pod creation
-- Leverage \`--dry-run=client -o yaml\` to save time on the exam
+- Leverage \`--dry-run=client -o yaml\` to save time in practice
 - If an init container fails, the entire Pod restarts
 - Containers within the same Pod communicate via \`localhost\``
     },
@@ -424,7 +424,7 @@ kubectl autoscale deployment/my-app --min=2 --max=10 --cpu-percent=80
 | 배포 히스토리 | X | O |
 | 일시정지/재개 | X | O |
 
-### CKA 시험 포인트
+### 핵심 포인트
 
 - \`kubectl create deployment\`으로 빠르게 생성 후 \`--dry-run=client -o yaml\`로 YAML 추출
 - 롤백 시 \`kubectl rollout undo\`를 사용
@@ -551,7 +551,7 @@ kubectl autoscale deployment/my-app --min=2 --max=10 --cpu-percent=80
 | Deployment history | No | Yes |
 | Pause/Resume | No | Yes |
 
-### CKA Exam Tips
+### Practical Tips
 
 - Use \`kubectl create deployment\` with \`--dry-run=client -o yaml\` for quick YAML generation
 - Use \`kubectl rollout undo\` for rollbacks
@@ -708,7 +708,7 @@ spec:
 | 영속 스토리지 | 공유 PVC | hostPath 주로 사용 | Pod별 고유 PVC |
 | 순서 보장 | X | X | O |
 
-### CKA 시험 포인트
+### 핵심 포인트
 
 - DaemonSet은 replicas 필드가 없음 — 노드 수에 따라 자동 결정
 - StatefulSet은 반드시 \`serviceName\` 지정과 Headless Service가 필요
@@ -855,7 +855,7 @@ Example: \`mysql-0.mysql-headless.default.svc.cluster.local\`
 | Persistent storage | Shared PVC | Typically hostPath | Unique PVC per Pod |
 | Ordering guarantee | No | No | Yes |
 
-### CKA Exam Tips
+### Practical Tips
 
 - DaemonSets have no \`replicas\` field — count is determined by number of nodes
 - StatefulSets require a \`serviceName\` field and a Headless Service
@@ -1004,7 +1004,7 @@ kubectl create job manual-backup --from=cronjob/nightly-backup
 kubectl logs job/data-migration
 \`\`\`
 
-### CKA 시험 포인트
+### 핵심 포인트
 
 - Job의 \`restartPolicy\`는 반드시 **Never** 또는 **OnFailure** (Always 불가)
 - \`backoffLimit\`을 초과하면 Job이 **Failed** 상태가 됨
@@ -1145,7 +1145,7 @@ kubectl create job manual-backup --from=cronjob/nightly-backup
 kubectl logs job/data-migration
 \`\`\`
 
-### CKA Exam Tips
+### Practical Tips
 
 - Job \`restartPolicy\` must be **Never** or **OnFailure** (not Always)
 - Exceeding \`backoffLimit\` marks the Job as **Failed**
@@ -1334,12 +1334,12 @@ immutable: true    # 변경 불가 — 삭제 후 재생성만 가능
 - **성능 향상**: kubelet이 API 서버에 변경 감시를 하지 않음
 - **안전성**: 실수로 인한 변경 방지
 
-### CKA 시험 포인트
+### 핵심 포인트
 
 - ConfigMap/Secret은 **같은 네임스페이스** 내에서만 참조 가능
 - Secret은 base64 **인코딩**일 뿐 **암호화가 아님** — etcd 암호화 별도 설정 필요
 - 볼륨 마운트 시 ConfigMap 변경이 자동 반영됨 (환경 변수는 Pod 재시작 필요)
-- \`stringData\`를 사용하면 CKA 시험에서 시간 절약 가능
+- \`stringData\`를 사용하면 실무에서 시간 절약 가능
 - \`kubectl create configmap/secret\` 명령어를 반드시 숙지`,
       en: `## ConfigMap & Secret
 
@@ -1514,12 +1514,12 @@ immutable: true    # Cannot be modified — must delete and recreate
 - **Performance benefit**: kubelet stops watching the API server for changes
 - **Safety**: Prevents accidental modifications
 
-### CKA Exam Tips
+### Practical Tips
 
 - ConfigMaps/Secrets can only be referenced within the **same namespace**
 - Secrets are base64 **encoded**, NOT **encrypted** — etcd encryption must be configured separately
 - Volume-mounted ConfigMaps auto-update on change (env vars require Pod restart)
-- Use \`stringData\` in Secrets to save time on the CKA exam
+- Use \`stringData\` in Secrets to save time in practice
 - Master the \`kubectl create configmap/secret\` imperative commands`
     },
   },
@@ -1679,7 +1679,7 @@ kubectl describe limitrange -n dev
 kubectl describe resourcequota -n dev
 \`\`\`
 
-### CKA 시험 포인트
+### 핵심 포인트
 
 - ResourceQuota가 설정된 네임스페이스에서는 반드시 requests/limits를 지정해야 Pod 생성 가능
 - LimitRange의 default가 있으면 리소스 미지정 시 자동 적용
@@ -1835,7 +1835,7 @@ kubectl describe limitrange -n dev
 kubectl describe resourcequota -n dev
 \`\`\`
 
-### CKA Exam Tips
+### Practical Tips
 
 - In namespaces with ResourceQuota, Pods **must** specify requests/limits to be created
 - LimitRange defaults are auto-applied when resources are not specified
@@ -2032,7 +2032,7 @@ spec:
 | **Tolerations** | Pod | Taint 허용 |
 | **nodeName** | Pod | 직접 노드 지정 |
 
-### CKA 시험 포인트
+### 핵심 포인트
 
 - \`nodeSelector\`는 가장 간단하지만 OR 조건 등 복잡한 표현 불가
 - Taint/Toleration은 Pod를 특정 노드로 **끌어들이지 않음** — 거부만 함
@@ -2220,7 +2220,7 @@ spec:
 | **Tolerations** | Pod | Allow tainted nodes |
 | **nodeName** | Pod | Direct node assignment |
 
-### CKA Exam Tips
+### Practical Tips
 
 - \`nodeSelector\` is simplest but cannot express OR conditions or complex rules
 - Taints/Tolerations do NOT **attract** Pods to nodes — they only repel
@@ -2357,7 +2357,7 @@ vi /etc/kubernetes/manifests/static-web.yaml
 
 ### 스태틱 Pod 식별 방법
 
-CKA 시험에서 스태틱 Pod를 식별하는 방법:
+실무에서 스태틱 Pod를 식별하는 방법:
 
 \`\`\`bash
 # 방법 1: ownerReferences 확인
@@ -2383,14 +2383,14 @@ kubectl get pod <pod-name> -o yaml | grep mirror
 | **삭제** | kubectl delete | 매니페스트 파일 삭제 |
 | **API 조회** | 가능 | 미러 Pod로 조회 (읽기 전용) |
 
-### CKA 시험 포인트
+### 핵심 포인트
 
 - 스태틱 Pod 경로는 \`/var/lib/kubelet/config.yaml\`의 \`staticPodPath\`에서 확인
 - 기본 경로는 \`/etc/kubernetes/manifests\`이지만 변경될 수 있음 — 반드시 확인!
 - \`kubectl delete\`로 스태틱 Pod를 삭제할 수 **없음** — 매니페스트 파일을 삭제해야 함
 - Control Plane 컴포넌트(etcd, apiserver, scheduler, controller-manager)는 스태틱 Pod
 - 스태틱 Pod는 DaemonSet, Deployment 등 컨트롤러의 관리를 받지 않음
-- 시험에서 kubelet 설정 파일 경로를 찾는 것이 첫 번째 단계`,
+- 실무에서 kubelet 설정 파일 경로를 찾는 것이 첫 번째 단계`,
       en: `## Static Pods
 
 ### What are Static Pods?
@@ -2512,7 +2512,7 @@ vi /etc/kubernetes/manifests/static-web.yaml
 
 ### Identifying Static Pods
 
-How to identify static Pods on the CKA exam:
+How to identify static Pods in practice:
 
 \`\`\`bash
 # Method 1: Check ownerReferences
@@ -2538,14 +2538,14 @@ kubectl get pod <pod-name> -o yaml | grep mirror
 | **Deletion** | kubectl delete | Delete manifest file |
 | **API visibility** | Full access | Mirror Pod (read-only) |
 
-### CKA Exam Tips
+### Practical Tips
 
 - Check \`staticPodPath\` in \`/var/lib/kubelet/config.yaml\`
 - Default path is \`/etc/kubernetes/manifests\` but may be changed — always verify!
 - You **cannot** delete a static Pod with \`kubectl delete\` — you must remove the manifest file
 - Control Plane components (etcd, apiserver, scheduler, controller-manager) are static Pods
 - Static Pods are NOT managed by controllers like DaemonSets or Deployments
-- On the exam, finding the kubelet config file path is always the first step`
+- In practice, finding the kubelet config file path is always the first step`
     },
   },
 ];

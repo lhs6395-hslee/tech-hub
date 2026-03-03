@@ -89,7 +89,7 @@ volumes:
       type: Directory         # DirectoryOrCreate, File, FileOrCreate 등
 \`\`\`
 
-> **CKA 시험 포인트**: hostPath는 단일 노드 테스트에 유용하지만, 프로덕션에서는 보안 위험이 있어 권장하지 않습니다. DaemonSet에서 노드별 로그 수집에 사용될 수 있습니다.
+> **핵심 포인트**: hostPath는 단일 노드 테스트에 유용하지만, 프로덕션에서는 보안 위험이 있어 권장하지 않습니다. DaemonSet에서 노드별 로그 수집에 사용될 수 있습니다.
 
 | hostPath type | 설명 |
 |---------------|------|
@@ -155,7 +155,7 @@ volumes:
             resource: limits.cpu
 \`\`\`
 
-### CKA 시험 팁
+### 실무 팁
 
 - \`kubectl explain pod.spec.volumes\` 명령으로 볼륨 타입을 빠르게 확인
 - emptyDir은 sidecar 패턴에서 로그 공유에 자주 사용됨
@@ -244,7 +244,7 @@ volumes:
       type: Directory         # DirectoryOrCreate, File, FileOrCreate, etc.
 \`\`\`
 
-> **CKA Exam Point**: hostPath is useful for single-node testing but is a security risk in production. It can be used with DaemonSets for per-node log collection.
+> **Key Point**: hostPath is useful for single-node testing but is a security risk in production. It can be used with DaemonSets for per-node log collection.
 
 | hostPath type | Description |
 |---------------|-------------|
@@ -310,7 +310,7 @@ volumes:
             resource: limits.cpu
 \`\`\`
 
-### CKA Exam Tips
+### Practical Tips
 
 - Use \`kubectl explain pod.spec.volumes\` to quickly review volume types
 - emptyDir is commonly used in the sidecar pattern for sharing logs
@@ -412,7 +412,7 @@ spec:
 | **RWX** | ReadWriteMany | 여러 노드에서 읽기/쓰기 마운트 |
 | **RWOP** | ReadWriteOncePod | 단일 Pod에서만 읽기/쓰기 (K8s 1.22+) |
 
-> **CKA 시험 포인트**: 모든 스토리지 백엔드가 모든 접근 모드를 지원하는 것은 아닙니다. 예를 들어 AWS EBS는 RWO만 지원하고, NFS는 RWX를 지원합니다.
+> **핵심 포인트**: 모든 스토리지 백엔드가 모든 접근 모드를 지원하는 것은 아닙니다. 예를 들어 AWS EBS는 RWO만 지원하고, NFS는 RWX를 지원합니다.
 
 ### 회수 정책 (Reclaim Policy)
 
@@ -459,7 +459,7 @@ kubectl get pvc pvc-example -o jsonpath='{.status.phase}'
 kubectl patch pv pv-example -p '{"spec":{"claimRef": null}}'
 \`\`\`
 
-### CKA 시험 팁
+### 실무 팁
 
 - PVC가 \`Pending\` 상태이면 조건에 맞는 PV가 없거나 StorageClass가 틀린 것
 - \`storageClassName: ""\`은 동적 프로비저닝을 비활성화하고 정적 PV만 바인딩
@@ -552,7 +552,7 @@ spec:
 | **RWX** | ReadWriteMany | Read/write by many nodes |
 | **RWOP** | ReadWriteOncePod | Read/write by a single Pod (K8s 1.22+) |
 
-> **CKA Exam Point**: Not all storage backends support all access modes. For example, AWS EBS supports only RWO, while NFS supports RWX.
+> **Key Point**: Not all storage backends support all access modes. For example, AWS EBS supports only RWO, while NFS supports RWX.
 
 ### Reclaim Policies
 
@@ -599,7 +599,7 @@ kubectl get pvc pvc-example -o jsonpath='{.status.phase}'
 kubectl patch pv pv-example -p '{"spec":{"claimRef": null}}'
 \`\`\`
 
-### CKA Exam Tips
+### Practical Tips
 
 - If a PVC is \`Pending\`, no matching PV exists or the StorageClass is wrong
 - \`storageClassName: ""\` disables dynamic provisioning and binds only to static PVs
@@ -686,7 +686,7 @@ spec:
 | \`Immediate\` | PVC 생성 즉시 PV 바인딩/프로비저닝 | 기본값. 존 제약이 없는 스토리지 |
 | \`WaitForFirstConsumer\` | Pod가 스케줄링될 때까지 대기 후 바인딩 | 토폴로지 인식 스토리지 (EBS, 로컬) |
 
-> **CKA 시험 포인트**: \`WaitForFirstConsumer\`는 Pod가 스케줄링되는 노드의 토폴로지(존, 리전)에 맞는 PV를 프로비저닝합니다. 이는 EBS와 같이 특정 AZ에 종속되는 스토리지에 중요합니다.
+> **핵심 포인트**: \`WaitForFirstConsumer\`는 Pod가 스케줄링되는 노드의 토폴로지(존, 리전)에 맞는 PV를 프로비저닝합니다. 이는 EBS와 같이 특정 AZ에 종속되는 스토리지에 중요합니다.
 
 \`\`\`yaml
 apiVersion: storage.k8s.io/v1
@@ -741,7 +741,7 @@ kubectl patch pvc dynamic-pvc -p '{"spec": {"resources": {"requests": {"storage"
 
 > 볼륨 축소는 지원되지 않습니다. 파일 시스템 확장이 필요한 경우 Pod 재시작이 필요할 수 있습니다.
 
-### CKA 시험 팁
+### 실무 팁
 
 - \`kubectl get sc\`는 \`kubectl get storageclass\`의 축약형
 - 기본 StorageClass가 없으면 \`storageClassName\`이 없는 PVC는 Pending 상태 유지
@@ -819,7 +819,7 @@ spec:
 | \`Immediate\` | PV bound/provisioned as soon as PVC is created | Default. For storage with no zone constraints |
 | \`WaitForFirstConsumer\` | Waits until a Pod is scheduled before binding | Topology-aware storage (EBS, local) |
 
-> **CKA Exam Point**: \`WaitForFirstConsumer\` provisions the PV in the topology (zone, region) where the Pod is scheduled. This is critical for storage like EBS that is AZ-specific.
+> **Key Point**: \`WaitForFirstConsumer\` provisions the PV in the topology (zone, region) where the Pod is scheduled. This is critical for storage like EBS that is AZ-specific.
 
 \`\`\`yaml
 apiVersion: storage.k8s.io/v1
@@ -874,7 +874,7 @@ kubectl patch pvc dynamic-pvc -p '{"spec": {"resources": {"requests": {"storage"
 
 > Volume shrinking is not supported. A Pod restart may be required for filesystem expansion.
 
-### CKA Exam Tips
+### Practical Tips
 
 - \`kubectl get sc\` is shorthand for \`kubectl get storageclass\`
 - Without a default StorageClass, PVCs missing \`storageClassName\` stay Pending
@@ -1038,7 +1038,7 @@ Kubernetes는 인트리(in-tree) 볼륨 플러그인에서 CSI 드라이버로�
 kubectl get csinodes -o yaml
 \`\`\`
 
-### CKA 시험 팁
+### 실무 팁
 
 - CSI 드라이버는 일반적으로 \`kube-system\` 네임스페이스에 설치됨
 - \`kubectl get csidrivers\`로 설치된 드라이버를 빠르게 확인
@@ -1194,7 +1194,7 @@ Kubernetes is migrating from in-tree volume plugins to CSI drivers.
 kubectl get csinodes -o yaml
 \`\`\`
 
-### CKA Exam Tips
+### Practical Tips
 
 - CSI drivers are typically installed in the \`kube-system\` namespace
 - Use \`kubectl get csidrivers\` to quickly list installed drivers

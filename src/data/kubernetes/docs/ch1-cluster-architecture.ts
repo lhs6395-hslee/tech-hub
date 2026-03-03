@@ -62,7 +62,7 @@ Kubernetes(K8s)는 **컨테이너화된 애플리케이션**의 배포, 확장, 
 └───────────────┘    └───────────────┘
 \`\`\`
 
-### CKA 시험 포인트
+### 핵심 포인트
 
 - Kubernetes의 핵심 구성 요소와 역할을 정확히 이해
 - Control Plane과 Worker Node의 차이점 숙지
@@ -163,7 +163,7 @@ Kubernetes (K8s) is an open-source container orchestration platform that automat
 └───────────────┘    └───────────────┘
 \`\`\`
 
-### CKA Exam Points
+### Key Points
 
 - Understand core components and their roles precisely
 - Know the differences between Control Plane and Worker Nodes
@@ -576,7 +576,7 @@ ETCDCTL_API=3 etcdctl endpoint health \\
   --key=/etc/kubernetes/pki/etcd/server.key
 \`\`\`
 
-### CKA 시험 핵심
+### 핵심 포인트
 
 - API Server의 인증 → 인가 → 어드미션 컨트롤 흐름 이해
 - etcd가 유일한 데이터 저장소임을 기억
@@ -705,7 +705,7 @@ ETCDCTL_API=3 etcdctl endpoint health \\
   --key=/etc/kubernetes/pki/etcd/server.key
 \`\`\`
 
-### CKA Exam Key Points
+### Key Points
 
 - Understand the Authentication → Authorization → Admission Control flow
 - Remember that etcd is the only data store
@@ -853,7 +853,7 @@ kubectl get pods -n kube-system
 kubectl cluster-info
 \`\`\`
 
-### CKA 시험 핵심
+### 핵심 포인트
 
 - \`kubeadm init\`과 \`kubeadm join\` 명령어 숙지
 - \`--pod-network-cidr\` 플래그의 역할 이해
@@ -993,7 +993,7 @@ kubectl get pods -n kube-system
 kubectl cluster-info
 \`\`\`
 
-### CKA Exam Key Points
+### Key Points
 
 - Master \`kubeadm init\` and \`kubeadm join\` commands
 - Understand the role of \`--pod-network-cidr\` flag
@@ -1130,7 +1130,7 @@ export KUBECONFIG=~/.kube/merged-config
 | Basic Auth | username, password | 비권장 (deprecated) |
 | Exec 플러그인 | exec | 클라우드 프로바이더 인증 |
 
-### CKA 시험 핵심
+### 핵심 포인트
 
 - 시험에서 여러 클러스터 간 전환이 필요
 - \`kubectl config use-context\` 명령어 필수 숙지
@@ -1138,7 +1138,7 @@ export KUBECONFIG=~/.kube/merged-config
 - \`--kubeconfig\` 플래그와 \`KUBECONFIG\` 환경변수 차이 이해
 
 \`\`\`bash
-# CKA 시험에서 자주 사용하는 패턴
+# 실무에서 자주 사용하는 패턴
 # 1. 컨텍스트 확인
 kubectl config get-contexts
 
@@ -1270,7 +1270,7 @@ export KUBECONFIG=~/.kube/merged-config
 | Basic Auth | username, password | Deprecated |
 | Exec Plugin | exec | Cloud provider auth |
 
-### CKA Exam Key Points
+### Key Points
 
 - Exam requires switching between multiple clusters
 - \`kubectl config use-context\` is essential
@@ -1278,7 +1278,7 @@ export KUBECONFIG=~/.kube/merged-config
 - Understand the difference between \`--kubeconfig\` flag and \`KUBECONFIG\` env variable
 
 \`\`\`bash
-# Common pattern in CKA exam
+# Common practical pattern
 # 1. Check contexts
 kubectl config get-contexts
 
@@ -1443,7 +1443,7 @@ kubectl auth can-i get nodes --as system:serviceaccount:default:my-sa
 kubectl auth can-i --list --as jane -n default
 \`\`\`
 
-### CKA 시험 핵심
+### 핵심 포인트
 
 - Role vs ClusterRole, RoleBinding vs ClusterRoleBinding 차이 명확히 이해
 - \`kubectl auth can-i\` 명령어로 권한 테스트
@@ -1597,7 +1597,7 @@ kubectl auth can-i get nodes --as system:serviceaccount:default:my-sa
 kubectl auth can-i --list --as jane -n default
 \`\`\`
 
-### CKA Exam Key Points
+### Key Points
 
 - Clearly understand Role vs ClusterRole, RoleBinding vs ClusterRoleBinding
 - Test permissions with \`kubectl auth can-i\`
@@ -1733,7 +1733,7 @@ kubectl version --short
 kubelet --version
 \`\`\`
 
-### CKA 시험 핵심
+### 핵심 포인트
 
 - 업그레이드 순서: 컨트롤 플레인 먼저, 워커 노드 나중에
 - \`kubeadm upgrade apply\`는 첫 컨트롤 플레인에서만, 나머지는 \`kubeadm upgrade node\`
@@ -1861,7 +1861,7 @@ kubectl version --short
 kubelet --version
 \`\`\`
 
-### CKA Exam Key Points
+### Key Points
 
 - Upgrade order: Control plane first, worker nodes after
 - \`kubeadm upgrade apply\` only on first control plane; \`kubeadm upgrade node\` for the rest
@@ -2004,7 +2004,7 @@ ETCDCTL_API=3 etcdctl snapshot save \\
 find \${BACKUP_DIR} -name "snapshot_*.db" -mtime +7 -delete
 \`\`\`
 
-### CKA 시험 핵심
+### 핵심 포인트
 
 - \`ETCDCTL_API=3\` 설정 필수 (기본값이 아닐 수 있음)
 - 인증서 경로는 etcd 매니페스트에서 확인: \`/etc/kubernetes/manifests/etcd.yaml\`
@@ -2139,7 +2139,7 @@ ETCDCTL_API=3 etcdctl snapshot save \\
 find \${BACKUP_DIR} -name "snapshot_*.db" -mtime +7 -delete
 \`\`\`
 
-### CKA Exam Key Points
+### Key Points
 
 - Setting \`ETCDCTL_API=3\` is mandatory (may not be default)
 - Find certificate paths from etcd manifest: \`/etc/kubernetes/manifests/etcd.yaml\`
@@ -2290,7 +2290,7 @@ kubectl config set-context jane-context \\
 kubectl config use-context jane-context
 \`\`\`
 
-### CKA 시험 핵심
+### 핵심 포인트
 
 - 인증서 위치: \`/etc/kubernetes/pki/\` 디렉토리
 - \`openssl x509\` 명령어로 인증서 확인 방법 숙지
@@ -2434,7 +2434,7 @@ kubectl config set-context jane-context \\
 kubectl config use-context jane-context
 \`\`\`
 
-### CKA Exam Key Points
+### Key Points
 
 - Certificate location: \`/etc/kubernetes/pki/\` directory
 - Know how to inspect certificates with \`openssl x509\`

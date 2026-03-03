@@ -138,7 +138,7 @@ export default function K8sDocsPage() {
               </div>
               <div>
                 <p className="text-sm font-bold leading-none">
-                  {locale === 'ko' ? 'CKA 이론' : 'CKA Theory'}
+                  {locale === 'ko' ? 'K8s 이론' : 'K8s Theory'}
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
                   {sectionNumber}/{totalSections} {locale === 'ko' ? '섹션' : 'sections'}
