@@ -332,10 +332,6 @@ volumes:
 
 ### PV/PVC 라이프사이클
 
-\`\`\`
-프로비저닝 → 바인딩 → 사용 → 회수(Reclaim)
-\`\`\`
-
 | 단계 | 설명 |
 |------|------|
 | **프로비저닝** | 정적(Static) — 관리자가 PV 수동 생성 / 동적(Dynamic) — StorageClass로 자동 생성 |
@@ -471,10 +467,6 @@ kubectl patch pv pv-example -p '{"spec":{"claimRef": null}}'
 A **PersistentVolume (PV)** is a storage resource provisioned by a cluster administrator, and a **PersistentVolumeClaim (PVC)** is a user's request for storage. PV and PVC abstract storage implementation details away from Pods.
 
 ### PV/PVC Lifecycle
-
-\`\`\`
-Provisioning → Binding → Using → Reclaiming
-\`\`\`
 
 | Phase | Description |
 |-------|-------------|
@@ -908,29 +900,6 @@ kubectl patch pvc dynamic-pvc -p '{"spec": {"resources": {"requests": {"storage"
 
 CSI 드라이버는 두 가지 주요 컴포넌트로 구성됩니다:
 
-\`\`\`
-┌─────────────────────────────────────────────────┐
-│                 Kubernetes Cluster               │
-│                                                  │
-│  ┌──────────────────┐   ┌─────────────────────┐ │
-│  │  Controller Plugin │   │    Node Plugin       │ │
-│  │  (Deployment/      │   │    (DaemonSet)       │ │
-│  │   StatefulSet)     │   │                      │ │
-│  │                    │   │  - NodeStageVolume   │ │
-│  │  - CreateVolume    │   │  - NodePublishVolume │ │
-│  │  - DeleteVolume    │   │  - NodeGetInfo       │ │
-│  │  - ControllerPublish│  │                      │ │
-│  │  - CreateSnapshot   │  │  모든 노드에서 실행    │ │
-│  │                    │   │                      │ │
-│  └──────────────────┘   └─────────────────────┘ │
-│                                                  │
-│  Sidecar 컨테이너:                                │
-│  - external-provisioner   - external-attacher    │
-│  - external-snapshotter   - external-resizer     │
-│  - node-driver-registrar  - livenessprobe        │
-└─────────────────────────────────────────────────┘
-\`\`\`
-
 | 컴포넌트 | 배포 방식 | 역할 |
 |----------|----------|------|
 | **Controller Plugin** | Deployment/StatefulSet | 볼륨 생성/삭제, 스냅샷 관리 |
@@ -1063,28 +1032,6 @@ kubectl get csinodes -o yaml
 ### CSI Architecture
 
 CSI drivers consist of two main components:
-
-\`\`\`
-┌─────────────────────────────────────────────────┐
-│                 Kubernetes Cluster               │
-│                                                  │
-│  ┌──────────────────┐   ┌─────────────────────┐ │
-│  │  Controller Plugin │   │    Node Plugin       │ │
-│  │  (Deployment/      │   │    (DaemonSet)       │ │
-│  │   StatefulSet)     │   │                      │ │
-│  │                    │   │  - NodeStageVolume   │ │
-│  │  - CreateVolume    │   │  - NodePublishVolume │ │
-│  │  - DeleteVolume    │   │  - NodeGetInfo       │ │
-│  │  - ControllerPublish│  │                      │ │
-│  │  - CreateSnapshot   │  │  Runs on every node  │ │
-│  │                    │   │                      │ │
-│  └──────────────────┘   └─────────────────────┘ │
-│                                                  │
-│  Sidecar Containers:                             │
-│  - external-provisioner   - external-attacher    │
-│  - external-snapshotter   - external-resizer     │
-│  - node-driver-registrar  - livenessprobe        │
-└─────────────────────────────────────────────────┘
 \`\`\`
 
 | Component | Deployment | Purpose |

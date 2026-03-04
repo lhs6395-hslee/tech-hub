@@ -38,30 +38,6 @@ Kubernetes(K8s)는 **컨테이너화된 애플리케이션**의 배포, 확장, 
 
 ### 아키텍처 개요
 
-\`\`\`
-┌─────────────────────────────────────────────────┐
-│                Control Plane                     │
-│  ┌──────────┐ ┌──────┐ ┌───────────┐ ┌────────┐│
-│  │API Server│ │ etcd │ │Scheduler  │ │  CCM   ││
-│  └──────────┘ └──────┘ └───────────┘ └────────┘│
-│                         ┌───────────────────┐   │
-│                         │Controller Manager │   │
-│                         └───────────────────┘   │
-└─────────────────────────────────────────────────┘
-         │                    │
-┌────────┴──────┐    ┌───────┴───────┐
-│   Worker Node │    │  Worker Node  │
-│ ┌───────────┐ │    │ ┌───────────┐ │
-│ │  kubelet  │ │    │ │  kubelet  │ │
-│ ├───────────┤ │    │ ├───────────┤ │
-│ │kube-proxy │ │    │ │kube-proxy │ │
-│ ├───────────┤ │    │ ├───────────┤ │
-│ │ Container │ │    │ │ Container │ │
-│ │  Runtime  │ │    │ │  Runtime  │ │
-│ └───────────┘ │    │ └───────────┘ │
-└───────────────┘    └───────────────┘
-\`\`\`
-
 ### 핵심 포인트
 
 - Kubernetes의 핵심 구성 요소와 역할을 정확히 이해
@@ -138,30 +114,6 @@ Kubernetes (K8s) is an open-source container orchestration platform that automat
 - **Secret & Config Management**: Manage sensitive info without rebuilding images
 
 ### Architecture Overview
-
-\`\`\`
-┌─────────────────────────────────────────────────┐
-│                Control Plane                     │
-│  ┌──────────┐ ┌──────┐ ┌───────────┐ ┌────────┐│
-│  │API Server│ │ etcd │ │Scheduler  │ │  CCM   ││
-│  └──────────┘ └──────┘ └───────────┘ └────────┘│
-│                         ┌───────────────────┐   │
-│                         │Controller Manager │   │
-│                         └───────────────────┘   │
-└─────────────────────────────────────────────────┘
-         │                    │
-┌────────┴──────┐    ┌───────┴───────┐
-│   Worker Node │    │  Worker Node  │
-│ ┌───────────┐ │    │ ┌───────────┐ │
-│ │  kubelet  │ │    │ │  kubelet  │ │
-│ ├───────────┤ │    │ ├───────────┤ │
-│ │kube-proxy │ │    │ │kube-proxy │ │
-│ ├───────────┤ │    │ ├───────────┤ │
-│ │ Container │ │    │ │ Container │ │
-│ │  Runtime  │ │    │ │  Runtime  │ │
-│ └───────────┘ │    │ └───────────┘ │
-└───────────────┘    └───────────────┘
-\`\`\`
 
 ### Key Points
 
@@ -305,18 +257,6 @@ kubectl get configmap kube-proxy -n kube-system -o yaml | grep mode
 - CRI(Container Runtime Interface) 준수 필요
 - containerd, CRI-O 등 지원 (Docker는 1.24부터 제거)
 
-### 컴포넌트 통신 흐름
-
-\`\`\`
-사용자 → kubectl → API Server → etcd (상태 저장)
-                       ↓
-                   Scheduler (파드 배치 결정)
-                       ↓
-                   kubelet (파드 실행)
-                       ↓
-                Container Runtime (컨테이너 생성)
-\`\`\`
-
 ### Static Pod vs 일반 Pod
 
 | 특성 | Static Pod | 일반 Pod |
@@ -420,18 +360,6 @@ kubectl get configmap kube-proxy -n kube-system -o yaml | grep mode
 - Must comply with CRI (Container Runtime Interface)
 - Supports containerd, CRI-O (Docker removed since 1.24)
 
-### Component Communication Flow
-
-\`\`\`
-User → kubectl → API Server → etcd (state storage)
-                      ↓
-                  Scheduler (pod placement decision)
-                      ↓
-                  kubelet (pod execution)
-                      ↓
-               Container Runtime (container creation)
-\`\`\`
-
 ### Static Pod vs Regular Pod
 
 | Property | Static Pod | Regular Pod |
@@ -460,30 +388,6 @@ cat /var/lib/kubelet/config.yaml | grep staticPodPath
 ### kube-apiserver 상세
 
 API Server는 Kubernetes 클러스터의 **중앙 관리 허브**입니다. 모든 컴포넌트는 API Server를 통해서만 클러스터 상태에 접근합니다.
-
-#### API 요청 처리 흐름
-
-\`\`\`
-클라이언트 요청
-    ↓
-1. 인증 (Authentication)
-    - X.509 인증서
-    - Bearer 토큰
-    - ServiceAccount 토큰
-    ↓
-2. 인가 (Authorization)
-    - RBAC
-    - ABAC
-    - Webhook
-    ↓
-3. 어드미션 컨트롤 (Admission Control)
-    - Mutating Admission
-    - Validating Admission
-    ↓
-4. 오브젝트 유효성 검사
-    ↓
-5. etcd에 저장
-\`\`\`
 
 #### API Server 주요 설정
 
@@ -540,24 +444,6 @@ etcd는 Kubernetes 클러스터의 **단일 진실 공급원(Single Source of Tr
 - **성능**: 읽기/쓰기 수만 ops/sec 처리
 - **감시(Watch)**: 키 변경 이벤트를 실시간으로 통지
 
-#### etcd 데이터 구조
-
-\`\`\`
-/registry/
-├── pods/
-│   └── default/
-│       └── my-pod
-├── services/
-│   └── default/
-│       └── my-service
-├── deployments/
-│   └── default/
-│       └── my-deployment
-└── secrets/
-    └── default/
-        └── my-secret
-\`\`\`
-
 #### etcd 클러스터 확인
 
 \`\`\`bash
@@ -589,30 +475,6 @@ ETCDCTL_API=3 etcdctl endpoint health \\
 ### kube-apiserver in Detail
 
 The API Server is the **central management hub** of the Kubernetes cluster. All components access cluster state only through the API Server.
-
-#### API Request Processing Flow
-
-\`\`\`
-Client Request
-    ↓
-1. Authentication
-    - X.509 Certificates
-    - Bearer Tokens
-    - ServiceAccount Tokens
-    ↓
-2. Authorization
-    - RBAC
-    - ABAC
-    - Webhook
-    ↓
-3. Admission Control
-    - Mutating Admission
-    - Validating Admission
-    ↓
-4. Object Validation
-    ↓
-5. Persist to etcd
-\`\`\`
 
 #### Key API Server Configuration
 
@@ -668,24 +530,6 @@ etcd is the **Single Source of Truth** for the Kubernetes cluster.
 - **High Availability**: Odd-number node clusters recommended (3, 5, 7)
 - **Performance**: Handles tens of thousands of read/write ops/sec
 - **Watch**: Real-time notification of key change events
-
-#### etcd Data Structure
-
-\`\`\`
-/registry/
-├── pods/
-│   └── default/
-│       └── my-pod
-├── services/
-│   └── default/
-│       └── my-service
-├── deployments/
-│   └── default/
-│       └── my-deployment
-└── secrets/
-    └── default/
-        └── my-secret
-\`\`\`
 
 #### Checking etcd Cluster
 
@@ -1303,10 +1147,6 @@ kubectl config set-context --current --namespace=target-ns
 
 RBAC(Role-Based Access Control)는 Kubernetes에서 **역할 기반으로 API 접근을 제어**하는 인가 방식입니다.
 
-\`\`\`
-사용자/ServiceAccount → RoleBinding → Role → 리소스 접근 권한
-\`\`\`
-
 ### 4가지 RBAC 리소스
 
 | 리소스 | 범위 | 설명 |
@@ -1456,10 +1296,6 @@ kubectl auth can-i --list --as jane -n default
 ### What is RBAC?
 
 RBAC (Role-Based Access Control) is an authorization method in Kubernetes that **controls API access based on roles**.
-
-\`\`\`
-User/ServiceAccount → RoleBinding → Role → Resource Access Permissions
-\`\`\`
 
 ### Four RBAC Resources
 
@@ -1630,19 +1466,6 @@ Kubernetes 컴포넌트 간에는 허용되는 버전 차이가 있습니다:
 
 **핵심 규칙**: 한 번에 하나의 마이너 버전만 업그레이드 (예: 1.29 → 1.30)
 
-### 업그레이드 순서
-
-\`\`\`
-1. 컨트롤 플레인 노드 (순차적)
-   ├── kubeadm 업그레이드
-   ├── 컨트롤 플레인 컴포넌트 업그레이드
-   └── kubelet, kubectl 업그레이드
-2. 워커 노드 (순차적 또는 병렬)
-   ├── drain (파드 이동)
-   ├── kubeadm, kubelet, kubectl 업그레이드
-   └── uncordon (노드 복귀)
-\`\`\`
-
 ### 컨트롤 플레인 업그레이드
 
 \`\`\`bash
@@ -1757,19 +1580,6 @@ There are allowed version differences between Kubernetes components:
 | kubectl | +1/-1 | 1.29 ~ 1.31 |
 
 **Key rule**: Upgrade only one minor version at a time (e.g., 1.29 → 1.30)
-
-### Upgrade Order
-
-\`\`\`
-1. Control Plane Nodes (sequential)
-   ├── Upgrade kubeadm
-   ├── Upgrade control plane components
-   └── Upgrade kubelet, kubectl
-2. Worker Nodes (sequential or parallel)
-   ├── drain (move pods)
-   ├── Upgrade kubeadm, kubelet, kubectl
-   └── uncordon (restore node)
-\`\`\`
 
 ### Control Plane Upgrade
 

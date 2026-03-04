@@ -34,29 +34,6 @@ k3s는 **Rancher Labs(현 SUSE)**에서 만든 경량 Kubernetes 배포판입니
 
 ### k3s 아키텍처
 
-\`\`\`text
-┌─────────────────────────────┐
-│        k3s server           │
-│  ┌──────────┐ ┌───────────┐ │
-│  │API Server│ │ Scheduler │ │
-│  └──────────┘ └───────────┘ │
-│  ┌──────────┐ ┌───────────┐ │
-│  │Controller│ │  SQLite/  │ │
-│  │ Manager  │ │   etcd    │ │
-│  └──────────┘ └───────────┘ │
-│  ┌──────────┐ ┌───────────┐ │
-│  │  Kubelet │ │ containerd│ │
-│  └──────────┘ └───────────┘ │
-└─────────────────────────────┘
-
-┌─────────────────────────────┐
-│        k3s agent            │
-│  ┌──────────┐ ┌───────────┐ │
-│  │  Kubelet │ │ containerd│ │
-│  └──────────┘ └───────────┘ │
-└─────────────────────────────┘
-\`\`\`
-
 - **k3s server**: Control Plane + Kubelet 모두 실행 (단일 노드에서는 이것만으로 충분)
 - **k3s agent**: Kubelet만 실행 (워커 노드용)
 
@@ -96,29 +73,6 @@ k3s is a lightweight Kubernetes distribution created by **Rancher Labs (now SUSE
 | **microk8s** | Dev/IoT | Yes | Yes | Low |
 
 ### k3s Architecture
-
-\`\`\`text
-┌─────────────────────────────┐
-│        k3s server           │
-│  ┌──────────┐ ┌───────────┐ │
-│  │API Server│ │ Scheduler │ │
-│  └──────────┘ └───────────┘ │
-│  ┌──────────┐ ┌───────────┐ │
-│  │Controller│ │  SQLite/  │ │
-│  │ Manager  │ │   etcd    │ │
-│  └──────────┘ └───────────┘ │
-│  ┌──────────┐ ┌───────────┐ │
-│  │  Kubelet │ │ containerd│ │
-│  └──────────┘ └───────────┘ │
-└─────────────────────────────┘
-
-┌─────────────────────────────┐
-│        k3s agent            │
-│  ┌──────────┐ ┌───────────┐ │
-│  │  Kubelet │ │ containerd│ │
-│  └──────────┘ └───────────┘ │
-└─────────────────────────────┘
-\`\`\`
 
 - **k3s server**: Runs both Control Plane + Kubelet (sufficient for a single node)
 - **k3s agent**: Runs Kubelet only (for worker nodes)

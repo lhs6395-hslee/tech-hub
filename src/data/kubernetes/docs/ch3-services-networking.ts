@@ -1829,16 +1829,6 @@ ports:
 - 파드 하나 변경 시 전체 Endpoints 객체 전송
 - kube-proxy, CoreDNS 등 watch하는 컴포넌트에 부하
 
-#### EndpointSlice의 해결 방식
-
-\`\`\`
-Service (1000 파드)
-├── EndpointSlice-1 (100 엔드포인트)
-├── EndpointSlice-2 (100 엔드포인트)
-├── ...
-└── EndpointSlice-10 (100 엔드포인트)
-\`\`\`
-
 - 슬라이스당 기본 최대 100개 엔드포인트
 - 변경 시 해당 슬라이스만 업데이트/전송
 - 네트워크 트래픽 및 API 서버 부하 대폭 감소
@@ -2021,16 +2011,6 @@ For large Services (thousands of Pods), a single Endpoints object becomes very l
 - Increased etcd storage pressure
 - Entire Endpoints object transmitted when one Pod changes
 - Heavy load on watching components (kube-proxy, CoreDNS, etc.)
-
-#### How EndpointSlices Solve This
-
-\`\`\`
-Service (1000 Pods)
-├── EndpointSlice-1 (100 endpoints)
-├── EndpointSlice-2 (100 endpoints)
-├── ...
-└── EndpointSlice-10 (100 endpoints)
-\`\`\`
 
 - Default maximum of 100 endpoints per slice
 - Only the affected slice is updated/transmitted on changes
