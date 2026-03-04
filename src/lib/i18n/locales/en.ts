@@ -34,6 +34,7 @@ export const en: TranslationKeys = {
     learn: 'Learn',
     docs: 'Theory',
     simulator: 'Simulator',
+    labs: 'Labs',
     progress: 'Progress',
     settings: 'Settings',
   },

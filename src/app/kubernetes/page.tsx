@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useLocaleStore } from '@/stores/locale-store';
 import { K8S_LEVEL_CONFIGS } from '@/types/kubernetes';
-import { Container, Server, Network, HardDrive, Search, BookOpen, GraduationCap, MessageSquare, Terminal } from 'lucide-react';
+import { Container, Server, Network, HardDrive, Search, BookOpen, GraduationCap, MessageSquare, Terminal, FlaskConical } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const DOMAIN_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -95,17 +95,17 @@ export default function KubernetesPage() {
               : 'Review concepts with True/False, Multiple Choice, and Term Matching'}
           </p>
         </Link>
-        <div className="flex flex-col items-center text-center p-6 rounded-xl bg-muted/30 space-y-3">
-          <MessageSquare className="h-8 w-8 text-purple-500" />
+        <Link href="/kubernetes/labs" className="flex flex-col items-center text-center p-6 rounded-xl bg-muted/30 space-y-3 hover:bg-muted/50 transition-colors">
+          <FlaskConical className="h-8 w-8 text-purple-500" />
           <h3 className="font-semibold">
-            {locale === 'ko' ? 'AI 챗봇' : 'AI Chatbot'}
+            {locale === 'ko' ? 'K8s 실습 문제' : 'K8s Lab Problems'}
           </h3>
           <p className="text-sm text-muted-foreground">
             {locale === 'ko'
-              ? 'Kubernetes 전문 AI 어시스턴트에게 자유롭게 질문합니다'
-              : 'Ask the Kubernetes AI assistant anything freely'}
+              ? 'k3s 클러스터에서 kubectl 명령으로 실전 문제를 풀어봅니다'
+              : 'Solve hands-on problems with kubectl commands on a k3s cluster'}
           </p>
-        </div>
+        </Link>
       </section>
 
       {/* Domain Cards */}
@@ -128,7 +128,7 @@ export default function KubernetesPage() {
             const iconColor = ICON_COLORS[config.color] || ICON_COLORS.blue;
 
             return (
-              <Link key={config.id} href="/kubernetes/docs">
+              <Link key={config.id} href={`/kubernetes/labs/${config.id}`}>
                 <Card className="relative overflow-hidden group cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1">
                   <div className={`absolute inset-0 bg-gradient-to-br ${cardGradient} transition-all`} />
                   <CardContent className="relative p-6 flex flex-col items-center text-center space-y-3">

@@ -32,6 +32,7 @@ export const ko = {
     learn: '학습',
     docs: '이론학습',
     simulator: '시뮬레이터',
+    labs: '실습',
     progress: '진행도',
     settings: '설정',
   },

@@ -26,6 +26,7 @@ export default function Header() {
     { href: '/kubernetes', label: t('nav.home') },
     { href: '/kubernetes/docs', label: t('nav.docs') },
     { href: '/kubernetes/learn', label: t('nav.learn') },
+    { href: '/kubernetes/labs', label: t('nav.labs') },
   ];
 
   const navLinks = isDatabaseSection

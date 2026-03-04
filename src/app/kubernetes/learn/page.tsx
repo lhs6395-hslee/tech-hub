@@ -128,8 +128,8 @@ export default function K8sLearnPage() {
         <div className="space-y-6">
           <p className="text-sm text-muted-foreground">
             {locale === 'ko'
-              ? 'Kubernetes의 5개 도메인별로 이론을 학습하세요. 각 도메인을 클릭하면 상세 이론 문서로 이동합니다.'
-              : 'Study theory for each of the 5 Kubernetes domains. Click a domain to view detailed documentation.'}
+              ? 'Kubernetes의 5개 도메인별 실습 문제를 풀어보세요. 각 도메인을 클릭하면 실습 문제 목록으로 이동합니다.'
+              : 'Solve hands-on problems for each of the 5 Kubernetes domains. Click a domain to view lab problems.'}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {K8S_LEVEL_CONFIGS.map((config) => {
@@ -138,7 +138,7 @@ export default function K8sLearnPage() {
               const iconColor = ICON_COLORS[config.color] || ICON_COLORS.blue;
 
               return (
-                <Link key={config.id} href="/kubernetes/docs">
+                <Link key={config.id} href={`/kubernetes/labs/${config.id}`}>
                   <Card className="relative overflow-hidden group cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1">
                     <div className={`absolute inset-0 bg-gradient-to-br ${gradient} transition-all`} />
                     <CardContent className="relative p-6 flex flex-col items-center text-center space-y-3">
