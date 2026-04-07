@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocaleStore } from '@/stores/locale-store';
 import { useTranslation } from '@/lib/i18n';
+import { useProgressStore } from '@/stores/progress-store';
+import { useK8sProgressStore } from '@/stores/k8s-progress-store';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Database, Brain, Container, Monitor } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Database, Brain, Container, Monitor, TrendingUp, CheckCircle, BookOpen } from 'lucide-react';
 import ChatBot from '@/components/chat/ChatBot';
 
 const techPaths = [
@@ -56,6 +59,18 @@ export default function HubPage() {
     }
   };
 
+  // Aggregate stats
+  const sqlProgress = useProgressStore((s) => s.progress.levelProgress);
+  const k8sProgress = useK8sProgressStore((s) => s.progress.domainProgress);
+
+  const totalSqlCompleted = Object.values(sqlProgress).reduce((sum, lp) => sum + lp.completedProblems, 0);
+  const totalSqlProblems = Object.values(sqlProgress).reduce((sum, lp) => sum + lp.totalProblems, 0);
+  const totalK8sCompleted = Object.values(k8sProgress).reduce((sum, lp) => sum + lp.completedProblems, 0);
+  const totalK8sProblems = Object.values(k8sProgress).reduce((sum, lp) => sum + lp.totalProblems, 0);
+  const overallCompleted = totalSqlCompleted + totalK8sCompleted;
+  const overallTotal = totalSqlProblems + totalK8sProblems;
+  const overallPct = overallTotal > 0 ? Math.round((overallCompleted / overallTotal) * 100) : 0;
+
   return (
     <div className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)]">
       {/* Hero Section */}
@@ -75,6 +90,64 @@ export default function HubPage() {
           {t('hub.subtitle')}
         </p>
       </section>
+
+      {/* Learning Stats Dashboard */}
+      {overallTotal > 0 && (
+        <section className="max-w-4xl w-full mb-8">
+          <Card className="border-dashed">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                <h3 className="font-semibold text-sm text-muted-foreground">
+                  {locale === 'ko' ? '나의 학습 현황' : 'My Learning Progress'}
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-1.5">
+                      <BookOpen className="h-4 w-4 text-muted-foreground" />
+                      {locale === 'ko' ? '전체 진행도' : 'Overall'}
+                    </span>
+                    <span className="font-medium">{overallPct}%</span>
+                  </div>
+                  <Progress value={overallPct} className="h-2 [&>div]:bg-indigo-500" />
+                  <p className="text-xs text-muted-foreground">
+                    <CheckCircle className="h-3 w-3 inline mr-1" />
+                    {overallCompleted}/{overallTotal} {locale === 'ko' ? '완료' : 'completed'}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-1.5">
+                      <Database className="h-4 w-4 text-emerald-500" />
+                      SQL
+                    </span>
+                    <span className="font-medium">
+                      {totalSqlProblems > 0 ? Math.round((totalSqlCompleted / totalSqlProblems) * 100) : 0}%
+                    </span>
+                  </div>
+                  <Progress value={totalSqlProblems > 0 ? Math.round((totalSqlCompleted / totalSqlProblems) * 100) : 0} className="h-2 [&>div]:bg-emerald-500" />
+                  <p className="text-xs text-muted-foreground">{totalSqlCompleted}/{totalSqlProblems}</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-1.5">
+                      <Container className="h-4 w-4 text-blue-500" />
+                      K8s
+                    </span>
+                    <span className="font-medium">
+                      {totalK8sProblems > 0 ? Math.round((totalK8sCompleted / totalK8sProblems) * 100) : 0}%
+                    </span>
+                  </div>
+                  <Progress value={totalK8sProblems > 0 ? Math.round((totalK8sCompleted / totalK8sProblems) * 100) : 0} className="h-2 [&>div]:bg-blue-500" />
+                  <p className="text-xs text-muted-foreground">{totalK8sCompleted}/{totalK8sProblems}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       {/* Tech Path Cards */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl w-full">

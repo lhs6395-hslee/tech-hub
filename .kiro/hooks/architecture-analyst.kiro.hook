@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Architecture Analyst Agent",
+  "description": "스펙 태스크 완료 후 Analyst 에이전트가 아키텍처 일관성, 의존성 순환, 기존 패턴과의 정합성을 분석합니다.",
+  "version": "1",
+  "when": {
+    "type": "postTaskExecution"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "너는 지금 Analyst 에이전트야. 방금 완료된 태스크의 결과물을 아키텍처 관점에서 분석해야 해.\n\n분석 기준:\n1. 아키텍처 일관성: 기존 프로젝트 구조(src/app, src/lib, src/components, src/types)와 일치하는가?\n2. 의존성: 순환 참조가 없는가? 불필요한 의존성이 추가되지 않았는가?\n3. 패턴 일관성: 기존 코드의 패턴(Zustand 스토어, API 라우트 구조, 컴포넌트 구조)을 따르는가?\n4. 성능 영향: 번들 크기 증가, 불필요한 리렌더링, N+1 쿼리 등의 문제가 없는가?\n5. 확장성: 향후 기능 추가 시 수정 범위가 최소화되는 구조인가?\n\n문제가 있으면 구체적인 개선안을 제시해. 문제가 없으면 \"Analyst 분석 완료: 아키텍처 정합성 확인\"이라고만 말해."
+  }
+}

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useLocaleStore } from '@/stores/locale-store';
 import { matchingSets as defaultMatchingSets, quizCategories as defaultCategories } from '@/data/quiz';
-import { RotateCcw, Trophy, ArrowRight, CheckCircle, XCircle, Shuffle } from 'lucide-react';
+import { RotateCcw, Trophy, ArrowRight, CheckCircle } from 'lucide-react';
 
 interface MatchPairData {
   term: { ko: string; en: string };

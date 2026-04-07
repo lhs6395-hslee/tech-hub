@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "Final Validation Agent",
+  "description": "에이전트 작업이 완료된 후 lint, 타입 체크, 빌드 검증을 자동 실행하여 최종 품질을 확인합니다.",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "./node_modules/.bin/tsc --noEmit 2>&1 | head -30",
+    "timeout": 60
+  }
+}

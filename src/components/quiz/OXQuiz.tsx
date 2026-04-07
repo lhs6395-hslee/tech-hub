@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useLocaleStore } from '@/stores/locale-store';
 import { oxQuestions as defaultOXQuestions, quizCategories as defaultCategories } from '@/data/quiz';
-import { CheckCircle, XCircle, ArrowRight, RotateCcw, Trophy, Filter } from 'lucide-react';
+import { CheckCircle, XCircle, ArrowRight, RotateCcw, Trophy } from 'lucide-react';
 
 interface OXQuestionData {
   id: string;

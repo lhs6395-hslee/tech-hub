@@ -10,8 +10,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const recalculateProgress = useProgressStore((s) => s.recalculateProgress);
 
   useEffect(() => {
-    setMounted(true);
-    // Recalculate progress on mount to sync with current problem set
+    requestAnimationFrame(() => {
+      setMounted(true);
+    });
     recalculateProgress();
   }, [recalculateProgress]);
 

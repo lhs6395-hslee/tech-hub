@@ -4,7 +4,7 @@ import { useTranslation } from '@/lib/i18n';
 import { useLocaleStore } from '@/stores/locale-store';
 import { LEVEL_CONFIGS } from '@/types/problem';
 import LevelCard from '@/components/progress/LevelCard';
-import { Database, Terminal, BookOpen, Trophy } from 'lucide-react';
+import { Database, Terminal, BookOpen, Trophy, GraduationCap, FlaskConical } from 'lucide-react';
 import ArchitectureDiagram from '@/components/home/ArchitectureDiagram';
 import ExecutionFlowDiagram from '@/components/home/ExecutionFlowDiagram';
 import ERDDiagram from '@/components/home/ERDDiagram';
@@ -31,7 +31,7 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
         <div className="flex flex-col items-center text-center p-6 rounded-xl bg-muted/30 space-y-3">
           <Terminal className="h-8 w-8 text-emerald-500" />
           <h3 className="font-semibold">
@@ -63,6 +63,28 @@ export default function HomePage() {
             {locale === 'ko'
               ? '쿼리 결과를 자동으로 채점하고 상세한 해설을 제공합니다'
               : 'Automatically grade your queries and get detailed explanations'}
+          </p>
+        </div>
+        <div className="flex flex-col items-center text-center p-6 rounded-xl bg-muted/30 space-y-3">
+          <GraduationCap className="h-8 w-8 text-purple-500" />
+          <h3 className="font-semibold">
+            {locale === 'ko' ? '이론 퀴즈' : 'Theory Quizzes'}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {locale === 'ko'
+              ? 'OX 퀴즈, 4지선다, 용어 매칭으로 개념을 복습합니다'
+              : 'Review concepts with True/False, Multiple Choice, and Term Matching'}
+          </p>
+        </div>
+        <div className="flex flex-col items-center text-center p-6 rounded-xl bg-muted/30 space-y-3">
+          <FlaskConical className="h-8 w-8 text-rose-500" />
+          <h3 className="font-semibold">
+            {locale === 'ko' ? 'DB 시뮬레이터' : 'DB Simulators'}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {locale === 'ko'
+              ? 'B-Tree, Buffer Pool, VACUUM, 트랜잭션을 시각적으로 체험합니다'
+              : 'Visually explore B-Tree, Buffer Pool, VACUUM, and Transactions'}
           </p>
         </div>
       </section>

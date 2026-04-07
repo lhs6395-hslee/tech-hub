@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Code Reviewer Agent",
+  "description": "Builder가 코드를 작성(write)한 후, 독립적인 Reviewer 관점에서 코드 품질, 보안, 타입 안전성을 검증합니다. 만든 사람이 아닌 별도의 시각으로 평가합니다.",
+  "version": "1",
+  "when": {
+    "type": "postToolUse",
+    "toolTypes": [
+      "write"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "너는 지금 Reviewer 에이전트야. Builder가 방금 작성한 코드를 독립적으로 검증해야 해. Builder의 의도와 무관하게, 아래 체크리스트를 기준으로 냉정하게 평가해:\n\n1. 타입 안전성: any 타입 사용, 누락된 타입 정의, 잘못된 타입 캐스팅\n2. 보안: SQL 인젝션 가능성, XSS 취약점, 하드코딩된 시크릿\n3. 에러 핸들링: try-catch 누락, 에러 메시지 노출, 미처리 Promise\n4. 코드 품질: 미사용 import, 중복 코드, 매직 넘버\n5. 프로젝트 패턴 준수: 한/영 이중 언어 패턴, 기존 파일 구조 일관성\n\n문제가 발견되면 즉시 수정해. 문제가 없으면 \"Reviewer 검증 통과\"라고만 말해. 절대 Builder의 작업을 무조건 승인하지 마."
+  }
+}

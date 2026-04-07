@@ -90,7 +90,7 @@ export default function ProblemWorkspacePage() {
       setQueryResult(data.result);
       setActiveTab('result');
       recordAttempt(problem.id);
-    } catch (err) {
+    } catch {
       setQueryError(
         locale === 'ko'
           ? '데이터베이스 연결에 실패했습니다. Docker가 실행 중인지 확인해주세요.'

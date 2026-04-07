@@ -109,7 +109,7 @@ export default function BufferPoolSimulator({ locale }: Props) {
   }
 
   function processAll() {
-    let currentPool = pool.map((s) => ({ ...s }));
+    const currentPool = pool.map((s) => ({ ...s }));
     let currentClock = clock;
     let currentIndex = accessIndex;
     const newResults: AccessResult[] = [...results];

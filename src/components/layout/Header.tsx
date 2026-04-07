@@ -10,7 +10,7 @@ import { Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Header() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const pathname = usePathname();
   const isDatabaseSection = pathname.startsWith('/database');
   const isKubernetesSection = pathname.startsWith('/kubernetes');
@@ -19,6 +19,7 @@ export default function Header() {
     { href: '/database', label: t('nav.home') },
     { href: '/database/docs', label: t('nav.docs') },
     { href: '/database/learn', label: t('nav.learn') },
+    { href: '/database/quiz', label: locale === 'ko' ? '퀴즈' : 'Quiz' },
     { href: '/database/simulator', label: t('nav.simulator') },
   ];
 
@@ -26,6 +27,7 @@ export default function Header() {
     { href: '/kubernetes', label: t('nav.home') },
     { href: '/kubernetes/docs', label: t('nav.docs') },
     { href: '/kubernetes/learn', label: t('nav.learn') },
+    { href: '/kubernetes/quiz', label: locale === 'ko' ? '퀴즈' : 'Quiz' },
     { href: '/kubernetes/labs', label: t('nav.labs') },
   ];
 

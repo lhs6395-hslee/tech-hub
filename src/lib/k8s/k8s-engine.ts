@@ -1,7 +1,4 @@
 import { execFile } from 'child_process';
-import { writeFile, unlink } from 'fs/promises';
-import { tmpdir } from 'os';
-import { join } from 'path';
 import type { K8sExecutionResult } from '@/types/k8s-problem';
 
 const KUBECONFIG = '/etc/rancher/k3s/k3s.yaml';

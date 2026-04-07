@@ -3,8 +3,11 @@
 import Link from 'next/link';
 import { useLocaleStore } from '@/stores/locale-store';
 import { K8S_LEVEL_CONFIGS } from '@/types/kubernetes';
-import { Container, Server, Network, HardDrive, Search, BookOpen, GraduationCap, MessageSquare, Terminal, FlaskConical } from 'lucide-react';
+import { Container, Server, Network, HardDrive, Search, BookOpen, GraduationCap, Terminal, FlaskConical } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import K8sArchitectureDiagram from '@/components/home/K8sArchitectureDiagram';
+import K8sPodLifecycleDiagram from '@/components/home/K8sPodLifecycleDiagram';
+import K8sNetworkingDiagram from '@/components/home/K8sNetworkingDiagram';
 
 const DOMAIN_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Server,
@@ -28,14 +31,6 @@ const CARD_GRADIENTS: Record<string, string> = {
   cyan: 'from-cyan-500/20 to-cyan-600/5 hover:from-cyan-500/30 hover:to-cyan-600/10',
   amber: 'from-amber-500/20 to-amber-600/5 hover:from-amber-500/30 hover:to-amber-600/10',
   purple: 'from-purple-500/20 to-purple-600/5 hover:from-purple-500/30 hover:to-purple-600/10',
-};
-
-const ICON_COLORS: Record<string, string> = {
-  blue: 'text-blue-500',
-  emerald: 'text-emerald-500',
-  cyan: 'text-cyan-500',
-  amber: 'text-amber-500',
-  purple: 'text-purple-500',
 };
 
 export default function KubernetesPage() {
@@ -108,6 +103,21 @@ export default function KubernetesPage() {
         </Link>
       </section>
 
+      {/* K8s Architecture Diagram */}
+      <section className="max-w-4xl mx-auto">
+        <K8sArchitectureDiagram locale={locale} />
+      </section>
+
+      {/* Pod Lifecycle Diagram */}
+      <section className="max-w-4xl mx-auto">
+        <K8sPodLifecycleDiagram locale={locale} />
+      </section>
+
+      {/* Networking Diagram */}
+      <section className="max-w-4xl mx-auto">
+        <K8sNetworkingDiagram locale={locale} />
+      </section>
+
       {/* Domain Cards */}
       <section className="space-y-6 max-w-4xl mx-auto">
         <div className="text-center space-y-2">
@@ -125,7 +135,6 @@ export default function KubernetesPage() {
             const Icon = DOMAIN_ICONS[config.icon] || Server;
             const gradient = DOMAIN_GRADIENTS[config.color] || DOMAIN_GRADIENTS.blue;
             const cardGradient = CARD_GRADIENTS[config.color] || CARD_GRADIENTS.blue;
-            const iconColor = ICON_COLORS[config.color] || ICON_COLORS.blue;
 
             return (
               <Link key={config.id} href={`/kubernetes/labs/${config.id}`}>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Trash2,
   Plus,
@@ -11,7 +11,6 @@ import {
   Zap,
   BarChart3,
   Lock,
-  Settings,
 } from 'lucide-react';
 
 interface Props {
@@ -66,16 +65,6 @@ export default function VacuumSimulator({ locale }: Props) {
   const autovacuumTrigger = Math.floor(
     AUTOVACUUM_THRESHOLD + AUTOVACUUM_SCALE_FACTOR * liveTuples
   );
-
-  // Check autovacuum trigger
-  useEffect(() => {
-    if (autovacuumEnabled && deadTuples >= autovacuumTrigger && deadTuples > 0) {
-      const timer = setTimeout(() => {
-        handleAutovacuum();
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [deadTuples, autovacuumEnabled, autovacuumTrigger]);
 
   function addLog(msg: string) {
     setLog((prev) => [...prev, msg]);
@@ -228,7 +217,7 @@ export default function VacuumSimulator({ locale }: Props) {
     }
   }
 
-  function handleAutovacuum() {
+  const handleAutovacuum = useCallback(() => {
     const deadCount = rows.filter((r) => r.status === 'dead').length;
     if (deadCount === 0) return;
     setRows((prev) => prev.filter((r) => r.status === 'live'));
@@ -237,7 +226,17 @@ export default function VacuumSimulator({ locale }: Props) {
         ? `⚡ AUTOVACUUM: 임계값 도달 (dead: ${deadCount} ≥ threshold: ${autovacuumTrigger}). 자동으로 ${deadCount}개 dead tuple 제거.`
         : `⚡ AUTOVACUUM: Threshold reached (dead: ${deadCount} ≥ threshold: ${autovacuumTrigger}). Auto-removed ${deadCount} dead tuples.`
     );
-  }
+  }, [rows, locale, autovacuumTrigger]);
+
+  // Check autovacuum trigger
+  useEffect(() => {
+    if (autovacuumEnabled && deadTuples >= autovacuumTrigger && deadTuples > 0) {
+      const timer = setTimeout(() => {
+        handleAutovacuum();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [deadTuples, autovacuumEnabled, autovacuumTrigger, handleAutovacuum]);
 
   function handleReset() {
     setRows([...INITIAL_ROWS]);

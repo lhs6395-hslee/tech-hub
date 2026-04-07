@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useLocaleStore } from '@/stores/locale-store';
 import { LEVEL_CONFIGS } from '@/types/problem';
 import LevelCard from '@/components/progress/LevelCard';
-import { CheckCircle, Zap, Link2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { CheckCircle, Zap, Link2, ArrowLeft } from 'lucide-react';
 import OXQuiz from '@/components/quiz/OXQuiz';
 import MultipleChoice from '@/components/quiz/MultipleChoice';
 import TermMatching from '@/components/quiz/TermMatching';

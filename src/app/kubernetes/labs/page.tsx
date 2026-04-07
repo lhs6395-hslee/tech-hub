@@ -23,14 +23,6 @@ const GRADIENTS: Record<string, string> = {
   purple: 'from-purple-500/20 to-purple-600/5 hover:from-purple-500/30 hover:to-purple-600/10',
 };
 
-const ICON_COLORS: Record<string, string> = {
-  blue: 'text-blue-500',
-  emerald: 'text-emerald-500',
-  cyan: 'text-cyan-500',
-  amber: 'text-amber-500',
-  purple: 'text-purple-500',
-};
-
 const DOMAIN_GRADIENTS: Record<string, string> = {
   blue: 'from-blue-500 to-blue-600',
   emerald: 'from-emerald-500 to-emerald-600',
@@ -60,7 +52,6 @@ export default function K8sLabsPage() {
         {K8S_LEVEL_CONFIGS.map((config) => {
           const Icon = ICONS[config.icon] || Server;
           const gradient = GRADIENTS[config.color] || GRADIENTS.blue;
-          const iconColor = ICON_COLORS[config.color] || ICON_COLORS.blue;
           const domainGradient = DOMAIN_GRADIENTS[config.color] || DOMAIN_GRADIENTS.blue;
           const progress = getDomainProgress(config.id);
 
